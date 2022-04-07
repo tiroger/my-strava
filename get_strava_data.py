@@ -56,5 +56,30 @@ def my_data():
         print('There was a problem with the request.')
 
 
+def process_data(all_activities):
+    #all_activities = my_data()
+
+    # Transforming the date column to datetime and extracting year, month, weekday
+    all_activities['start_date_local'] = pd.to_datetime(all_activities['start_date_local'])
+    all_activities['year'] = all_activities['start_date_local'].dt.year
+    months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+    all_activities['month'] = all_activities['start_date_local'].dt.month
+    all_activities['month'] = all_activities['month'].apply(lambda x: months[x-1])
+    all_activities['day'] = all_activities['start_date_local'].dt.day
+    days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    all_activities['weekday'] = all_activities['start_date_local'].dt.weekday
+    all_activities['weekday'] = all_activities['weekday'].apply(lambda x: days[x]) # Converting weekday number to name
+    all_activities['hour'] = all_activities['start_date_local'].dt.hour
+
+    # Dropping unnecessary columns
+    cols_to_remove = ['name', 'athlete', 'resource_state', 'upload_id_str', 'external_id', 
+    'from_accepted_tag', 'has_kudoed', 'workout_type', 'display_hide_heartrate_option', 'map', 'visibility',
+    'timezone', 'upload_id', 'start_date', 'start_date_local', 'utc_offset', 'location_city', 'location_country', 
+    'location_state', 'heartrate_opt_out', 'flagged', 'commute', 'manual', 'gear_id', 'athlete_count', 'private', 
+    'has_heartrate', 'start_latlng', 'end_latlng', 'device_watts', 'elev_low']
+    activities_df = all_activities.drop(cols_to_remove, axis=1)
+
+    return activities_df
+
 if __name__ == '__main__':
     my_data()
