@@ -28,4 +28,11 @@ processed_data = process_data(all_activities)
 processed_data.head()
 
 
+####################################
+# BASIC ANALYSIS AND VISUALIZATION #
+####################################
+
+
+
+
 

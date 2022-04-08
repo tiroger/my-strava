@@ -18,11 +18,13 @@ import pandas as pd
 
 
 def my_data():
-    page = 1
-    frames = []
+
     try:
+        page = 1
+        frames = []
         print('Getting data...')
-        while page < 5: # Iterating through pages
+        while page < 5: # Iterating through all pages
+            print(f"Requesting page {page}...")
             auth_url = "https://www.strava.com/oauth/token"
             activites_url = "https://www.strava.com/api/v3/athlete/activities"
 
@@ -34,7 +36,7 @@ def my_data():
                 'f': 'json'
             }
 
-            # print("Requesting Token...\n")
+            
             res = requests.post(auth_url, data=payload, verify=False)
             print(res)
             access_token = res.json()['access_token']
@@ -45,12 +47,13 @@ def my_data():
             my_dataset = requests.get(activites_url, headers=header, params=param).json()
             output = pd.DataFrame(my_dataset) # Converting json to datarame
             frames.append(output)
-
-            page += 1
+            
+            page = page + 1 # Incrementing page number
 
             my_dataset_df = pd.concat(frames) # Concatenating all pages into dataframe
-            print('Data retrieved successfully!')
-            return my_dataset_df
+            
+        print('Data retrieved successfully!')
+        return my_dataset_df
             
     except:
         print('There was a problem with the request.')
@@ -70,6 +73,17 @@ def process_data(all_activities):
     all_activities['weekday'] = all_activities['start_date_local'].dt.weekday
     all_activities['weekday'] = all_activities['weekday'].apply(lambda x: days[x]) # Converting weekday number to name
     all_activities['hour'] = all_activities['start_date_local'].dt.hour
+
+    # Converting distance to miles
+    all_activities['distance'] = (all_activities['distance'] * 0.000621371).round(1)
+
+    # Converting elevation to feet
+    all_activities['total_elevation_gain'] = (all_activities['total_elevation_gain'] * 3.28084).round(1)
+    all_activities['elev_high'] = (all_activities['elev_high'] * 3.28084).round(1)
+
+    # Converting elapse time to hours
+    all_activities['elapsed_time'] = (all_activities['elapsed_time'] / 3600).round(1)
+    all_activities['moving_time'] = (all_activities['moving_time'] / 3600).round(1)
 
     # Dropping unnecessary columns
     cols_to_remove = ['name', 'athlete', 'resource_state', 'upload_id_str', 'external_id', 
