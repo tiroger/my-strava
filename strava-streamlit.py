@@ -25,8 +25,6 @@ import plotly.express as px
 
 all_activities = my_data()
 processed_data = process_data(all_activities)
-processed_data.head()
-
 
 ####################################
 # BASIC ANALYSIS AND VISUALIZATION #
