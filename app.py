@@ -2,7 +2,7 @@
 # LIBRARIES #
 #############
 
-from turtle import color
+from turtle import color, width
 from get_strava_data import my_data, process_data # Functions to retrive data using strava api and process for visualizations
 
 import pandas as pd
@@ -31,12 +31,12 @@ my_week = 'https://www.strava.com/athletes/644338/activity-summary/53c89f1acdf2b
 
 ##### Use one of two options below #####
 
-# # Get data using strava api # For deployment
-# my_data_df = my_data()
-# processed_data = process_data(my_data_df)
+# Get data using strava api # For deployment
+my_data_df = my_data()
+processed_data = process_data(my_data_df)
 
 # Get local data # For development
-processed_data = pd.read_csv('./data/processed_data.csv')
+# processed_data = pd.read_csv('./data/processed_data.csv')
 
 
 ############
@@ -53,7 +53,8 @@ with st.sidebar:
 # MAIN PAGE #
 #############
 
-st.title('MY JOURNEY ON STRAVA')
+st.title('MY JOURNEY ON STRAVA: ')
+st.subheader('MEMBER SINCE 2012')
 
 # Total number of activities
 start_date = processed_data.year.min()
@@ -83,12 +84,12 @@ with col2:
 with col3:
     st.metric(label="Kudos", value="{:,}".format(total_kudos))
 
-st.subheader('Activity Breakdown')
+# st.subheader('Activity Breakdown')
 
 # Chart of all activities by type
-breakdown_by_type = processed_data['type'].value_counts()
+breakdown_by_type = processed_data['type'].value_counts().sort_values(ascending=True)
 
-fig = px.bar(breakdown_by_type, x=breakdown_by_type.index, y=breakdown_by_type.values, text_auto='.0s') # Plotly Express
+fig = px.bar(breakdown_by_type, y=breakdown_by_type.index, x=breakdown_by_type.values, text_auto='.0s', orientation='h') # Plotly Express
 fig.update_traces(textfont_size=12, textangle=0, textposition="outside", cliponaxis=False)
 fig.update_layout(
     # title_text="Activity Breakdown",
@@ -97,12 +98,23 @@ fig.update_layout(
     font=dict(
         family="Arial",
         size=14,
-    )
+        color='#45738F'
+    ),
+    plot_bgcolor='white',
+    paper_bgcolor='#FFFFFF',
+    margin_l=0,
+    margin_r=10,
+    margin_t=0,
+    margin_b=0,
+    margin_autoexpand=True,
+    # width=520,
+    hovermode=False,
+
 )
 fig.update_traces(marker_color='#FC4C02',
-                  marker_line_width=1.5, opacity=0.6)
-                  
-fig.update_yaxes(showticklabels=False)
+                  marker_line_width=0)
+# fig.update_yaxes(showticklabels=False)
+
 st.plotly_chart(fig, use_container_width=True)
 
 ####################################
