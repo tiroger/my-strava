@@ -161,29 +161,27 @@ grouped_by_year_and_month = processed_data.groupby(['year', 'month', 'type']).ag
 # Since not all months have data, we're creating entries for missing months and setting the distance and elevation gain to 0
 mux = pd.MultiIndex.from_product([grouped_by_year_and_month.year.unique(), grouped_by_year_and_month.type.unique(), range(1,13)], names=['year', 'type' ,'month'])
 grouped_by_year_and_month = grouped_by_year_and_month.set_index(['year', 'type', 'month']).reindex(mux, fill_value=0).reset_index()
-grouped_by_year_and_month['Cummulative Distance'] = grouped_by_year_and_month.groupby(['year', 'type'])['distance'].cumsum()
-grouped_by_year_and_month['Cummulative Elevation'] = grouped_by_year_and_month.groupby(['year', 'type'])['total_elevation_gain'].cumsum()
+grouped_by_year_and_month['Cumulative Distance'] = grouped_by_year_and_month.groupby(['year', 'type'])['distance'].cumsum()
+grouped_by_year_and_month['Cumulative Elevation'] = grouped_by_year_and_month.groupby(['year', 'type'])['total_elevation_gain'].cumsum()
 months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 grouped_by_year_and_month['month'] = grouped_by_year_and_month['month'].apply(lambda x: months[x -1])
 
 # Plotly charts
 
-selected_year = st.multiselect('Filter by Year', grouped_by_year_and_month.year.unique(), default=grouped_by_year_and_month.year.max()) # Filter for year
-selected_metric = st.selectbox('Metric', ['Cummulative Distance', 'Cummulative Elevation']) # Filter for desired metric
+selected_year = st.multiselect('Filter by Year', grouped_by_year_and_month.year.unique(), default=[2021, 2022]) # Filter for year
+selected_metric = st.selectbox('Metric', ['Cumulative Distance', 'Cumulative Elevation']) # Filter for desired metric
 
-best_distance = grouped_by_year_and_month['Cummulative Distance'].max()
-best_distance_year = grouped_by_year_and_month[grouped_by_year_and_month['Cummulative Distance'] == best_distance]['year'].unique()[0]
+best_distance = grouped_by_year_and_month['Cumulative Distance'].max()
+best_distance_year = grouped_by_year_and_month[grouped_by_year_and_month['Cumulative Distance'] == best_distance]['year'].unique()[0]
 
-best_elevation = grouped_by_year_and_month['Cummulative Elevation'].max()
-best_elevation_year = grouped_by_year_and_month[grouped_by_year_and_month['Cummulative Elevation'] == best_elevation]['year'].unique()[0]
+best_elevation = grouped_by_year_and_month['Cumulative Elevation'].max()
+best_elevation_year = grouped_by_year_and_month[grouped_by_year_and_month['Cumulative Elevation'] == best_elevation]['year'].unique()[0]
 
-
-
-
+# Filtering year and activity type
 grouped_by_year_and_month = grouped_by_year_and_month[grouped_by_year_and_month['type'].isin([activity_type])]
 grouped_by_year_and_month = grouped_by_year_and_month[grouped_by_year_and_month['year'].isin(selected_year)]
 
-
+# Plotly charts
 fig = px.line(grouped_by_year_and_month, x='month', y=selected_metric, color='year')
 fig.update_layout(
         xaxis=dict(
@@ -202,7 +200,7 @@ fig.update_layout(
         yaxis=dict(
             # showgrid=True,
             zeroline=False,
-            showline=True,
+            showline=False,
             gridcolor = 'rgb(235, 236, 240)',
             showticklabels=True,
             title='',
@@ -226,7 +224,7 @@ fig.update_layout(
 # ),
         plot_bgcolor='rgba(0,0,0,0)',
         xaxis_title='',
-        yaxis_title='miles' if selected_metric == 'Cummulative Distance' else 'feet',
+        yaxis_title='Distamce (miles)' if selected_metric == 'Cumulative Distance' else 'Elevation (feet)',
         margin=dict(l=0, r=0, t=0, b=0)
     )
 fig.for_each_trace(lambda trace: fig.add_annotation(
@@ -245,7 +243,43 @@ st.plotly_chart(fig, use_container_width=True)
 col1, col2 = st.columns(2)
 
 with col1:
-    st.metric(f'Yearly Distance Best {best_distance_year}', "{:,}".format(best_distance) + ' miles')
+    st.metric(f'Distance Best {best_distance_year}', "{:,}".format(best_distance) + ' miles')
 with col2:
-    st.metric(f'Yearly Elevation Best {best_elevation_year}', "{:,}".format(best_elevation) + ' feet')
+    st.metric(f'Elevation Best {best_elevation_year}', "{:,}".format(best_elevation) + ' feet')
 
+
+today = dt.datetime.today()
+months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+this_month = dt.datetime.today().month
+
+d0 = dt.datetime(2022, 1, 1)
+d1 = dt.datetime.today()
+delta = d1 - d0
+
+days_gone_by = delta.days
+
+distance_goal = 2500
+monthly_goal = distance_goal/12
+daily_goals = distance_goal/365
+
+# Cumulative distance per day
+grouped_by_day = processed_data.groupby(['year', 'month', 'day']).agg({'distance': 'sum'}).reset_index()
+# Daily cumulative distance
+grouped_by_day['Cummulative Distance'] = grouped_by_day.groupby(['year'])['distance'].cumsum()
+
+should_be_reached = daily_goals*days_gone_by
+
+today_year = dt.datetime.today().year
+# print(f"Today's month is the {this_month}th month and year is {today_year}")
+
+
+where_i_am = grouped_by_day[(grouped_by_day.year == today_year) & (grouped_by_day.month == this_month)]['Cummulative Distance'].max()
+# print(f"I should have reached {should_be_reached} miles. I've done {where_i_am} miles")
+
+
+col1, col2 = st.columns(2)
+
+with col1:
+    st.metric(f'2022 Distance Goal', "{:,}".format(distance_goal) + ' miles')
+with col2:
+    st.metric(f'Distance through {today.strftime("%m/%d/%Y")}', "{:,}".format(where_i_am) + ' miles', round(where_i_am - should_be_reached, 0))
