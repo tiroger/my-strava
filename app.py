@@ -2,7 +2,7 @@
 # LIBRARIES #
 #############
 
-from turtle import color, width
+# from turtle import color, width
 from get_strava_data import my_data, process_data # Functions to retrive data using strava api and process for visualizations
 
 import pandas as pd
