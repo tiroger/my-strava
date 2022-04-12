@@ -261,7 +261,9 @@ delta = d1 - d0
 
 days_gone_by = delta.days # number of days since the beginning of the year
 
-distance_goal = 2500 # distance goal for 2022
+distance_goal = st.number_input('Choose a distance goal for the year', value=2000) # distance goal for 2022
+# st.write('The current distance goal is ', distance_goal)
+
 monthly_goal = distance_goal/12 # monthly distance to reach 2500 miles
 daily_goals = distance_goal/365 # daily distance to reach 2500 miles
 
@@ -284,6 +286,36 @@ pace = round(where_i_am - should_be_reached, 1)
 col1, col2, = st.columns(2)
 
 with col1:
-    st.metric(f'2022 Distance Goal', "{:,}".format(distance_goal) + ' miles')
+    st.metric(f'{today_year} Distance Goal', "{:,}".format(distance_goal) + ' miles')
 with col2:
-    st.metric(f'Distance through {today.strftime("%m/%d/%Y")}', "{:,}".format(where_i_am) + ' miles', f'{pace} ' + 'miles behind' if pace <0 else 'miles ahead')
+    st.metric(f'Distance through {today.strftime("%m/%d/%Y")}', "{:,}".format(where_i_am) + ' miles', f'{pace} ' + 'miles behind' if pace <0 else f'{pace} ' + 'miles ahead')
+
+
+elevation_goal = st.number_input('Choose an elevation goal for the year', value=50000) # distance goal for 2022
+# st.write('The current distance goal is ', distance_goal)
+
+monthly_goal_elev = elevation_goal/12 # monthly distance to reach 2500 miles
+daily_goals_elev = elevation_goal/365 # daily distance to reach 2500 miles
+
+# Cumulative distance per day
+grouped_by_day = processed_data.groupby(['year', 'month', 'day']).agg({'total_elevation_gain': 'sum'}).reset_index()
+# Daily cumulative distance
+grouped_by_day['Cummulative Elevation'] = grouped_by_day.groupby(['year'])['total_elevation_gain'].cumsum()
+
+should_be_reached_elev = daily_goals_elev*days_gone_by # distance that should have been reached by now to be on pace for 2500 miles for the year
+
+today_year = dt.datetime.today().year
+# print(f"Today's month is the {this_month}th month and year is {today_year}")
+
+
+where_i_am_elev = grouped_by_day[(grouped_by_day.year == today_year) & (grouped_by_day.month == this_month)]['Cummulative Elevation'].max()
+# print(f"I should have reached {should_be_reached} miles. I've done {where_i_am} miles")
+
+pace_elev = round(where_i_am_elev - should_be_reached_elev, 1)
+
+col1, col2, = st.columns(2)
+
+with col1:
+    st.metric(f'{today_year} Elevation Goal', "{:,}".format(elevation_goal) + ' feet')
+with col2:
+    st.metric(f'Elevation Gain through {today.strftime("%m/%d/%Y")}', "{:,}".format(where_i_am_elev) + ' feet', f'{"{:,}".format(pace_elev)} ' + 'feet behind' if pace_elev <0 else f'{"{:,}".format(pace_elev)} ' + 'feet ahead')
