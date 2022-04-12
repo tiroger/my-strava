@@ -69,7 +69,7 @@ total_time = processed_data.moving_time.sum()
 ############
 
 with st.sidebar:
-    st.title('Overview')
+    st.markdown('<h1 style="color:#FC4C02">Overview</h1>', unsafe_allow_html=True)
     st.subheader(f'Member since {start_date}')
 
 
@@ -130,15 +130,15 @@ with st.sidebar:
 # MAIN PAGE #
 #############
 
-st.title('MY JOURNEY ON STRAVA')
-st.subheader('Activities')
+st.markdown('<h1 style="color:#FC4C02">MY STRAVA JOURNEY</h1>', unsafe_allow_html=True)
+st.markdown('<h2 style="color:#45738F">Activities</h2>', unsafe_allow_html=True)
 
 ####################
 # Activities Table #
 ####################
 
 # Filter by activity type
-activity_type = st.selectbox('Filter by activity type', processed_data.type.unique()) # Select from dropdown
+activity_type = st.selectbox('Filter by sport', processed_data.type.unique()) # Select from dropdown
 
 # Processing data for table
 streamlit_df = processed_data[['start_date_local', 'name', 'type', 'moving_time', 'distance', 'total_elevation_gain', 'average_speed', 'average_cadence', 'average_watts', 'average_heartrate', 'suffer_score']]
@@ -154,7 +154,7 @@ st.dataframe(streamlit_df)
 # Yearly Progression line chart #
 #################################
 
-st.subheader('Year Progressions')
+st.markdown('<h2 style="color:#45738F">Year Progressions</h2>', unsafe_allow_html=True)
 
 grouped_by_year_and_month = processed_data.groupby(['year', 'month', 'type']).agg({'distance': 'sum', 'total_elevation_gain': 'sum'}).reset_index() # Group by year and month
 
@@ -168,7 +168,7 @@ grouped_by_year_and_month['month'] = grouped_by_year_and_month['month'].apply(la
 
 # Plotly charts
 
-selected_year = st.multiselect('Filter by Year', grouped_by_year_and_month.year.unique(), default=[2021, 2022]) # Filter for year
+selected_year = st.multiselect('Filter by Year', grouped_by_year_and_month.year.unique(), default=[2018, 2019, 2020, 2021, 2022]) # Filter for year
 selected_metric = st.selectbox('Metric', ['Cumulative Distance', 'Cumulative Elevation']) # Filter for desired metric
 
 best_distance = grouped_by_year_and_month['Cumulative Distance'].max()
@@ -237,7 +237,7 @@ st.plotly_chart(fig, use_container_width=True)
 
 
 ##################
-# Best and Goals #
+# Bests and Goals #
 ##################
 
 col1, col2 = st.columns(2)
@@ -256,18 +256,18 @@ d0 = dt.datetime(2022, 1, 1)
 d1 = dt.datetime.today()
 delta = d1 - d0
 
-days_gone_by = delta.days
+days_gone_by = delta.days # number of days since the beginning of the year
 
-distance_goal = 2500
-monthly_goal = distance_goal/12
-daily_goals = distance_goal/365
+distance_goal = 2500 # distance goal for 2022
+monthly_goal = distance_goal/12 # monthly distance to reach 2500 miles
+daily_goals = distance_goal/365 # daily distance to reach 2500 miles
 
 # Cumulative distance per day
 grouped_by_day = processed_data.groupby(['year', 'month', 'day']).agg({'distance': 'sum'}).reset_index()
 # Daily cumulative distance
 grouped_by_day['Cummulative Distance'] = grouped_by_day.groupby(['year'])['distance'].cumsum()
 
-should_be_reached = daily_goals*days_gone_by
+should_be_reached = daily_goals*days_gone_by # distance that should have been reached by now to be on pace for 2500 miles for the year
 
 today_year = dt.datetime.today().year
 # print(f"Today's month is the {this_month}th month and year is {today_year}")
@@ -277,9 +277,9 @@ where_i_am = grouped_by_day[(grouped_by_day.year == today_year) & (grouped_by_da
 # print(f"I should have reached {should_be_reached} miles. I've done {where_i_am} miles")
 
 
-col1, col2 = st.columns(2)
+col1, col2, = st.columns(2)
 
 with col1:
     st.metric(f'2022 Distance Goal', "{:,}".format(distance_goal) + ' miles')
 with col2:
-    st.metric(f'Distance through {today.strftime("%m/%d/%Y")}', "{:,}".format(where_i_am) + ' miles', round(where_i_am - should_be_reached, 0))
+    st.metric(f'Distance through {today.strftime("%m/%d/%Y")}', "{:,}".format(where_i_am) + ' miles', round(where_i_am - should_be_reached, 1))
