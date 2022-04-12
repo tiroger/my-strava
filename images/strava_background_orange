@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html class='' dir='ltr' lang='en' xmlns:fb='http://www.facebook.com/2008/fbml' xmlns:og='http://opengraphprotocol.org/schema/' xmlns='http://www.w3.org/TR/html5'>
+<head>
+	<title>Strava</title>
+
+	<meta charset='UTF-8'>
+	<meta content='yes' name='apple-mobile-web-app-capable'>
+	<meta content='black' name='apple-mobile-web-app-status-bar-style'>
+	<meta content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable = yes' name='viewport'>
+  <meta property="fb:app_id" content="1376751139010684">
+      <meta property="og:url" content="https://blog.strava.com/to-our-fellow-athletes/">
+    <meta property="og:title" content="To Our Fellow Athletes">
+    <meta property="og:type" content="article">
+    <meta property="og:description" content="Many of you, from all around the world, have been asking us how to approach being active during these very challenging times. As part of our commitment to serving athletes, we’re doing our best to respond and help. Like always, when we have hard choices to make, we look to our values and core beliefs.">
+    <meta property="og:image" content="https://blog.strava.com/wp-content/uploads/2020/03/Background-NEW.png">
+  
+  <script type="text/javascript">
+    document.documentElement.classList.add("js");
+  </script>
+
+  <script src="//rum-static.pingdom.net/pa-5a29bbab6f8fe500080000f9.js" async></script>
+  <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+
+  <meta name='robots' content='index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' />
+
+	<!-- This site is optimized with the Yoast SEO plugin v16.6.1 - https://yoast.com/wordpress/plugins/seo/ -->
+	<link rel="canonical" href="https://blog.strava.com/to-our-fellow-athletes/" />
+	<meta property="og:locale" content="en_US" />
+	<meta property="og:type" content="article" />
+	<meta property="og:title" content="[:en]To Our Fellow Athletes[:de]Post #19970[:] - Strava" />
+	<meta property="og:description" content="[:en]Many of you, from all around the world, have been asking us how to approach being active during these very challenging times. As part of our commitment to serving athletes, we’re doing our best to respond and help. Like always, when we have hard choices to make, we look to our values and core beliefs.[:]" />
+	<meta property="og:url" content="https://blog.strava.com/to-our-fellow-athletes/" />
+	<meta property="og:site_name" content="Strava" />
+	<meta property="article:modified_time" content="2020-03-20T07:59:16+00:00" />
+	<meta property="og:image" content="https://blog.strava.com/wp-content/uploads/2020/03/Background-NEW.png" />
+	<meta property="og:image:width" content="2700" />
+	<meta property="og:image:height" content="1320" />
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:site" content="@strava" />
+	<script type="application/ld+json" class="yoast-schema-graph">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://blog.strava.com/#website","url":"https://blog.strava.com/","name":"Strava","description":"","potentialAction":[{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"https://blog.strava.com/?s={search_term_string}"},"query-input":"required name=search_term_string"}],"inLanguage":"en-US"},{"@type":"ImageObject","@id":"https://blog.strava.com/to-our-fellow-athletes/#primaryimage","inLanguage":"en-US","url":"https://blog.strava.com/wp-content/uploads/2020/03/Background-NEW.png","contentUrl":"https://blog.strava.com/wp-content/uploads/2020/03/Background-NEW.png","width":2700,"height":1320},{"@type":"WebPage","@id":"https://blog.strava.com/to-our-fellow-athletes/#webpage","url":"https://blog.strava.com/to-our-fellow-athletes/","name":"[:en]To Our Fellow Athletes[:de]Post #19970[:] - Strava","isPartOf":{"@id":"https://blog.strava.com/#website"},"primaryImageOfPage":{"@id":"https://blog.strava.com/to-our-fellow-athletes/#primaryimage"},"datePublished":"2020-03-17T23:41:16+00:00","dateModified":"2020-03-20T07:59:16+00:00","breadcrumb":{"@id":"https://blog.strava.com/to-our-fellow-athletes/#breadcrumb"},"inLanguage":"en-US","potentialAction":[{"@type":"ReadAction","target":["https://blog.strava.com/to-our-fellow-athletes/"]}]},{"@type":"BreadcrumbList","@id":"https://blog.strava.com/to-our-fellow-athletes/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://blog.strava.com/"},{"@type":"ListItem","position":2,"name":"To Our Fellow Athletes"}]}]}</script>
+	<!-- / Yoast SEO plugin. -->
+
+
+<link rel='dns-prefetch' href='//cdnjs.cloudflare.com' />
+<link rel='dns-prefetch' href='//www.strava.com' />
+<link rel='dns-prefetch' href='//s.w.org' />
+<link rel="alternate" type="application/rss+xml" title="Strava &raquo; Feed" href="https://blog.strava.com/feed/" />
+<link rel="alternate" type="application/rss+xml" title="Strava &raquo; Comments Feed" href="https://blog.strava.com/comments/feed/" />
+		<script type="text/javascript">
+			window._wpemojiSettings = {"baseUrl":"https:\/\/s.w.org\/images\/core\/emoji\/13.0.1\/72x72\/","ext":".png","svgUrl":"https:\/\/s.w.org\/images\/core\/emoji\/13.0.1\/svg\/","svgExt":".svg","source":{"concatemoji":"https:\/\/blog.strava.com\/wp-includes\/js\/wp-emoji-release.min.js?ver=5.7.6"}};
+			!function(e,a,t){var n,r,o,i=a.createElement("canvas"),p=i.getContext&&i.getContext("2d");function s(e,t){var a=String.fromCharCode;p.clearRect(0,0,i.width,i.height),p.fillText(a.apply(this,e),0,0);e=i.toDataURL();return p.clearRect(0,0,i.width,i.height),p.fillText(a.apply(this,t),0,0),e===i.toDataURL()}function c(e){var t=a.createElement("script");t.src=e,t.defer=t.type="text/javascript",a.getElementsByTagName("head")[0].appendChild(t)}for(o=Array("flag","emoji"),t.supports={everything:!0,everythingExceptFlag:!0},r=0;r<o.length;r++)t.supports[o[r]]=function(e){if(!p||!p.fillText)return!1;switch(p.textBaseline="top",p.font="600 32px Arial",e){case"flag":return s([127987,65039,8205,9895,65039],[127987,65039,8203,9895,65039])?!1:!s([55356,56826,55356,56819],[55356,56826,8203,55356,56819])&&!s([55356,57332,56128,56423,56128,56418,56128,56421,56128,56430,56128,56423,56128,56447],[55356,57332,8203,56128,56423,8203,56128,56418,8203,56128,56421,8203,56128,56430,8203,56128,56423,8203,56128,56447]);case"emoji":return!s([55357,56424,8205,55356,57212],[55357,56424,8203,55356,57212])}return!1}(o[r]),t.supports.everything=t.supports.everything&&t.supports[o[r]],"flag"!==o[r]&&(t.supports.everythingExceptFlag=t.supports.everythingExceptFlag&&t.supports[o[r]]);t.supports.everythingExceptFlag=t.supports.everythingExceptFlag&&!t.supports.flag,t.DOMReady=!1,t.readyCallback=function(){t.DOMReady=!0},t.supports.everything||(n=function(){t.readyCallback()},a.addEventListener?(a.addEventListener("DOMContentLoaded",n,!1),e.addEventListener("load",n,!1)):(e.attachEvent("onload",n),a.attachEvent("onreadystatechange",function(){"complete"===a.readyState&&t.readyCallback()})),(n=t.source||{}).concatemoji?c(n.concatemoji):n.wpemoji&&n.twemoji&&(c(n.twemoji),c(n.wpemoji)))}(window,document,window._wpemojiSettings);
+		</script>
+		<style type="text/css">
+img.wp-smiley,
+img.emoji {
+	display: inline !important;
+	border: none !important;
+	box-shadow: none !important;
+	height: 1em !important;
+	width: 1em !important;
+	margin: 0 .07em !important;
+	vertical-align: -0.1em !important;
+	background: none !important;
+	padding: 0 !important;
+}
+</style>
+	<link rel='stylesheet' id='wp-block-library-css'  href='https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-includes/css/dist/block-library/style.min.css?ver=5.7.6' type='text/css' media='all' />
+<link rel='stylesheet' id='fl-builder-layout-19970-css'  href='https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/uploads/bb-plugin/cache/19970-layout.css?ver=ca60c96774d734f1754e67a9e748b2e8' type='text/css' media='all' />
+<link rel='stylesheet' id='swiftype-facets-css'  href='https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/plugins/swiftype-search/Search/../assets/facets.css?ver=5.7.6' type='text/css' media='all' />
+<link rel='stylesheet' id='strava-fonts-css'  href='https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/themes/nouveau/assets/css/fonts.css?ver=1.0.0' type='text/css' media='screen' />
+<link rel='stylesheet' id='strava-style-css'  href='https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/themes/nouveau/assets/css/blog.css?v=19&#038;ver=1.0.0' type='text/css' media='screen' />
+<link rel='stylesheet' id='strava-lity-css'  href='https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/themes/nouveau/vendor/javascripts/lity/lity.min.css?ver=1.0.0' type='text/css' media='screen' />
+<link rel='stylesheet' id='swiftype-css'  href='https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/plugins/swiftype-search/Search/../assets/autocomplete.css?ver=5.7.6' type='text/css' media='all' />
+<link rel='stylesheet' id='font-awesome-5-css'  href='https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/plugins/bb-plugin/fonts/fontawesome/5.15.1/css/all.min.css?ver=2.4.2.4' type='text/css' media='all' />
+<link rel='stylesheet' id='font-awesome-css'  href='https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/plugins/bb-plugin/fonts/fontawesome/5.15.1/css/v4-shims.min.css?ver=2.4.2.4' type='text/css' media='all' />
+<link rel='stylesheet' id='dkpdf-frontend-css'  href='https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/plugins/dk-pdf/assets/css/frontend.css?ver=1.9.6' type='text/css' media='all' />
+<script type='text/javascript' src='https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-includes/js/jquery/jquery.min.js?ver=3.5.1' id='jquery-core-js'></script>
+<script type='text/javascript' src='https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.3.2' id='jquery-migrate-js'></script>
+<script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/howler/2.0.15/howler.core.min.js?ver=2.0.15' id='howler-js-js'></script>
+<script type='text/javascript' src='https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/themes/nouveau/assets/js/main.js?v=19&#038;ver=1.0.0' id='strava-javascript-js'></script>
+<script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/vanilla-lazyload/8.7.1/lazyload.min.js?ver=1' id='strava-lazyload-js'></script>
+<script type='text/javascript' id='swiftype-js-extra'>
+/* <![CDATA[ */
+var swiftypeParams = {"engineKey":"y6fqqp7TfBKwRFHbhg8R"};
+/* ]]> */
+</script>
+<script type='text/javascript' src='https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/plugins/swiftype-search/Search/../assets/install_swiftype.min.js?ver=5.7.6' id='swiftype-js'></script>
+<link rel="https://api.w.org/" href="https://blog.strava.com/wp-json/" /><link rel="alternate" type="application/json" href="https://blog.strava.com/wp-json/wp/v2/pages/19970" /><link rel="EditURI" type="application/rsd+xml" title="RSD" href="https://blog.strava.com/xmlrpc.php?rsd" />
+<link rel="wlwmanifest" type="application/wlwmanifest+xml" href="https://blog.strava.com/wp-includes/wlwmanifest.xml" /> 
+<link rel='shortlink' href='https://blog.strava.com/?p=19970' />
+<link rel="alternate" type="application/json+oembed" href="https://blog.strava.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fblog.strava.com%2Fto-our-fellow-athletes%2F" />
+<link rel="alternate" type="text/xml+oembed" href="https://blog.strava.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fblog.strava.com%2Fto-our-fellow-athletes%2F&#038;format=xml" />
+<style type="text/css">
+.qtranxs_flag_en {background-image: url(https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/plugins/qtranslate-x/flags/us.png); background-repeat: no-repeat;}
+.qtranxs_flag_de {background-image: url(https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/plugins/qtranslate-x/flags/de.png); background-repeat: no-repeat;}
+.qtranxs_flag_fr {background-image: url(https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/plugins/qtranslate-x/flags/fr.png); background-repeat: no-repeat;}
+.qtranxs_flag_es {background-image: url(https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/plugins/qtranslate-x/flags/es.png); background-repeat: no-repeat;}
+.qtranxs_flag_ea {background-image: url(https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/plugins/qtranslate-x/flags/es_419.png); background-repeat: no-repeat;}
+.qtranxs_flag_nl {background-image: url(https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/plugins/qtranslate-x/flags/nl.png); background-repeat: no-repeat;}
+.qtranxs_flag_it {background-image: url(https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/plugins/qtranslate-x/flags/it.png); background-repeat: no-repeat;}
+.qtranxs_flag_pt {background-image: url(https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/plugins/qtranslate-x/flags/pt.png); background-repeat: no-repeat;}
+.qtranxs_flag_pb {background-image: url(https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/plugins/qtranslate-x/flags/br.png); background-repeat: no-repeat;}
+.qtranxs_flag_ja {background-image: url(https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/plugins/qtranslate-x/flags/jp.png); background-repeat: no-repeat;}
+.qtranxs_flag_zh {background-image: url(https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/plugins/qtranslate-x/flags/cn.png); background-repeat: no-repeat;}
+.qtranxs_flag_zi {background-image: url(https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/plugins/qtranslate-x/flags/zh_TW.png); background-repeat: no-repeat;}
+.qtranxs_flag_ko {background-image: url(https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/plugins/qtranslate-x/flags/ko.png); background-repeat: no-repeat;}
+.qtranxs_flag_ru {background-image: url(https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/plugins/qtranslate-x/flags/ru.png); background-repeat: no-repeat;}
+.qtranxs_flag_uk {background-image: url(https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/plugins/qtranslate-x/flags/gb.png); background-repeat: no-repeat;}
+</style>
+<link hreflang="en" href="https://blog.strava.com/en/to-our-fellow-athletes/" rel="alternate" />
+<link hreflang="de" href="https://blog.strava.com/de/to-our-fellow-athletes/" rel="alternate" />
+<link hreflang="fr" href="https://blog.strava.com/fr/to-our-fellow-athletes/" rel="alternate" />
+<link hreflang="es" href="https://blog.strava.com/es/to-our-fellow-athletes/" rel="alternate" />
+<link hreflang="es_419" href="https://blog.strava.com/ea/to-our-fellow-athletes/" rel="alternate" />
+<link hreflang="nl" href="https://blog.strava.com/nl/to-our-fellow-athletes/" rel="alternate" />
+<link hreflang="it" href="https://blog.strava.com/it/to-our-fellow-athletes/" rel="alternate" />
+<link hreflang="pt" href="https://blog.strava.com/pt/to-our-fellow-athletes/" rel="alternate" />
+<link hreflang="pt-br" href="https://blog.strava.com/pb/to-our-fellow-athletes/" rel="alternate" />
+<link hreflang="ja" href="https://blog.strava.com/ja/to-our-fellow-athletes/" rel="alternate" />
+<link hreflang="cn" href="https://blog.strava.com/zh/to-our-fellow-athletes/" rel="alternate" />
+<link hreflang="zh_TW" href="https://blog.strava.com/zi/to-our-fellow-athletes/" rel="alternate" />
+<link hreflang="ko_KR" href="https://blog.strava.com/ko/to-our-fellow-athletes/" rel="alternate" />
+<link hreflang="ru" href="https://blog.strava.com/ru/to-our-fellow-athletes/" rel="alternate" />
+<link hreflang="uk" href="https://blog.strava.com/uk/to-our-fellow-athletes/" rel="alternate" />
+<link hreflang="x-default" href="https://blog.strava.com/to-our-fellow-athletes/" rel="alternate" />
+<meta name="generator" content="qTranslate-X 3.4.6.8" />
+<link rel="icon" href="https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/uploads/2018/03/apple-touch-icon-152x152.png" sizes="32x32" />
+<link rel="icon" href="https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/uploads/2018/03/apple-touch-icon-152x152.png" sizes="192x192" />
+<link rel="apple-touch-icon" href="https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/uploads/2018/03/apple-touch-icon-152x152.png" />
+<meta name="msapplication-TileImage" content="https://blog.strava.com/wp-content/uploads/2018/03/apple-touch-icon-152x152.png" />
+</head>
+
+<body class="   ">
+	<div class="page">
+    <nav class="main-menu">
+	<div class="main-menu-container">
+		<button class="close-button">
+			<span class="line"></span>
+			<span class="line"></span>
+		</button>
+
+    <div class="menu-strava-global-nav-container"><ul id="menu-strava-global-nav" class="links topics"><li id="menu-item-12515" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-12515 link topic"><a href="https://blog.strava.com/topics/">All Topics</a></li>
+<li id="menu-item-12506" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-12506 link topic"><a href="https://blog.strava.com/topics/community/">Community</a></li>
+<li id="menu-item-12507" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-12507 link topic"><a href="https://blog.strava.com/topics/cycling/">Cycling</a></li>
+<li id="menu-item-12508" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-12508 link topic"><a href="https://blog.strava.com/topics/running/">Running</a></li>
+<li id="menu-item-12516" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-12516 link topic"><a href="https://blog.strava.com/topics/features/">Technology</a></li>
+<li id="menu-item-12509" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-12509 link topic"><a href="https://blog.strava.com/topics/training/">Training</a></li>
+<li id="menu-item-17471" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-17471 link topic"><a href="https://blog.strava.com/podcast/">Podcast</a></li>
+</ul></div>
+		<p class="link-header">Languages</p>
+
+		<ul class = "links languages"><li class="lang-en link language language is-selected"><a href="https://blog.strava.com/en/to-our-fellow-athletes/" title="English (US) (en)">English (US)</a></li><li class="lang-de link language language"><a href="https://blog.strava.com/de/to-our-fellow-athletes/" title="Deutsch (de)">Deutsch</a></li><li class="lang-fr link language language"><a href="https://blog.strava.com/fr/to-our-fellow-athletes/" title="Français (fr)">Français</a></li><li class="lang-es link language language"><a href="https://blog.strava.com/es/to-our-fellow-athletes/" title="Español (es)">Español</a></li><li class="lang-ea link language language"><a href="https://blog.strava.com/ea/to-our-fellow-athletes/" title="Español de América (ea)">Español de América</a></li><li class="lang-nl link language language"><a href="https://blog.strava.com/nl/to-our-fellow-athletes/" title="Nederlands (nl)">Nederlands</a></li><li class="lang-it link language language"><a href="https://blog.strava.com/it/to-our-fellow-athletes/" title="Italiano (it)">Italiano</a></li><li class="lang-pt link language language"><a href="https://blog.strava.com/pt/to-our-fellow-athletes/" title="Português (pt)">Português</a></li><li class="lang-pb link language language"><a href="https://blog.strava.com/pb/to-our-fellow-athletes/" title="Português do Brasil (pb)">Português do Brasil</a></li><li class="lang-ja link language language"><a href="https://blog.strava.com/ja/to-our-fellow-athletes/" title="日本語 (ja)">日本語</a></li><li class="lang-zh link language language"><a href="https://blog.strava.com/zh/to-our-fellow-athletes/" title="简体中文 (zh)">简体中文</a></li><li class="lang-zi link language language"><a href="https://blog.strava.com/zi/to-our-fellow-athletes/" title="繁體中文 (zi)">繁體中文</a></li><li class="lang-ko link language language"><a href="https://blog.strava.com/ko/to-our-fellow-athletes/" title="한국어 (ko)">한국어</a></li><li class="lang-ru link language language"><a href="https://blog.strava.com/ru/to-our-fellow-athletes/" title="Русский (ru)">Русский</a></li></ul>
+		<p class="link-header">Get Started</p>
+
+		<ul class="links">
+			<li class="link"><a href="https://www.strava.com/register/free?cta=sign-up&source=blog">Sign Up</a></li>
+			<li class="link"><a href="https://strava.app.link/Ap67iuEe5y">Get the App</a></li>
+		</ul>
+
+		<p class="link-header">Learn More</p>
+
+		<ul class="links">
+			<li class="link"><a href="https://www.strava.com?cta=visit-homepage&source=blog">Visit Strava.com</a></li>
+		</ul>
+	</div>
+</nav>
+    <section class="search">
+	<div class="container">
+		<button class="close-button">
+			<span class="line"></span>
+			<span class="line"></span>
+		</button>
+
+		<div class="grid">
+			<div class="offset-col-2 col-20">
+				<input type="text" name="query" placeholder="" autocomplete="off" required />
+			</div>
+		</div>
+
+		<div class="posts">
+			<div class="grid">
+				<div class="offset-col-3 col-18">
+					<p class="section-header search-section-header">Top Results</p>
+				</div>
+			</div>
+
+			<div class="search-autocomplete-results">
+			</div>
+
+			<div class="action">
+				<div class="content">
+					<a href="#" class="pill-button">
+						<span>Search All</span>
+					</a>
+				</div>
+			</section>
+		</div>
+	</div>
+</section>
+
+		<div class="global-content">
+      <header class="global-header">
+	<div class="left">
+				<a href="/" class="burger">
+			<span class="txt">Menu</span>
+			<span class="line"></span>
+			<span class="line"></span>
+			<span class="line"></span>
+		</a>
+			</div>
+
+	<div class="mid">
+		<div class="grid">
+			<div class="offset-col-3 col-18">
+                              <a href="https://blog.strava.com" class="strava-blog-logo">
+              <svg width="134px" height="17px" viewBox="0 0 134 17" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <g stroke="none" stroke-width="1" fill="" fill-rule="evenodd">
+        <g class="logo" transform="translate(0.000000, -1.000000)">
+            <g>
+              <path d="M13.91,10.19 C14.2315403,10.7812463 14.3902847,11.4472825 14.37,12.12 L14.37,12.12 C14.3836659,12.8571463 14.2226063,13.5870546 13.9,14.25 C13.5861937,14.8788981 13.1309596,15.4265481 12.57,15.85 C11.9439219,16.3081746 11.2388346,16.6471588 10.49,16.85 C9.5949536,17.0993623 8.66907368,17.2205684 7.74,17.21 C6.28604872,17.2227686 4.83889271,17.0102492 3.45,16.58 C2.18698169,16.1920778 1.01876852,15.5449626 0.02,14.68 L2.71,11.48 C3.48017312,12.084041 4.35465587,12.5416192 5.29,12.83 C6.16158518,13.0983833 7.068036,13.2365412 7.98,13.24 C8.32217866,13.2650873 8.66533385,13.2067509 8.98,13.07 C9.16264226,12.9847206 9.27954671,12.8015703 9.28,12.6 L9.28,12.6 C9.28,12.38 9.13,12.2 8.84,12.06 C8.31175685,11.8495145 7.76169222,11.6985822 7.2,11.61 C6.35333333,11.4366667 5.54666667,11.2366667 4.78,11.01 C4.07750647,10.8059743 3.40502796,10.5100838 2.78,10.13 C2.2188963,9.79303487 1.74320064,9.33102829 1.39,8.78 C1.02867774,8.17690246 0.848188314,7.48271237 0.87,6.78 L0.87,6.78 C0.863550118,6.0907881 1.00685237,5.40839642 1.29,4.78 C1.57089511,4.15870004 1.98783585,3.60847497 2.51,3.17 C3.09920599,2.68205196 3.77883137,2.31505426 4.51,2.09 C5.39726482,1.817272 6.3218761,1.68566674 7.25,1.7 C8.54561887,1.67862391 9.83698172,1.85395255 11.08,2.22 C12.1668606,2.54281967 13.1841717,3.06503937 14.08,3.76 L11.63,7.16 C10.9425496,6.6578882 10.1750318,6.27581987 9.36,6.03 C8.63137005,5.8017623 7.87346829,5.68049802 7.11,5.67 C6.82294839,5.64901477 6.53568687,5.70785147 6.28,5.84 C6.11380962,5.92863487 6.01,6.1016509 6.01,6.29 L6.01,6.29 C6.01,6.49 6.14,6.66 6.42,6.81 C6.93009198,7.02306006 7.46390799,7.17414006 8.01,7.26 C8.89503813,7.41363786 9.76996996,7.62068279 10.63,7.88 C11.3380473,8.09644455 12.0115239,8.41297855 12.63,8.82 C13.1558202,9.1727726 13.5937152,9.64145709 13.91,10.19 L13.91,10.19 Z M14.09,6.19 L18.52,6.19 L18.52,16.98 L23.52,16.98 L23.52,6.19 L27.91,6.19 L27.91,1.98 L14.08,1.98 L14.09,6.19 Z M72.41,0.98 L64.32,16.98 L69.14,16.98 L72.42,10.51 L75.7,16.98 L80.52,16.98 L72.41,0.98 Z M49.91,0.98 L58,16.98 L53.18,16.98 L49.91,10.51 L46.61,16.98 L37.61,16.98 L34.77,12.68 L33.7,12.68 L33.7,16.98 L28.7,16.98 L28.7,1.98 L36.05,1.98 C37.1746034,1.94660197 38.2968425,2.10209292 39.37,2.44 C40.1556563,2.69714995 40.8733824,3.12778556 41.47,3.7 C41.9038723,4.1405659 42.2440409,4.66442551 42.47,5.24 C42.7072776,5.87957328 42.8226012,6.55794733 42.81,7.24 L42.81,7.24 C42.8416305,8.230773 42.5618432,9.20653126 42.01,10.03 C41.4560333,10.808988 40.7079409,11.4295255 39.84,11.83 L42.45,15.64 L49.91,0.98 Z M37.82,7.57 C37.8476603,7.14379655 37.6504283,6.73416079 37.3,6.49 C36.8797878,6.23366972 36.3914015,6.11157315 35.9,6.14 L33.71,6.14 L33.71,9.08 L35.91,9.08 C36.4132046,9.10839165 36.9118872,8.97142953 37.33,8.69 C37.6730064,8.43958809 37.8681452,8.03429972 37.85,7.61 L37.82,7.57 Z M64.43,1.98 L61.15,8.45 L57.91,1.98 L53.09,1.98 L61.19,17.98 L69.28,1.98 L64.43,1.98 Z" id="Shape"></path>
+              <path d="M83.91,11.54 L85,11.37 C85.0274408,12.0658844 85.2961327,12.7305433 85.76,13.25 C86.2586118,13.6929961 86.9146438,13.9164795 87.58,13.87 C88.1750005,13.9130751 88.7679415,13.7622084 89.27,13.44 C89.6268098,13.175705 89.8321292,12.7538671 89.82,12.31 C89.8449425,11.8726109 89.6544998,11.4506497 89.31,11.18 C88.6543312,10.787519 87.9378569,10.5070126 87.19,10.35 C86.3529963,10.1799083 85.5599071,9.83952665 84.86,9.35 C84.4195226,8.9628675 84.1801173,8.39566112 84.21,7.81 C84.215131,7.16546331 84.513209,6.55826723 85.02,6.16 C85.6429514,5.6652859 86.4257114,5.41622592 87.22,5.46 C88.0357815,5.41638614 88.8404577,5.66452418 89.49,6.16 C90.0529713,6.63071207 90.4376665,7.28010576 90.58,8 L89.58,8.27 C89.3677826,7.49249731 88.7951219,6.86419137 88.0405739,6.58098831 C87.2860259,6.29778526 86.441381,6.39413662 85.77,6.84 C85.4539901,7.07502043 85.2684104,7.44617981 85.27,7.84 C85.2471468,8.19911342 85.4189973,8.54281451 85.72,8.74 C86.3552114,9.06697247 87.0264205,9.31867589 87.72,9.49 C88.6108949,9.69158589 89.4513413,10.072679 90.19,10.61 C90.6622965,11.0570931 90.911451,11.6909715 90.87,12.34 C90.8759281,13.029521 90.5799971,13.6871454 90.06,14.14 C88.4892604,15.2056243 86.4115606,15.1410744 84.91,13.98 C84.2858891,13.3186432 83.9295331,12.4491345 83.91,11.54 L83.91,11.54 Z" id="Shape"></path>
+              <path d="M93.35,12.19 L93.35,6.7 L92.11,6.7 L92.11,5.7 L93.39,5.7 L93.39,3.52 L94.45,3.52 L94.45,5.7 L96.63,5.7 L96.63,6.7 L94.45,6.7 L94.45,12.04 C94.4199303,12.4328442 94.4959096,12.8265552 94.67,13.18 C94.8838972,13.427038 95.2050004,13.5539857 95.53,13.52 L96.17,13.52 L96.17,14.59 L95.5,14.59 C94.0666667,14.59 93.35,13.79 93.35,12.19 L93.35,12.19 Z" id="Shape"></path>
+              <path d="M101.91,14.84 C100.815239,14.8698776 99.763769,14.4119204 99.04,13.59 C98.2479896,12.6207309 97.8483346,11.3896509 97.92,10.14 C97.8509331,8.88696619 98.2662491,7.65533942 99.08,6.7 C99.7959229,5.88362464 100.83431,5.42293185 101.92,5.44 C102.987961,5.42555111 104.006901,5.88737294 104.7,6.7 C105.493209,7.66522237 105.896332,8.89242814 105.83,10.14 C105.909811,11.39042 105.517241,12.6252322 104.73,13.6 C104.024994,14.4173126 102.988865,14.8729152 101.91,14.84 L101.91,14.84 Z M101.91,13.84 C102.696893,13.84 103.437864,13.4695146 103.91,12.84 C104.978449,11.1876772 104.978449,9.06232284 103.91,7.41 C103.437864,6.78048539 102.696893,6.41 101.91,6.41 C101.09545,6.39890535 100.322433,6.76877007 99.82,7.41 C99.2333056,8.19440094 98.9460522,9.16255138 99.01,10.14 C98.9463258,11.1205565 99.2413144,12.0908203 99.84,12.87 C100.34512,13.4931759 101.107889,13.8506085 101.91,13.84 L101.91,13.84 Z" id="Shape"></path>
+              <path d="M108.05,14.59 L108.05,5.7 L109.11,5.7 L109.11,6.7 L109.11,6.7 C109.284819,6.34754258 109.564214,6.05766967 109.91,5.87 C110.215912,5.69747719 110.558979,5.60141863 110.91,5.59 C111.046306,5.57595468 111.183694,5.57595468 111.32,5.59 L111.6,5.67 L111.67,5.72 L111.45,6.83 C111.233481,6.72185979 110.990908,6.6768105 110.75,6.7 C110.2856,6.68695672 109.84043,6.88562779 109.54,7.24 C109.196041,7.6918013 109.028906,8.25365763 109.07,8.82 L109.07,14.61 L108.05,14.59 Z" id="Shape"></path>
+              <path d="M113.67,4.24 L113.67,2.85 L115.03,2.85 L115.03,4.24 L113.67,4.24 Z M113.8,14.59 L113.8,5.7 L114.91,5.7 L114.91,14.59 L113.8,14.59 Z" id="Shape"></path>
+              <path d="M124.2,11.98 L125.12,12.48 C124.822754,13.1615796 124.341408,13.7468132 123.73,14.17 C123.044834,14.6374634 122.229049,14.8755468 121.4,14.85 C120.258426,14.8960154 119.156731,14.425959 118.4,13.57 C117.59532,12.6213222 117.180731,11.4025725 117.24,10.16 C117.181231,8.92259709 117.583909,7.70743462 118.37,6.75 C119.098796,5.90830132 120.167075,5.43840565 121.28,5.47 C122.381129,5.42586289 123.443253,5.88158403 124.17,6.71 C124.948481,7.68897618 125.336789,8.92158911 125.26,10.17 L125.26,10.49 L118.35,10.49 C118.330103,11.3429157 118.597802,12.1777139 119.11,12.86 C119.636507,13.5376082 120.463449,13.91179 121.32,13.86 C121.658958,13.860275 121.99604,13.8097126 122.32,13.71 C122.580002,13.6327401 122.828779,13.5217988 123.06,13.38 C123.258987,13.2422507 123.434556,13.0734339 123.58,12.88 C123.703864,12.7335404 123.814309,12.5762405 123.91,12.41 L124.2,11.98 Z M118.43,9.55 L124.19,9.55 C124.186865,9.21200827 124.139804,8.87585817 124.05,8.55 C123.952095,8.19558914 123.800325,7.85832217 123.6,7.55 C123.375814,7.2185289 123.064337,6.95550375 122.7,6.79 C122.274815,6.59058425 121.809547,6.49137276 121.34,6.5 C120.863768,6.49050503 120.39275,6.60052368 119.97,6.82 C119.602303,7.00761011 119.288958,7.28652157 119.06,7.63 C118.857022,7.93953622 118.698792,8.2761962 118.59,8.63 C118.494512,8.92439296 118.440657,9.23069177 118.43,9.54 L118.43,9.55 Z" id="Shape"></path>
+              <path d="M126.91,11.54 L128,11.37 C128.027441,12.0658844 128.296133,12.7305433 128.76,13.25 C129.258612,13.6929961 129.914644,13.9164795 130.58,13.87 C131.175,13.9130751 131.767941,13.7622084 132.27,13.44 C132.62681,13.175705 132.832129,12.7538671 132.82,12.31 C132.844942,11.8726109 132.6545,11.4506497 132.31,11.18 C131.654331,10.787519 130.937857,10.5070126 130.19,10.35 C129.352996,10.1799083 128.559907,9.83952665 127.86,9.35 C127.419523,8.9628675 127.180117,8.39566112 127.21,7.81 C127.215131,7.16546331 127.513209,6.55826723 128.02,6.16 C128.642951,5.6652859 129.425711,5.41622592 130.22,5.46 C131.035781,5.41638614 131.840458,5.66452418 132.49,6.16 C133.052971,6.63071207 133.437666,7.28010576 133.58,8 L132.58,8.27 C132.367783,7.49249731 131.795122,6.86419137 131.040574,6.58098831 C130.286026,6.29778526 129.441381,6.39413662 128.77,6.84 C128.45399,7.07502043 128.26841,7.44617981 128.27,7.84 C128.247147,8.19911342 128.418997,8.54281451 128.72,8.74 C129.355211,9.06697247 130.02642,9.31867589 130.72,9.49 C131.610895,9.69158589 132.451341,10.072679 133.19,10.61 C133.662296,11.0570931 133.911451,11.6909715 133.87,12.34 C133.875928,13.029521 133.579997,13.6871454 133.06,14.14 C131.48926,15.2056243 129.411561,15.1410744 127.91,13.98 C127.285889,13.3186432 126.929533,12.4491345 126.91,11.54 L126.91,11.54 Z" id="Shape"></path>
+            </g>
+        </g>
+    </g>
+</svg>
+    				</a>
+                  			</div>
+		</div>
+	</div>
+
+	<div class="right">
+    		<a href="/search/" class="search-icon">
+			<svg width="36px" height="36px" viewBox="0 0 36 36" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+			    <g class="icon" id="Page-1" stroke="none" fill="none" stroke-width="5" fill-rule="evenodd">
+			        <circle cx="14.4" cy="14.1" r="13.5"></circle>
+			        <path d="M24.7,24.4 L35.7,35.4"></path>
+			    </g>
+			</svg>
+		</a>
+    	</div>
+</header>
+
+	
+  <article class="post marketing-page">
+    <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html><body><div class="fl-builder-content fl-builder-content-19970 fl-builder-content-primary fl-builder-global-templates-locked" data-post-id="19970"><div class="fl-row fl-row-full-width fl-row-bg-none fl-node-5e710acfbd8e7" data-node="5e710acfbd8e7">
+	<div class="fl-row-content-wrap">
+						<div class="fl-row-content fl-row-full-width fl-node-content">
+		
+<div class="fl-col-group fl-node-5e710acfbf6c5" data-node="5e710acfbf6c5">
+			<div class="fl-col fl-node-5e710acfbf712" data-node="5e710acfbf712">
+	<div class="fl-col-content fl-node-content">
+	<div class="fl-module fl-module-marketing-header fl-node-5e710acfbd760" data-node="5e710acfbd760">
+	<div class="fl-module-content fl-node-content">
+		<header class="post-header "><div class="background-splash has-responsive-background darken" data-desktop-background="https://blog.strava.com/wp-content/uploads/2020/03/Background-NEW.png" data-mobile-background="https://blog.strava.com/wp-content/uploads/2020/03/Background-NEW.png">
+    <div class="container">
+      <div class="grid top">
+        <div class="offset-col-6 col-12 white">
+                  </div>
+      </div>
+
+      <div class="grid">
+        <div class="offset-col-6 col-12">
+          <h1 class="post-title st-marketing-headline">To Our Fellow Athletes</h1>
+          <h4 class="post-summary st-marketing-subheading">A message about COVID-19</h4>
+        </div>
+      </div>
+
+      <div class="scroll-cta">
+      </div>
+    </div>
+  </div>
+</header><div class="trigger-wayfinding-in"></div>
+	</div>
+</div>
+<div class="fl-module fl-module-marketing-copy fl-node-5e710afd9b4ea" data-node="5e710afd9b4ea">
+	<div class="fl-module-content fl-node-content">
+		<section class="post-content "><div class="grid">
+  <div class="offset-col-2 col-20">
+        <h2 class="aligncenter "></h2>
+    Many of you, from all around the world, have been asking us how to approach being active during these very challenging times. As part of our commitment to serving athletes, we&rsquo;re doing our best to respond and help. Like always, when we have hard choices to make, we look to our values and core beliefs:
+<br><br><strong>We believe that being active is good for people.</strong> It&rsquo;s good for our mental and physical health in so many ways, especially in times of stress. If you&rsquo;re like us, and we know you are, it&rsquo;s tied to our sense of identity and happiness, and is a source of routine and calm when we need it most. We&rsquo;ve asked athlete and epidemiology researcher Dr. Megan Roche to help us understand a bit more about being an athlete these days, and hope <a href="https://blog.strava.com/galleries/being-active-during-the-covid-19-crisis/">her answers</a> give you some clarity and comfort.&nbsp;
+<br><br><strong>Our <a href="https://www.strava.com/community-standards">community standards</a> are rooted in safety and respect.</strong> That&rsquo;s respect for yourselves, each other, and local laws and customs. Your safety and health, and that of the people around you, are of paramount importance &ndash;&nbsp;that&rsquo;s always been our point of view and remains so now. If local government and health officials are asking you to change your way of being active, please follow their instructions to the letter, both for your well-being and your community&rsquo;s. If you feel that taking a break from being active would benefit you or those you love, please do. We&rsquo;ll see you on the other side of that break when you&rsquo;re ready.&nbsp;
+<br><br><strong>Staying connected matters, now as much as ever. </strong>Whether you&rsquo;re able to work out now or not, we believe that we all can play a part in helping each other get through this. We&rsquo;ve seen some heartwarming posts lately in our feeds from athletes offering support and resources, or posts asking for advice that athletes have helped to answer, or inspiring indoor uploads from athletes dedicated to their sport even though they can&rsquo;t get outside. If you can be there for your community on Strava during this time, we encourage you to go for it&hellip; better to help too much than not enough. And a bit of advice that we feel is never a bad idea: Reach out often to those you love and let them know you care.&nbsp;
+<br><br>
+Just like you, our ways of life are changing every day, and we are working hard to adapt in the best interests of our athletes and our employees. We&rsquo;re in this together, we are as committed as ever, and will do everything in our power to take care of one another.&nbsp;
+<br><br>
+The Strava Team  </div>
+</div>
+</section></div>
+</div>
+	</div>
+</div>
+	</div>
+		</div>
+	</div>
+</div>
+</div></body></html>
+    </section>
+    <nav class="social-share-bar">
+      <div class="content">
+        <p class="section-header">Share</p>
+        
+  <ul class="share-buttons">
+      <li class="share-button facebook">
+    <a href="https://www.facebook.com/dialog/share?app_id=1376751139010684&display=popup&href=https://blog.strava.com/to-our-fellow-athletes/&redirect_uri=https://blog.strava.com/to-our-fellow-athletes/"" target = "_blank">
+      <span class="txt">Share on Facebook</span>
+    </a>
+  </li>
+    <li class="share-button twitter">
+    <a href="http://twitter.com/share?url=https://blog.strava.com/to-our-fellow-athletes/&amp;text=To+Our+Fellow+Athletes+via+%40strava" target = "_blank">
+      <span class="txt">Share on Twitter</span>
+    </a>
+  </li>
+    <li class="share-button pinterest">
+    <a href="http://pinterest.com/pin/create/bookmarklet/?is_video=false&url=https://blog.strava.com/to-our-fellow-athletes/&media=https://blog.strava.com/wp-content/uploads/2020/03/Background-NEW.png&description=To Our Fellow Athletes" target = "_blank">
+      <span class="txt">Share on Pinterest</span>
+    </a>
+  </li>
+    <li class="share-button email">
+    <a href="mailto:?subject=To Our Fellow Athletes&amp;body=Many of you, from all around the world, have been asking us how to approach being active during these very challenging times. As part of our commitment to serving athletes, we’re doing our best to respond and help. Like always, when we have hard choices to make, we look to our values and core beliefs.%0D%0DRead story on Strava:%20https://blog.strava.com/to-our-fellow-athletes/">
+      <span class="txt">Share via Email</span>
+    </a>
+  </li>
+    </ul>
+
+       </div>
+    </nav>
+  </article>
+
+
+<section class='final-signup'>
+  <div class='wrapper'>
+    <div class='content'>
+      <div class='grid'>
+        <div class='col-24'>
+          <h3>Join Strava for Free:</h3>
+        </div>
+      </div>
+      <div class='signup-button desktop'>
+        <a class="facebook" href="https://strava.com/register">Sign up with Facebook</a>
+      </div>
+      <div class='signup-button desktop'>
+        <a class="google" href="https://strava.com/register">Sign up with Google</a>
+      </div>
+      <div class='signup-button mobile'>
+        <a class="strava" href="https://strava.com/app">Get the App.</a>
+      </div>
+      <p class='email-signup desktop'><a href="https://strava.com/register">Or, sign up with email.</a></p>
+      <sub class='fine-print'>By signing up for Strava, you agree to the <a href="https://strava.com/terms">Terms of Service.</a> View our <a href="https://strava.com/privacy">Privacy Policy.</a></sub>
+    </div>
+  </div>
+</section>
+
+<footer class='global-footer'>
+  <div class='grid'>
+    <div class='offset-col-6 col-5'>
+      <div class='logo branding logo-lg logo-wh'>
+        <img src="https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/themes/nouveau/assets/img/svgs/strava-gray.svg" alt="Strava" />
+      </div>
+      <p class='copyright'>
+        &copy; 2022 Strava, Inc.
+        <a href='https://strava.com/privacy'>All rights reserved</a>
+      </p>
+          </div>
+
+    <div class='col-4 follow'>
+      <h5>Follow</h5>
+      <ul>
+        <li>
+          <a class='social-icon facebook' href='https://www.facebook.com/Strava' target='_blank'>
+            <span class='txt'>Facebook</span>
+          </a>
+        </li>
+        <li>
+          <a class='social-icon instagram' href='https://www.instagram.com/strava' target='_blank'>
+            <span class='txt'>Instagram</span>
+          </a>
+        </li>
+        <li>
+          <a class='social-icon twitter' href='https://www.twitter.com/strava' target='_blank'>
+            <span class='txt'>Twitter</span>
+          </a>
+        </li>
+        <li>
+          <a class='social-icon youtube' href='https://www.youtube.com/stravainc' target='_blank'>
+            <span class='txt'>YouTube</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <div class='offset-col-1 col-4'>
+      <h5>Get Started</h5>
+      <ul>
+        <li>
+          <a href='https://www.strava.com/register/free?cta=sign-up&source=blog-footer'>
+            <span class='txt'>Sign Up</span>
+          </a>
+        </li>
+        <li>
+          <a href='https://www.strava.com/login'>
+            <span class='txt'>Login</span>
+          </a>
+        </li>
+        <li class='badge apple-badge'>
+          <a href='https://strava.app.link/gHZxO4jb5y' target='_blank'>
+            <img src="https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/themes/nouveau/assets/img/app-store-badge.png" alt="Strava for iOS" />
+          </a>
+        </li>
+        <li class='badge apple-badge'>
+          <a href='https://strava.app.link/gHZxO4jb5y' target='_blank'>
+            <img src="https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/themes/nouveau/assets/img/play-store-badge.png" alt="Strava for Android" />
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</footer>
+</div>
+
+</div>
+<script type='text/javascript' src='https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/uploads/bb-plugin/cache/19970-layout.js?ver=4a4311c3b5484791c431c6ff0e17ab4f' id='fl-builder-layout-19970-js'></script>
+<script type='text/javascript' src='https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/plugins/dk-pdf/assets/js/frontend.js?ver=1.9.6' id='dkpdf-frontend-js'></script>
+<script type='text/javascript' src='https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/plugins/strava-bb-editor/fl-custom-strava.js?ver=1.0.0' id='bb-strava-scripts-js'></script>
+<script type='text/javascript' src='https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/themes/nouveau/vendor/javascripts/strava-analytics.js?ver=1.3' id='strava-analytics-js-js'></script>
+<script type='text/javascript' src='https://www.strava.com/cookie-banner.js?ver=1.0.0' id='strava-cookie-js-js'></script>
+<script type='text/javascript' src='https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/themes/nouveau/vendor/javascripts/fitvids/jquery.fitvids.js?ver=1.1' id='strava-fitvids-js'></script>
+<script type='text/javascript' src='https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-content/themes/nouveau/vendor/javascripts/lity/lity.min.js?ver=2.2.2' id='strava-lity-js'></script>
+<script type='text/javascript' src='https://1n4rcn88bk4ziht713dla5ub-wpengine.netdna-ssl.com/wp-includes/js/wp-embed.min.js?ver=5.7.6' id='wp-embed-js'></script>
+<script type="text/javascript">
+   function loadNonessentialCookies() {
+      var script = document.createElement('script');
+      script.innerHTML = "(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-NG28725');";
+      document.getElementsByTagName('head')[0].prepend(script);
+      var noscript = document.createElement('noscript');
+      noscript.innerHTML = "<iframe src='https://www.googletagmanager.com/ns.html?id=GTM-NG28725' height='0' width='0' style='display:none;visibility:hidden'></iframe>";
+      document.getElementsByTagName('body')[0].prepend(noscript);
+    }
+</script>
+</body>
+</html>

@@ -55,9 +55,9 @@ perc_around_the_earth = (distance_traveled / earth_circumference)
 total_time = processed_data.moving_time.sum()
 
 
-############
-# SIDE BAR #
-############
+##################
+# SIDE BAR START #
+##################
 
 # with st.sidebar: # Option to show strava widgets
 #     st.header('Overview')
@@ -121,14 +121,16 @@ with st.sidebar:
 
     st.plotly_chart(fig, use_container_width=True)
 
-############
-# SIDE BAR #
-############
+################
+# SIDE BAR END #
+################
 
+#######################################################################
+#######################################################################
 
-#############
-# MAIN PAGE #
-#############
+###################
+# MAIN PAGE START #
+###################
 
 st.markdown('<h1 style="color:#FC4C02">MY STRAVA JOURNEY</h1>', unsafe_allow_html=True)
 st.markdown('<h2 style="color:#45738F">Activities</h2>', unsafe_allow_html=True)
@@ -138,7 +140,8 @@ st.markdown('<h2 style="color:#45738F">Activities</h2>', unsafe_allow_html=True)
 ####################
 
 # Filter by activity type
-activity_type = st.selectbox('Filter by sport', processed_data.type.unique()) # Select from dropdown
+activity_type = st.selectbox('Filter by sport', ['Ride', 'Workout', 'WeightTraining', 'Walk', 'Hike', 'Yoga',
+       'VirtualRide', 'Elliptical', 'Run', 'Swim', 'AlpineSki']) # Select from dropdown
 
 # Processing data for table
 streamlit_df = processed_data[['start_date_local', 'name', 'type', 'moving_time', 'distance', 'total_elevation_gain', 'average_speed', 'average_cadence', 'average_watts', 'average_heartrate', 'suffer_score']]
@@ -276,10 +279,11 @@ today_year = dt.datetime.today().year
 where_i_am = grouped_by_day[(grouped_by_day.year == today_year) & (grouped_by_day.month == this_month)]['Cummulative Distance'].max()
 # print(f"I should have reached {should_be_reached} miles. I've done {where_i_am} miles")
 
+pace = round(where_i_am - should_be_reached, 1)
 
 col1, col2, = st.columns(2)
 
 with col1:
     st.metric(f'2022 Distance Goal', "{:,}".format(distance_goal) + ' miles')
 with col2:
-    st.metric(f'Distance through {today.strftime("%m/%d/%Y")}', "{:,}".format(where_i_am) + ' miles', round(where_i_am - should_be_reached, 1))
+    st.metric(f'Distance through {today.strftime("%m/%d/%Y")}', "{:,}".format(where_i_am) + ' miles', f'{pace} ' + 'miles behind' if pace <0 else 'miles ahead')
