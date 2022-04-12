@@ -188,6 +188,8 @@ no_data_yet = no_data_yet[no_data_yet.month.isin(months_left)]
 
 # Removing upcoming months with no data from dataframe
 grouped_by_year_and_month = grouped_by_year_and_month[~grouped_by_year_and_month.isin(no_data_yet)]
+# Dropping na years
+grouped_by_year_and_month = grouped_by_year_and_month.dropna(subset=['year'])
 
 
 
