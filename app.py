@@ -24,6 +24,16 @@ strava_color_palette = ['#FC4C02', '#45738F', '#DF553B', '#3A18B0', '#FFAA06', '
 latest_activities = 'https://www.strava.com/athletes/644338/latest-rides/53c89f1acdf2bf69a8bc937e3793e9bfb56d64be'
 my_week = 'https://www.strava.com/athletes/644338/activity-summary/53c89f1acdf2bf69a8bc937e3793e9bfb56d64be'
 
+##################
+# DATES ELEMENTS #
+##################
+
+today = dt.datetime.today()
+months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+this_month = dt.datetime.today().month
+this_year = dt.datetime.today().year
+
+
 
 #################################
 # ACQUIRING AND PROCESSING DATA #
@@ -169,6 +179,18 @@ grouped_by_year_and_month['Cumulative Elevation'] = grouped_by_year_and_month.gr
 months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 grouped_by_year_and_month['month'] = grouped_by_year_and_month['month'].apply(lambda x: months[x -1])
 
+# Limiting data to current month
+months_left = months[this_month:]
+# Filtering out months beyond current one
+
+no_data_yet = grouped_by_year_and_month[grouped_by_year_and_month.year == this_year]
+no_data_yet = no_data_yet[no_data_yet.month.isin(months_left)]
+
+# Removing upcoming months with no data from dataframe
+grouped_by_year_and_month = grouped_by_year_and_month[~grouped_by_year_and_month.isin(no_data_yet)]
+
+
+
 # Plotly charts
 
 selected_year = st.multiselect('Filter by Year', grouped_by_year_and_month.year.unique(), default=[2018, 2019, 2020, 2021, 2022]) # Filter for year
@@ -251,10 +273,8 @@ with col2:
     st.metric(f'Elevation Best {best_elevation_year}', "{:,}".format(best_elevation) + ' feet')
 
 
-today = dt.datetime.today()
-months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-this_month = dt.datetime.today().month
 
+# Limiting the data to today's date
 d0 = dt.datetime(2022, 1, 1)
 d1 = dt.datetime.today()
 delta = d1 - d0
