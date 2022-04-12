@@ -14,14 +14,14 @@ bleach==4.1.0
 blinker==1.4
 boto3==1.20.33
 botocore==1.23.33
-Bottleneck @ file:///opt/concourse/worker/volumes/live/51dc1780-97b5-4c4b-5601-ba5845532b9c/volume/bottleneck_1648028903302/work
+# Bottleneck @ file:///opt/concourse/worker/volumes/live/51dc1780-97b5-4c4b-5601-ba5845532b9c/volume/bottleneck_1648028903302/work
 branca==0.4.2
 cachetools==5.0.0
 certifi==2021.10.8
 cffi==1.15.0
 charset-normalizer==2.0.10
 click==7.1.2
-cycler @ file:///tmp/build/80754af9/cycler_1637851556182/work
+# cycler @ file:///tmp/build/80754af9/cycler_1637851556182/work
 debugpy==1.5.1
 decorator==5.1.1
 defusedxml==0.7.1
@@ -50,14 +50,14 @@ jupyter-client==7.1.0
 jupyter-core==4.9.1
 jupyterlab-pygments==0.1.2
 jupyterlab-widgets==1.0.2
-kiwisolver @ file:///Users/builder/miniconda3/envs/prefect/conda-bld/kiwisolver_1638569885739/work
+# kiwisolver @ file:///Users/builder/miniconda3/envs/prefect/conda-bld/kiwisolver_1638569885739/work
 lxml==4.7.1
 MarkupSafe==2.0.1
-matplotlib @ file:///private/var/folders/sy/f16zz6x50xz3113nwtb9bvq00000gp/T/abs_croot-hkd3cnd2/matplotlib-suite_1647506470899/work
+# matplotlib @ file:///private/var/folders/sy/f16zz6x50xz3113nwtb9bvq00000gp/T/abs_croot-hkd3cnd2/matplotlib-suite_1647506470899/work
 matplotlib-inline==0.1.3
 mistune==0.8.4
 mkl-fft==1.3.1
-mkl-random @ file:///opt/concourse/worker/volumes/live/f196a661-8e33-4aac-63bc-efb2ff50e035/volume/mkl_random_1626186080069/work
+# mkl-random @ file:///opt/concourse/worker/volumes/live/f196a661-8e33-4aac-63bc-efb2ff50e035/volume/mkl_random_1626186080069/work
 mkl-service==2.4.0
 munkres==1.1.4
 nbclient==0.5.9
@@ -65,11 +65,11 @@ nbconvert==6.4.0
 nbformat==5.1.3
 nest-asyncio==1.5.4
 notebook==6.4.6
-numexpr @ file:///opt/concourse/worker/volumes/live/52f18ae0-3912-48f4-7832-7d22abf43616/volume/numexpr_1640704220628/work
+# numexpr @ file:///opt/concourse/worker/volumes/live/52f18ae0-3912-48f4-7832-7d22abf43616/volume/numexpr_1640704220628/work
 numpy==1.22.0
 openpyxl==3.0.9
 opensearch-py==1.0.0
-packaging @ file:///tmp/build/80754af9/packaging_1637314298585/work
+# packaging @ file:///tmp/build/80754af9/packaging_1637314298585/work
 pandas==1.4.1
 pandocfilters==1.5.0
 parso==0.8.3
@@ -92,7 +92,7 @@ Pympler==1.0.1
 PyMySQL==1.0.2
 pyparsing==3.0.6
 pyrsistent==0.18.0
-python-dateutil @ file:///tmp/build/80754af9/python-dateutil_1626374649649/work
+# python-dateutil @ file:///tmp/build/80754af9/python-dateutil_1626374649649/work
 python-dotenv==0.20.0
 python-utils==3.0.0
 pytz==2021.3
@@ -102,11 +102,10 @@ redshift-connector==2.0.903
 requests==2.27.1
 requests-aws4auth==1.1.1
 s3transfer==0.5.0
-scipy @ file:///opt/concourse/worker/volumes/live/7554f9b4-1616-4d3d-50f8-914545975614/volume/scipy_1641555024289/work
+# scipy @ file:///opt/concourse/worker/volumes/live/7554f9b4-1616-4d3d-50f8-914545975614/volume/scipy_1641555024289/work
 scramp==1.4.1
-seaborn @ file:///tmp/build/80754af9/seaborn_1629307859561/work
 Send2Trash==1.8.0
-six @ file:///tmp/build/80754af9/six_1644875935023/work
+# six @ file:///tmp/build/80754af9/six_1644875935023/work
 smmap==5.0.0
 sodapy==2.1.0
 soupsieve==2.3.1
@@ -117,7 +116,7 @@ terminado==0.12.1
 testpath==0.5.0
 toml==0.10.2
 toolz==0.11.2
-tornado @ file:///opt/concourse/worker/volumes/live/05341796-4198-4ded-4a9a-332fde3cdfd1/volume/tornado_1606942323372/work
+# tornado @ file:///opt/concourse/worker/volumes/live/05341796-4198-4ded-4a9a-332fde3cdfd1/volume/tornado_1606942323372/work
 traitlets==5.1.1
 tzdata==2021.5
 tzlocal==4.1
