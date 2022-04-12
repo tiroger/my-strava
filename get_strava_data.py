@@ -12,6 +12,8 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 import json
 import pandas as pd
 
+import streamlit as st
+
 #############################
 # FUNCTION TO RETREIVE DATA #
 #############################
@@ -29,10 +31,18 @@ def my_data():
             auth_url = "https://www.strava.com/oauth/token"
             activites_url = "https://www.strava.com/api/v3/athlete/activities"
 
+            # payload = {
+            #     'client_id': os.getenv('CLIENT_ID'),
+            #     'client_secret': os.getenv('CLIENT_SECRET'),
+            #     'refresh_token': os.getenv('REFRESH_TOKEN'),
+            #     'grant_type': "refresh_token",
+            #     'f': 'json'
+            # }
+
             payload = {
-                'client_id': os.getenv('CLIENT_ID'),
-                'client_secret': os.getenv('CLIENT_SECRET'),
-                'refresh_token': os.getenv('REFRESH_TOKEN'),
+                'client_id': st.secrets('CLIENT_ID'),
+                'client_secret': st.secrets('CLIENT_SECRET'),
+                'refresh_token': st.secrets('REFRESH_TOKEN'),
                 'grant_type': "refresh_token",
                 'f': 'json'
             }
