@@ -64,7 +64,7 @@ bikes_dict = {'Tie Fighter': 'Storck Scenero', 'Caadie': 'Cannondale CAAD10', 'D
 
 # Get data using strava api # For deployment
 
-@st.cache(show_spinner=False, max_entries=5, ttl=86400)
+@st.cache(show_spinner=False, max_entries=5, ttl=86400, allow_output_mutation=True)
 def fetch_activities():
     with st.spinner('Data Refreshing... May take up to 5 minutes.'):
 
@@ -73,7 +73,7 @@ def fetch_activities():
 
         return processed_data
 
-@st.cache(show_spinner=False, max_entries=5, ttl=86400)
+@st.cache(show_spinner=False, max_entries=5, ttl=86400, allow_output_mutation=True)
 def bikes():
     with st.spinner('Data Refreshing... May take up to 5 minutes.'):
         bikes = bike_data()

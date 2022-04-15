@@ -20,9 +20,9 @@ CLIENT_SECRET = st.secrets['CLIENT_SECRET']
 REFRESH_TOKEN = st.secrets['REFRESH_TOKEN']
 
 # For local development
-# CLIENT_ID = os.environ('CLIENT_ID')
-# CLIENT_SECRET = os.environ('CLIENT_SECRET')
-# REFRESH_TOKEN = os.environ('REFRESH_TOKEN')
+# CLIENT_ID = os.environ.get('CLIENT_ID')
+# CLIENT_SECRET = os.environ.get('CLIENT_SECRET')
+# REFRESH_TOKEN = os.environ.get('REFRESH_TOKEN')
 
 #############################
 # FUNCTION TO RETREIVE DATA #
@@ -41,14 +41,6 @@ def my_data():
             auth_url = "https://www.strava.com/oauth/token"
             activites_url = "https://www.strava.com/api/v3/athlete/activities"
 
-            # payload = {
-            #     'client_id': os.getenv('CLIENT_ID'),
-            #     'client_secret': os.getenv('CLIENT_SECRET'),
-            #     'refresh_token': os.getenv('REFRESH_TOKEN'),
-            #     'grant_type': "refresh_token",
-            #     'f': 'json'
-            # }
-            # For stramlit
             payload = {
                 'client_id': CLIENT_ID,
                 'client_secret': CLIENT_SECRET,
@@ -84,18 +76,10 @@ def athlete_data():
     auth_url = "https://www.strava.com/oauth/token"
     athlete_url = 'https://www.strava.com/api/v3/athlete'
 
-    # payload = {
-    #     'client_id': os.getenv('CLIENT_ID'),
-    #     'client_secret': os.getenv('CLIENT_SECRET'),
-    #     'refresh_token': os.getenv('REFRESH_TOKEN'),
-    #     'grant_type': "refresh_token",
-    #     'f': 'json'
-    # }
-    # For stramlit
     payload = {
-        'client_id': st.secrets('CLIENT_ID'),
-        'client_secret': st.secrets('CLIENT_SECRET'),
-        'refresh_token': st.secrets('REFRESH_TOKEN'),
+        'client_id': CLIENT_ID,
+        'client_secret': CLIENT_SECRET,
+        'refresh_token': REFRESH_TOKEN,
         'grant_type': "refresh_token",
         'f': 'json'
     }
@@ -124,19 +108,10 @@ def bike_data():
             auth_url = "https://www.strava.com/oauth/token"
             gears_url = f'https://www.strava.com/api/v3/gear/{b}'
             
-            # payload = {
-            # 'client_id': os.getenv('CLIENT_ID'),
-            # 'client_secret': os.getenv('CLIENT_SECRET'),
-            # 'refresh_token': os.getenv('REFRESH_TOKEN'),
-            # 'grant_type': "refresh_token",
-            # 'f': 'json'
-            # }
-            
-            # For stramlit
             payload = {
-                'client_id': st.secrets('CLIENT_ID'),
-                'client_secret': st.secrets('CLIENT_SECRET'),
-                'refresh_token': st.secrets('REFRESH_TOKEN'),
+                'client_id': CLIENT_ID,
+                'client_secret': CLIENT_SECRET,
+                'refresh_token': REFRESH_TOKEN,
                 'grant_type': "refresh_token",
                 'f': 'json'
             }
