@@ -2,8 +2,8 @@
 # LIBRARIES #
 #############
 
-# from dotenv import load_dotenv
-# load_dotenv()
+from dotenv import load_dotenv
+load_dotenv()
 import os
 
 import requests
@@ -14,9 +14,15 @@ import pandas as pd
 
 import streamlit as st
 
-CLIENT_ID = st.secrets('CLIENT_ID')
-CLIENT_SECRET = st.secrets('CLIENT_SECRET')
-REFRESH_TOKEN = st.secrets('REFRESH_TOKEN')
+# For Streamlit
+CLIENT_ID = st.secrets['CLIENT_ID']
+CLIENT_SECRET = st.secrets['CLIENT_SECRET']
+REFRESH_TOKEN = st.secrets['REFRESH_TOKEN']
+
+# For local development
+# CLIENT_ID = os.environ('CLIENT_ID')
+# CLIENT_SECRET = os.environ('CLIENT_SECRET')
+# REFRESH_TOKEN = os.environ('REFRESH_TOKEN')
 
 #############################
 # FUNCTION TO RETREIVE DATA #
