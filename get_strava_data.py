@@ -14,7 +14,7 @@ import pandas as pd
 
 import streamlit as st
 
-# For Streamlit
+# Credentials
 CLIENT_ID = st.secrets['CLIENT_ID']
 CLIENT_SECRET = st.secrets['CLIENT_SECRET']
 REFRESH_TOKEN = st.secrets['REFRESH_TOKEN']
@@ -36,7 +36,7 @@ def my_data():
         page = 1
         frames = []
         print('Getting data...')
-        while page < 5: # Iterating through all pages
+        while page < 10: # Iterating through all pages
             print(f"Requesting page {page}...")
             auth_url = "https://www.strava.com/oauth/token"
             activites_url = "https://www.strava.com/api/v3/athlete/activities"
@@ -58,7 +58,10 @@ def my_data():
             header = {'Authorization': 'Bearer ' + access_token}
             param = {'per_page': 200, 'page': page}
             my_dataset = requests.get(activites_url, headers=header, params=param).json()
+            if my_dataset == []:
+                break
             output = pd.DataFrame(my_dataset) # Converting json to datarame
+
             frames.append(output)
             
             page = page + 1 # Incrementing page number
@@ -164,7 +167,7 @@ def process_data(all_activities):
 
     # Dropping unnecessary columns
     cols_to_remove = ['athlete', 'resource_state', 'upload_id_str', 'external_id', 
-    'from_accepted_tag', 'has_kudoed', 'workout_type', 'display_hide_heartrate_option', 'map', 'visibility',
+    'from_accepted_tag', 'has_kudoed', 'workout_type', 'display_hide_heartrate_option', 'visibility',
     'timezone', 'upload_id', 'start_date', 'utc_offset', 'location_city', 'location_country', 
     'location_state', 'heartrate_opt_out', 'flagged', 'commute', 'manual', 'athlete_count', 'private', 
     'has_heartrate', 'start_latlng', 'end_latlng', 'device_watts', 'elev_low']
