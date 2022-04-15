@@ -2,8 +2,8 @@
 # LIBRARIES #
 #############
 
-from dotenv import load_dotenv
-load_dotenv()
+# from dotenv import load_dotenv
+# load_dotenv()
 import os
 
 import requests
@@ -13,6 +13,10 @@ import json
 import pandas as pd
 
 import streamlit as st
+
+CLIENT_ID = st.secrets('CLIENT_ID')
+CLIENT_SECRET = st.secrets('CLIENT_SECRET')
+REFRESH_TOKEN = st.secrets('REFRESH_TOKEN')
 
 #############################
 # FUNCTION TO RETREIVE DATA #
@@ -40,9 +44,9 @@ def my_data():
             # }
             # For stramlit
             payload = {
-                'client_id': st.secrets('CLIENT_ID'),
-                'client_secret': st.secrets('CLIENT_SECRET'),
-                'refresh_token': st.secrets('REFRESH_TOKEN'),
+                'client_id': CLIENT_ID,
+                'client_secret': CLIENT_SECRET,
+                'refresh_token': REFRESH_TOKEN,
                 'grant_type': "refresh_token",
                 'f': 'json'
             }
