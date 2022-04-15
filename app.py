@@ -18,6 +18,15 @@ import plotly.graph_objects as go
 import streamlit as st
 import streamlit.components.v1 as components
 
+###########################
+# Main Page Configuration #
+###########################
+
+st.set_page_config(page_title='My Strava', 
+                    page_icon='./images/strava4.png', 
+                    layout="centered", 
+                    initial_sidebar_state="auto")
+
 strava_color_palette = ['#FC4C02', '#45738F', '#DF553B', '#3A18B0', '#FFAA06', '#26A39E', '#951B05', '#D22B0C', '#F5674E'] # [strava orange, strava blue, warm orange, advance indigo, intermediate gold, beginner teal, hard red, medium sienna, easy peach]
 
 # Strava widgets
@@ -54,14 +63,32 @@ bikes_dict = {'Tie Fighter': 'Storck Scenero', 'Caadie': 'Cannondale CAAD10', 'D
 ##### Use one of two options below #####
 
 # Get data using strava api # For deployment
-# my_data_df = my_data()
-# processed_data = process_data(my_data_df)
-# bikes_df =  bike_data()
+
+@st.cache(show_spinner=False, max_entries=5, ttl=86400, allow_output_mutation=True)
+def fetch_activities():
+    with st.spinner('Data Refreshing... May take up to 5 minutes.'):
+
+        my_data_df = my_data()
+        processed_data = process_data(my_data_df)
+
+        return processed_data
+
+@st.cache(show_spinner=False, max_entries=5, ttl=86400, allow_output_mutation=True)
+def bikes():
+    with st.spinner('Data Refreshing... May take up to 5 minutes.'):
+        bikes = bike_data()
+
+        return bikes
+
+processed_data = fetch_activities()
+bikes_df = bikes()
+
 
 # Get local data # For development
-processed_data = pd.read_csv('./data/processed_data.csv')
-bikes_df = pd.read_csv('./data/bike_data.csv')
-athlete_df = pd.read_csv('./data/athlete_data.csv')
+# processed_data = pd.read_csv('./data/processed_data.csv')
+# bikes_df = pd.read_csv('./data/bike_data.csv')
+# athlete_df = pd.read_csv('./data/athlete_data.csv')
+
 
 
 processed_data['start_date_local'] = pd.to_datetime(processed_data['start_date_local'])
