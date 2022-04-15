@@ -3,7 +3,7 @@
 #############
 
 # from turtle import color, width
-from get_strava_data import my_data, process_data # Functions to retrive data using strava api and process for visualizations
+from get_strava_data import my_data, process_data, bike_data # Functions to retrive data using strava api and process for visualizations
 
 import pandas as pd
 # import numpy as np
@@ -24,14 +24,25 @@ strava_color_palette = ['#FC4C02', '#45738F', '#DF553B', '#3A18B0', '#FFAA06', '
 latest_activities = 'https://www.strava.com/athletes/644338/latest-rides/53c89f1acdf2bf69a8bc937e3793e9bfb56d64be'
 my_week = 'https://www.strava.com/athletes/644338/activity-summary/53c89f1acdf2bf69a8bc937e3793e9bfb56d64be'
 
-##################
-# DATES ELEMENTS #
-##################
+#################
+# DATE ELEMENTS #
+#################
 
 today = dt.datetime.today()
 months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 this_month = dt.datetime.today().month
 this_year = dt.datetime.today().year
+
+
+#################
+# PERSONAL DATA #
+#################
+
+ftp = 192
+weight_lbs = 164
+weight_kg = weight_lbs * 0.453592
+
+bikes_dict = {'Tie Fighter': 'Storck Scenero', 'Caadie': 'Cannondale CAAD10', 'Dirty McDirtBag': 'Marin Headlands', 'Hillius Maximus': 'Giant TCR', 'Hurt Enforcer': 'Cannondale Slate'}
 
 
 
@@ -45,11 +56,18 @@ this_year = dt.datetime.today().year
 # Get data using strava api # For deployment
 # my_data_df = my_data()
 # processed_data = process_data(my_data_df)
+# bikes_df =  bike_data()
 
 # Get local data # For development
 processed_data = pd.read_csv('./data/processed_data.csv')
+bikes_df = pd.read_csv('./data/bike_data.csv')
+athlete_df = pd.read_csv('./data/athlete_data.csv')
+
+
 processed_data['start_date_local'] = pd.to_datetime(processed_data['start_date_local'])
 processed_data['start_date_local'] = processed_data['start_date_local'].dt.strftime('%m-%d-%Y')
+
+
 
 # Data for dahsboard
 start_date = processed_data.year.min()
@@ -79,6 +97,7 @@ total_time = processed_data.moving_time.sum()
 ############
 
 with st.sidebar:
+    st.image('./images/strava_logo.png')
     st.markdown('<h1 style="color:#FC4C02">Overview</h1>', unsafe_allow_html=True)
     st.subheader(f'Member since {start_date}')
 
@@ -129,7 +148,8 @@ with st.sidebar:
     fig.update_layout(showlegend=False, uniformtext_minsize=16, uniformtext_mode='hide', hovermode=False, paper_bgcolor='rgba(0,0,0,0)',
     plot_bgcolor='rgba(0,0,0,0)', margin=dict(l=0, r=0, t=0, b=0), annotations=[dict(text='Activities', x=0.5, y=0.5, font_size=20, showarrow=False)])
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True, config= dict(
+            displayModeBar = False))
 
 ################
 # SIDE BAR END #
@@ -143,11 +163,13 @@ with st.sidebar:
 ###################
 
 st.markdown('<h1 style="color:#FC4C02">MY STRAVA JOURNEY</h1>', unsafe_allow_html=True)
-st.markdown('<h2 style="color:#45738F">Activities</h2>', unsafe_allow_html=True)
+
 
 ####################
 # Activities Table #
 ####################
+
+st.markdown('<h2 style="color:#45738F">Activities</h2>', unsafe_allow_html=True)
 
 # Filter by activity type
 activity_type = st.selectbox('Filter by sport', ['Ride', 'Workout', 'WeightTraining', 'Walk', 'Hike', 'Yoga',
@@ -157,14 +179,32 @@ activity_type = st.selectbox('Filter by sport', ['Ride', 'Workout', 'WeightTrain
 streamlit_df = processed_data[['start_date_local', 'name', 'type', 'moving_time', 'distance', 'total_elevation_gain', 'average_speed', 'average_cadence', 'average_watts', 'average_heartrate', 'suffer_score']]
 streamlit_df['start_date_local'] = pd.to_datetime(streamlit_df['start_date_local'])
 streamlit_df['start_date_local'] = streamlit_df['start_date_local'].dt.strftime('%m-%d-%Y')
-streamlit_df.rename(columns={'start_date_local': 'Date','name': 'Name', 'type': 'Type', 'moving_time': 'Moving Time (hours)', 'distance': 'Distance (miles)', 'total_elevation_gain': 'Elevation Gain (ft)', 'average_speed': 'Average Speed (mph)', 'average_cadence': 'Average Cadence (rpm)', 'average_watts': 'Average Watts', 'average_heartrate': 'Average Heartrate', 'suffer_score': 'Suffer Score'}, inplace=True)
-streamlit_df.set_index('Date', inplace=True)
+streamlit_df.rename(columns={'start_date_local': 'Date','name': 'Name', 'type': 'Type', 'moving_time': 'Moving Time (h)', 'distance': 'Distance (mi)', 'total_elevation_gain': 'Elevation Gain (ft)', 'average_speed': 'Avg Speed (mph)', 'average_cadence': 'Avg Cadence (rpm)', 'average_watts': 'Avg Power (Watts)', 'average_heartrate': 'Avg Heartrate', 'suffer_score': 'Suffer Score'}, inplace=True)
+# streamlit_df.set_index('Date', inplace=True)
 streamlit_df = streamlit_df[streamlit_df['Type'].isin([activity_type])]
 
-st.dataframe(streamlit_df)
+headerColor = '#45738F'
+rowEvenColor = 'lightcyan'
+rowOddColor = 'white'
+
+# Plotly table
+fig = go.Figure(data=[go.Table(
+    columnorder = [1,2,3,4,5,6,7,8,9,10,11],
+    columnwidth = [25,50,18,20,23,25,20,24,20,25,17],
+    header=dict(values=list(streamlit_df.columns),
+                line_color='darkslategray',
+                fill_color=headerColor,
+    font=dict(color='white', size=13)),
+    cells=dict(values=[streamlit_df['Date'], streamlit_df['Name'], streamlit_df['Type'], streamlit_df['Moving Time (h)'], streamlit_df['Distance (mi)'], streamlit_df['Elevation Gain (ft)'], streamlit_df['Avg Speed (mph)'], streamlit_df['Avg Cadence (rpm)'], streamlit_df['Avg Power (Watts)'], streamlit_df['Avg Heartrate'], streamlit_df['Suffer Score']],
+               fill_color = [[rowOddColor,rowEvenColor]*len(streamlit_df.index),], font=dict(color='black', size=12), height=50))
+])
+fig.update_layout(margin=dict(l=0, r=0, t=0, b=0))
+
+# st.dataframe(streamlit_df)
+st.plotly_chart(fig, use_container_width = False, config=dict(displayModeBar = False))
 
 #################################
-# Yearly Progression line chart #
+# Yearly Progressions line chart #
 #################################
 
 st.markdown('<h2 style="color:#45738F">Year Progressions</h2>', unsafe_allow_html=True)
@@ -176,18 +216,22 @@ mux = pd.MultiIndex.from_product([grouped_by_year_and_month.year.unique(), group
 grouped_by_year_and_month = grouped_by_year_and_month.set_index(['year', 'type', 'month']).reindex(mux, fill_value=0).reset_index()
 grouped_by_year_and_month['Cumulative Distance'] = grouped_by_year_and_month.groupby(['year', 'type'])['distance'].cumsum()
 grouped_by_year_and_month['Cumulative Elevation'] = grouped_by_year_and_month.groupby(['year', 'type'])['total_elevation_gain'].cumsum()
-months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+
 grouped_by_year_and_month['month'] = grouped_by_year_and_month['month'].apply(lambda x: months[x -1])
 
 # Limiting data to current month
 months_left = months[this_month:]
-# Filtering out months beyond current one
 
+# Filtering out months beyond current one
 no_data_yet = grouped_by_year_and_month[grouped_by_year_and_month.year == this_year]
 no_data_yet = no_data_yet[no_data_yet.month.isin(months_left)]
 
 # Removing upcoming months with no data from dataframe
 grouped_by_year_and_month = grouped_by_year_and_month[~grouped_by_year_and_month.isin(no_data_yet)]
+# Dropping na years
+grouped_by_year_and_month = grouped_by_year_and_month.dropna(subset=['year'])
+
+grouped_by_year_and_month['year'] = grouped_by_year_and_month['year'].astype(int)
 
 
 
@@ -258,7 +302,8 @@ fig.for_each_trace(lambda trace: fig.add_annotation(
     ax=10, ay=10, xanchor="left", showarrow=False))
 fig.update_traces(mode="markers+lines", hovertemplate=None)
 
-st.plotly_chart(fig, use_container_width=True)
+st.plotly_chart(fig, use_container_width=True, config= dict(
+            displayModeBar = False))
 
 
 ##################
@@ -292,7 +337,7 @@ grouped_by_day = processed_data.groupby(['year', 'month', 'day']).agg({'distance
 # Daily cumulative distance
 grouped_by_day['Cummulative Distance'] = grouped_by_day.groupby(['year'])['distance'].cumsum()
 
-should_be_reached = daily_goals*days_gone_by # distance that should have been reached by now to be on pace for 2500 miles for the year
+should_be_reached = daily_goals*days_gone_by # distance that should have been reached by now to be on pace for the desired goal for the year
 
 today_year = dt.datetime.today().year
 # print(f"Today's month is the {this_month}th month and year is {today_year}")
@@ -322,7 +367,7 @@ grouped_by_day = processed_data.groupby(['year', 'month', 'day']).agg({'total_el
 # Daily cumulative distance
 grouped_by_day['Cummulative Elevation'] = grouped_by_day.groupby(['year'])['total_elevation_gain'].cumsum()
 
-should_be_reached_elev = daily_goals_elev*days_gone_by # distance that should have been reached by now to be on pace for 2500 miles for the year
+should_be_reached_elev = daily_goals_elev*days_gone_by # elevation that should have been reached by now to be on pace to reach the set goal for the year
 
 today_year = dt.datetime.today().year
 # print(f"Today's month is the {this_month}th month and year is {today_year}")
@@ -339,3 +384,45 @@ with col1:
     st.metric(f'{today_year} Elevation Goal', "{:,}".format(elevation_goal) + ' feet')
 with col2:
     st.metric(f'Elevation Gain through {today.strftime("%m/%d/%Y")}', "{:,}".format(where_i_am_elev) + ' feet', f'{"{:,}".format(pace_elev)} ' + 'feet behind' if pace_elev <0 else f'{"{:,}".format(pace_elev)} ' + 'feet ahead')
+
+
+############
+# THE GEAR #
+############
+
+st.markdown('<h2 style="color:#45738F">The Gear</h2>', unsafe_allow_html=True)
+
+
+
+
+tcr_odometer = bikes_df[bikes_df.model_name == 'TCR']['converted_distance'].values[0]
+storck_odometer = bikes_df[bikes_df.model_name == 'scenero G2']['converted_distance'].values[0]
+headlands_odometer = bikes_df[bikes_df.model_name == 'Headlands']['converted_distance'].values[0]
+slate_odometer = bikes_df[bikes_df.model_name == 'Slate']['converted_distance'].values[0]
+
+
+
+
+col1, col2 = st.columns(2)
+
+odometer_metric_color = '#DF553B'
+
+with col1:
+    st.markdown('<h4 style="text-align: center;">Giant TCR</h4>', unsafe_allow_html=True)
+    st.image('./images/tcr.jpeg')
+    st.markdown(f'<h5 style="color:lightgrey">Odometer: <b style="color:{odometer_metric_color}">{"{:,}".format(tcr_odometer)} miles</b></h5>', unsafe_allow_html=True)
+with col2:
+    st.markdown('<h4 style="text-align: center;">Storck Scenero</h4>', unsafe_allow_html=True)
+    st.image('./images/scenero_2.jpeg')
+    st.markdown(f'<h5 style="color:lightgrey">Odometer: <b style="color:{odometer_metric_color}">{"{:,}".format(storck_odometer)} miles</b></h5>', unsafe_allow_html=True)
+
+col1, col2 = st.columns(2)
+
+with col1:
+    st.markdown('<h4 style="text-align: center;">Marin Headlands</h4>', unsafe_allow_html=True)
+    st.image('./images/headlands.jpeg')
+    st.markdown(f'<h5 style="color:lightgrey">Odometer: <b style="color:{odometer_metric_color}">{"{:,}".format(headlands_odometer)} miles</b></h5>', unsafe_allow_html=True)
+with col2:
+    st.markdown('<h4 style="text-align: center;">Cannondale Slate</h4>', unsafe_allow_html=True)
+    st.image('./images/slate.jpeg')
+    st.markdown(f'<h5 style="color:lightgrey">Odometer: <b style="color:{odometer_metric_color}">{"{:,}".format(slate_odometer)} miles</b></h5>', unsafe_allow_html=True)

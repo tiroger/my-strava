@@ -38,7 +38,7 @@ def my_data():
             #     'grant_type': "refresh_token",
             #     'f': 'json'
             # }
-
+            # For stramlit
             payload = {
                 'client_id': st.secrets('CLIENT_ID'),
                 'client_secret': st.secrets('CLIENT_SECRET'),
@@ -69,6 +69,84 @@ def my_data():
     except:
         print('There was a problem with the request.')
 
+def athlete_data():
+    print(f"Requesting data...")
+    auth_url = "https://www.strava.com/oauth/token"
+    athlete_url = 'https://www.strava.com/api/v3/athlete'
+
+    # payload = {
+    #     'client_id': os.getenv('CLIENT_ID'),
+    #     'client_secret': os.getenv('CLIENT_SECRET'),
+    #     'refresh_token': os.getenv('REFRESH_TOKEN'),
+    #     'grant_type': "refresh_token",
+    #     'f': 'json'
+    # }
+    # For stramlit
+    payload = {
+        'client_id': st.secrets('CLIENT_ID'),
+        'client_secret': st.secrets('CLIENT_SECRET'),
+        'refresh_token': st.secrets('REFRESH_TOKEN'),
+        'grant_type': "refresh_token",
+        'f': 'json'
+    }
+    
+    res = requests.post(auth_url, data=payload, verify=False)
+    print(res)
+    access_token = res.json()['access_token']
+    # print("Access Token = {}\n".format(access_token))
+
+    header = {'Authorization': 'Bearer ' + access_token}
+    param = {'per_page': 200, 'page': 1}
+    athlete = requests.get(athlete_url, headers=header, params=param).json()
+    df = pd.json_normalize(athlete)
+    # athlete_df = pd.DataFrame(athlete)
+    
+    print('Data retrieved successfully!')
+    # return athlete_df
+    return df
+
+def bike_data():
+    try:
+        bikes = ['b8099416', 'b4196400', 'b8615449', 'b4073790', 'b5245627', 'b8029179', 'b326351', 'b804798', 'b232108']
+        frames = []
+        for b in bikes:
+            print('Requesting data...')
+            auth_url = "https://www.strava.com/oauth/token"
+            gears_url = f'https://www.strava.com/api/v3/gear/{b}'
+            
+            # payload = {
+            # 'client_id': os.getenv('CLIENT_ID'),
+            # 'client_secret': os.getenv('CLIENT_SECRET'),
+            # 'refresh_token': os.getenv('REFRESH_TOKEN'),
+            # 'grant_type': "refresh_token",
+            # 'f': 'json'
+            # }
+            
+            # For stramlit
+            payload = {
+                'client_id': st.secrets('CLIENT_ID'),
+                'client_secret': st.secrets('CLIENT_SECRET'),
+                'refresh_token': st.secrets('REFRESH_TOKEN'),
+                'grant_type': "refresh_token",
+                'f': 'json'
+            }
+
+            res = requests.post(auth_url, data=payload, verify=False)
+            print(res)
+            access_token = res.json()['access_token']
+            # print("Access Token = {}\n".format(access_token))
+
+            header = {'Authorization': 'Bearer ' + access_token}
+            param = {'per_page': 200, 'page': 1}
+            gears = requests.get(gears_url, headers=header).json()
+            df = pd.json_normalize(gears) # Converting json to datarame
+            frames.append(df)
+            bikes_df = pd.concat(frames) # Concatenating all pages into dataframe
+            print('Data retrieved successfully!')
+        return bikes_df
+    except:
+        print('There was a problem with the request.')
+
 
 def process_data(all_activities):
 
@@ -87,6 +165,10 @@ def process_data(all_activities):
     # Converting distance to miles
     all_activities['distance'] = (all_activities['distance'] * 0.000621371).round(1)
 
+    # Converting speeds to mph
+    all_activities['average_speed'] = (all_activities['average_speed'] * 2.23694).round(1)
+    all_activities['max_speed'] = (all_activities['max_speed'] * 2.23694).round(1)
+
     # Converting elevation to feet
     all_activities['total_elevation_gain'] = (all_activities['total_elevation_gain'] * 3.28084).round(1)
     all_activities['elev_high'] = (all_activities['elev_high'] * 3.28084).round(1)
@@ -99,7 +181,7 @@ def process_data(all_activities):
     cols_to_remove = ['athlete', 'resource_state', 'upload_id_str', 'external_id', 
     'from_accepted_tag', 'has_kudoed', 'workout_type', 'display_hide_heartrate_option', 'map', 'visibility',
     'timezone', 'upload_id', 'start_date', 'utc_offset', 'location_city', 'location_country', 
-    'location_state', 'heartrate_opt_out', 'flagged', 'commute', 'manual', 'gear_id', 'athlete_count', 'private', 
+    'location_state', 'heartrate_opt_out', 'flagged', 'commute', 'manual', 'athlete_count', 'private', 
     'has_heartrate', 'start_latlng', 'end_latlng', 'device_watts', 'elev_low']
     activities_df = all_activities.drop(cols_to_remove, axis=1)
 
