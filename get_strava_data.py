@@ -51,7 +51,7 @@ def my_data():
             res = requests.post(auth_url, data=payload, verify=False)
             print(res)
             access_token = res.json()['access_token']
-            print("Access Token = {}\n".format(access_token))
+            # print("Access Token = {}\n".format(access_token))
 
             header = {'Authorization': 'Bearer ' + access_token}
             param = {'per_page': 200, 'page': page}
@@ -121,7 +121,8 @@ def bike_data():
             # 'grant_type': "refresh_token",
             # 'f': 'json'
             # }
-            For stramlit
+            
+            # For stramlit
             payload = {
                 'client_id': st.secrets('CLIENT_ID'),
                 'client_secret': st.secrets('CLIENT_SECRET'),

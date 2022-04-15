@@ -56,11 +56,18 @@ bikes_dict = {'Tie Fighter': 'Storck Scenero', 'Caadie': 'Cannondale CAAD10', 'D
 # Get data using strava api # For deployment
 # my_data_df = my_data()
 # processed_data = process_data(my_data_df)
+# bikes_df =  bike_data()
 
 # Get local data # For development
 processed_data = pd.read_csv('./data/processed_data.csv')
+bikes_df = pd.read_csv('./data/bike_data.csv')
+athlete_df = pd.read_csv('./data/athlete_data.csv')
+
+
 processed_data['start_date_local'] = pd.to_datetime(processed_data['start_date_local'])
 processed_data['start_date_local'] = processed_data['start_date_local'].dt.strftime('%m-%d-%Y')
+
+
 
 # Data for dahsboard
 start_date = processed_data.year.min()
@@ -385,7 +392,7 @@ with col2:
 
 st.markdown('<h2 style="color:#45738F">The Gear</h2>', unsafe_allow_html=True)
 
-bikes_df =  bike_data()
+
 
 
 tcr_odometer = bikes_df[bikes_df.model_name == 'TCR']['converted_distance'].values[0]
