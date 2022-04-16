@@ -3,28 +3,45 @@
 #############
 
 # from turtle import color, width
-from get_strava_data import my_data, process_data, bike_data # Functions to retrive data using strava api and process for visualizations
+from get_strava_data import my_data, process_data, bike_data, get_elevation # Functions to retrive data using strava api and process for visualizations
+
+import ast
+import polyline
 
 import pandas as pd
-# import numpy as np
+import numpy as np
 import datetime as dt
+
+from PIL import Image
+import base64
 
 # import matplotlib.pyplot as plt
 # import seaborn as sns
 import plotly.express as px
 import plotly.graph_objects as go
 
+import folium
+from folium.features import CustomIcon
+from streamlit_folium import folium_static
+
+import matplotlib.pyplot as plt
 
 import streamlit as st
 import streamlit.components.v1 as components
+
+###############
+# CREDENTIALS #
+###############
+MAPBOX_TOKEN = st.secrets['MAPBOX_TOKEN']
+
 
 ###########################
 # Main Page Configuration #
 ###########################
 
 st.set_page_config(page_title='My Strava', 
-                    page_icon='./images/strava4.png', 
-                    layout="centered", 
+                    page_icon='./icons/cropped-rtc-favicon.png', 
+                    layout="wide", 
                     initial_sidebar_state="auto")
 
 strava_color_palette = ['#FC4C02', '#45738F', '#DF553B', '#3A18B0', '#FFAA06', '#26A39E', '#951B05', '#D22B0C', '#F5674E'] # [strava orange, strava blue, warm orange, advance indigo, intermediate gold, beginner teal, hard red, medium sienna, easy peach]
@@ -124,9 +141,10 @@ total_time = processed_data.moving_time.sum()
 ############
 
 with st.sidebar:
-    st.image('./images/strava_logo.png')
+    # st.image('./icons/tri.jpeg')
     st.markdown('<h1 style="color:#FC4C02">Overview</h1>', unsafe_allow_html=True)
     st.subheader(f'Member since {start_date}')
+    st.image('./data/profile.png', width=300, output_format='PNG')
 
 
     col1, col2 = st.columns(2)
@@ -228,13 +246,125 @@ fig = go.Figure(data=[go.Table(
 fig.update_layout(margin=dict(l=0, r=0, t=0, b=0))
 
 # st.dataframe(streamlit_df)
-st.plotly_chart(fig, use_container_width = False, config=dict(displayModeBar = False))
+st.plotly_chart(fig, use_container_width = True, config=dict(displayModeBar = False))
+
+#################
+ # MAP OF RIDES #
+ ################
+
+st.markdown('<h2 style="color:#45738F">Ride Maps</h2>', unsafe_allow_html=True)
+
+polylines_df = pd.read_csv('./data/processed_data.csv', usecols=['start_date_local', 'name', 'distance', 'average_speed', 'total_elevation_gain', 'weighted_average_watts', 'average_heartrate', 'suffer_score', 'year', 'month', 'day', 'type', 'map'])
+polylines_df.start_date_local = pd.DatetimeIndex(polylines_df.start_date_local)
+polylines_df.start_date_local = polylines_df.start_date_local.dt.strftime('%m-%d-%Y')
+polylines_df = polylines_df[polylines_df.type == 'Ride'] # We'll only use rides which have a map
+
+
+option = st.selectbox(
+     'Select a ride for more details',
+     (polylines_df.name)
+)
+
+# Finding dataframe index based on ride name
+idx = polylines_df[polylines_df.name == option].index.values[0]
+
+# Decoding polylines
+decoded = pd.json_normalize(polylines_df[polylines_df.index == idx]['map'].apply(ast.literal_eval))['summary_polyline'].apply(polyline.decode).values[0]
+
+
+# Adding elevation data from Open Street Map
+# elevation_profile = [get_elevation(coord[0], coord[1]) for coord in decoded]
+# elevation_profile_feet = [elevation_profile[i] * 3.28084 for i in range(len(elevation_profile))] # Converting elevation to feet
+
+# Plotting elevation data
+# fig, ax = plt.subplots(figsize=(10, 4))
+# ax = pd.Series(elevation_profile_feet).rolling(3).mean().plot(
+#     ax=ax, 
+#     color='steelblue', 
+#     legend=False
+# )
+# ax.set_ylabel('Elevation (ft)')
+# ax.axes.xaxis.set_visible(False)
+# ax.spines['top'].set_visible(False)
+# ax.spines['right'].set_visible(False)
+# # Saving plot
+# plt.savefig('./data/elevation_profile.png', dpi=300)
+
+# Mapping route with folium
+
+
+
+centroid = [
+    np.mean([coord[0] for coord in decoded]), 
+    np.mean([coord[1] for coord in decoded])
+]
+my_map = folium.Map(location=centroid, zoom_start=12, tiles='OpenStreetMap')
+folium.PolyLine(decoded).add_to(my_map)
+
+icon = './icons/pin.png' # icon for ride start location
+icon_image = Image.open(icon)
+        
+icon = CustomIcon(
+np.array(icon_image),
+icon_size=(50, 50),
+popup_anchor=(0, -30),
+)
+
+# popup image
+image_file = './data/elevation_profile.png'
+encoded = base64.b64encode(open(image_file, 'rb').read()).decode('UTF-8')
+
+resolution, width, height = 50, 5, 6.5
+
+# read png file
+# elevation_profile = base64.b64encode(open(image_file, 'rb').read()).decode()
+
+
+# popup text
+html = """
+<h3 style="font-family:arial">{}</h3>
+    <p style="font-family:arial">
+        <code>
+        Date : {} <br>
+        </code>
+    </p>
+    <p style="font-family:arial"> 
+        <code>
+            Distance&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp: {} miles <br>
+            Elevation Gain&nbsp;&nbsp;&nbsp;&nbsp;&nbsp: {} feet <br>
+            Average Speed&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp: {} mph<br>
+            Average Watts&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp: {} Watts <br>
+            Average HR&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp: {} <br>
+            Suffer Score&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp: {} <br>
+        </code>
+    </p>
+<img src="data:image/png;base64,{}">
+""".format(
+    polylines_df[polylines_df.index == idx]['name'].values[0], 
+    polylines_df[polylines_df.index == idx]['start_date_local'].values[0],
+    polylines_df[polylines_df.index == idx]['distance'].values[0], 
+    polylines_df[polylines_df.index == idx]['total_elevation_gain'].values[0], 
+    polylines_df[polylines_df.index == idx]['average_speed'].values[0], 
+    polylines_df[polylines_df.index == idx]['weighted_average_watts'].values[0],  
+    polylines_df[polylines_df.index == idx]['average_heartrate'].values[0],
+    polylines_df[polylines_df.index == idx]['suffer_score'].values[0], 
+    encoded
+)
+
+iframe = folium.IFrame(html, width=(width*resolution)+20, height=(height*resolution))
+popup = folium.Popup(iframe, max_width=2650)
+
+marker = folium.Marker(location=decoded[0],
+                       popup=popup, 
+                       icon=icon).add_to(my_map)
+
+folium_static(my_map, width=1040)
 
 #################################
 # Yearly Progressions line chart #
 #################################
 
-st.markdown('<h2 style="color:#45738F">Year Progressions</h2>', unsafe_allow_html=True)
+st.markdown('<h2 style="color:#45738F">Year Progressions and Goals</h2>', unsafe_allow_html=True)
 
 grouped_by_year_and_month = processed_data.groupby(['year', 'month', 'type']).agg({'distance': 'sum', 'total_elevation_gain': 'sum'}).reset_index() # Group by year and month
 
@@ -282,10 +412,10 @@ fig = px.line(grouped_by_year_and_month, x='month', y=selected_metric, color='ye
 fig.update_layout(
         xaxis=dict(
             showline=True,
-            showgrid=False,
+            showgrid=True,
             showticklabels=True,
             linecolor='rgb(204, 204, 204)',
-            linewidth=2,
+            linewidth=1,
             ticks='outside',
             tickfont=dict(
                 family='Arial',
@@ -294,9 +424,9 @@ fig.update_layout(
             ),
         ),
         yaxis=dict(
-            # showgrid=True,
-            zeroline=False,
-            showline=False,
+            showgrid=True,
+            zeroline=True,
+            showline=True,
             gridcolor = 'rgb(235, 236, 240)',
             showticklabels=True,
             title='',
@@ -304,20 +434,7 @@ fig.update_layout(
         ),
         autosize=True,
         hovermode="x unified",
-        # margin=dict(
-        #     autoexpand=True,
-        #     l=100,
-        #     r=20,
-        #     t=110,
-        # ),
         showlegend=False,
-#         legend=dict(
-#         # orientation="h",
-#         yanchor="bottom",
-#         y=0.9,
-#         xanchor="left",
-#         x=0.7
-# ),
         plot_bgcolor='rgba(0,0,0,0)',
         xaxis_title='',
         yaxis_title='Distamce (miles)' if selected_metric == 'Cumulative Distance' else 'Elevation (feet)',
@@ -328,6 +445,8 @@ fig.for_each_trace(lambda trace: fig.add_annotation(
     font_color=trace.line.color,
     ax=10, ay=10, xanchor="left", showarrow=False))
 fig.update_traces(mode="markers+lines", hovertemplate=None)
+fig.update_xaxes(showgrid=False)
+fig.update_yaxes(showgrid=False)
 
 st.plotly_chart(fig, use_container_width=True, config= dict(
             displayModeBar = False))
@@ -419,18 +538,12 @@ with col2:
 
 st.markdown('<h2 style="color:#45738F">The Gear</h2>', unsafe_allow_html=True)
 
-
-
+col1, col2 = st.columns(2)
 
 tcr_odometer = bikes_df[bikes_df.model_name == 'TCR']['converted_distance'].values[0]
 storck_odometer = bikes_df[bikes_df.model_name == 'scenero G2']['converted_distance'].values[0]
 headlands_odometer = bikes_df[bikes_df.model_name == 'Headlands']['converted_distance'].values[0]
 slate_odometer = bikes_df[bikes_df.model_name == 'Slate']['converted_distance'].values[0]
-
-
-
-
-col1, col2 = st.columns(2)
 
 odometer_metric_color = '#DF553B'
 
