@@ -19,15 +19,10 @@ CLIENT_ID = st.secrets['CLIENT_ID']
 CLIENT_SECRET = st.secrets['CLIENT_SECRET']
 REFRESH_TOKEN = st.secrets['REFRESH_TOKEN']
 
-# For local development
-# CLIENT_ID = os.environ.get('CLIENT_ID')
-# CLIENT_SECRET = os.environ.get('CLIENT_SECRET')
-# REFRESH_TOKEN = os.environ.get('REFRESH_TOKEN')
 
-#############################
-# FUNCTION TO RETREIVE DATA #
-#############################
-
+#################################################
+# FUNCTIONS TO RETRIEVE AND PROCESS STRAVA DATA #
+#################################################
 
 
 def my_data():
@@ -174,6 +169,19 @@ def process_data(all_activities):
     activities_df = all_activities.drop(cols_to_remove, axis=1)
 
     return activities_df
+
+######################################################
+# FUNCTION TO RETRIEVE ELEVATION DATA FROM OPEN MAPS #
+######################################################
+
+def get_elevation(latitude, longitude):
+    base_url = 'https://api.open-elevation.com/api/v1/lookup'
+    payload = {'locations': f'{latitude},{longitude}'}
+    r = requests.get(base_url, params=payload).json()['results'][0]
+    return r['elevation']
+
+
+
 
 if __name__ == '__main__':
     my_data()
