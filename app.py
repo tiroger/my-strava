@@ -3,12 +3,14 @@
 #############
 
 # from turtle import color, width
+from turtle import onclick
 from get_strava_data import my_data, process_data, bike_data, get_elevation # Functions to retrive data using strava api and process for visualizations
 
 import ast
 import polyline
 
 import pandas as pd
+from pandas.api.types import CategoricalDtype
 import numpy as np
 import datetime as dt
 
@@ -220,13 +222,18 @@ st.markdown('<h2 style="color:#45738F">Activities</h2>', unsafe_allow_html=True)
 activity_type = st.selectbox('Filter by sport', ['Ride', 'Workout', 'WeightTraining', 'Walk', 'Hike', 'Yoga',
        'VirtualRide', 'Elliptical', 'Run', 'Swim', 'AlpineSki']) # Select from dropdown
 
+sort_preference = st.radio('Sort by', ('Date', 'Distance (mi)', 'Elevation Gain (ft)', 'Elevation Gain/mile (ft)', 'Avg Speed (mph)', 'Avg Power (Watts)', 'Avg Heartrate', 'Suffer Score'))
+
 # Processing data for table
-streamlit_df = processed_data[['start_date_local', 'name', 'type', 'moving_time', 'distance', 'total_elevation_gain', 'average_speed', 'average_cadence', 'average_watts', 'average_heartrate', 'suffer_score']]
+streamlit_df = processed_data[['start_date_local', 'name', 'type', 'moving_time', 'distance', 'total_elevation_gain', 'elev_gain_per_mile', 'average_speed', 'average_cadence', 'average_watts', 'average_heartrate', 'suffer_score']]
 streamlit_df['start_date_local'] = pd.to_datetime(streamlit_df['start_date_local'])
-streamlit_df['start_date_local'] = streamlit_df['start_date_local'].dt.strftime('%m-%d-%Y')
-streamlit_df.rename(columns={'start_date_local': 'Date','name': 'Name', 'type': 'Type', 'moving_time': 'Moving Time (h)', 'distance': 'Distance (mi)', 'total_elevation_gain': 'Elevation Gain (ft)', 'average_speed': 'Avg Speed (mph)', 'average_cadence': 'Avg Cadence (rpm)', 'average_watts': 'Avg Power (Watts)', 'average_heartrate': 'Avg Heartrate', 'suffer_score': 'Suffer Score'}, inplace=True)
-# streamlit_df.set_index('Date', inplace=True)
+streamlit_df['start_date_local'] = streamlit_df['start_date_local'].dt.strftime('%Y-%m-%d')
+streamlit_df.rename(columns={'start_date_local': 'Date','name': 'Name', 'type': 'Type', 'moving_time': 'Moving Time (h)', 'distance': 'Distance (mi)', 'total_elevation_gain': 'Elevation Gain (ft)', 'elev_gain_per_mile': 'Elevation Gain/mile (ft)', 'average_speed': 'Avg Speed (mph)', 'average_cadence': 'Avg Cadence (rpm)', 'average_watts': 'Avg Power (Watts)', 'average_heartrate': 'Avg Heartrate', 'suffer_score': 'Suffer Score'}, inplace=True)
+#streamlit_df.set_index('Date', inplace=True)
 streamlit_df = streamlit_df[streamlit_df['Type'].isin([activity_type])]
+
+# Sorting table
+streamlit_df.sort_values(by=sort_preference, ascending=False, inplace=True)
 
 headerColor = '#45738F'
 rowEvenColor = 'lightcyan'
@@ -234,19 +241,21 @@ rowOddColor = 'white'
 
 # Plotly table
 fig = go.Figure(data=[go.Table(
-    columnorder = [1,2,3,4,5,6,7,8,9,10,11],
-    columnwidth = [25,50,18,20,23,25,20,24,20,25,17],
+    columnorder = [1,2,3,4,5,6,7,8,9,10,11,12],
+    columnwidth = [25,50,18,20,20,23,25,20,24,20,25,17],
     header=dict(values=list(streamlit_df.columns),
                 line_color='darkslategray',
                 fill_color=headerColor,
     font=dict(color='white', size=13)),
-    cells=dict(values=[streamlit_df['Date'], streamlit_df['Name'], streamlit_df['Type'], streamlit_df['Moving Time (h)'], streamlit_df['Distance (mi)'], streamlit_df['Elevation Gain (ft)'], streamlit_df['Avg Speed (mph)'], streamlit_df['Avg Cadence (rpm)'], streamlit_df['Avg Power (Watts)'], streamlit_df['Avg Heartrate'], streamlit_df['Suffer Score']],
+    cells=dict(values=[streamlit_df['Date'], streamlit_df['Name'], streamlit_df['Type'], streamlit_df['Moving Time (h)'], streamlit_df['Distance (mi)'], streamlit_df['Elevation Gain (ft)'], streamlit_df['Elevation Gain/mile (ft)'], streamlit_df['Avg Speed (mph)'], streamlit_df['Avg Cadence (rpm)'], streamlit_df['Avg Power (Watts)'], streamlit_df['Avg Heartrate'], streamlit_df['Suffer Score']],
                fill_color = [[rowOddColor,rowEvenColor]*len(streamlit_df.index),], font=dict(color='black', size=12), height=50))
 ])
 fig.update_layout(margin=dict(l=0, r=0, t=0, b=0))
 
 # st.dataframe(streamlit_df)
 st.plotly_chart(fig, use_container_width = True, config=dict(displayModeBar = False))
+
+
 
 #################
  # MAP OF RIDES #
@@ -360,6 +369,89 @@ marker = folium.Marker(location=decoded[0],
 
 folium_static(my_map, width=1040)
 
+##########################
+# HEAT MAP OF ACTIVITIES #
+##########################
+
+st.markdown('<h2 style="color:#45738F">Activity Frequency</h2>', unsafe_allow_html=True)
+
+processed_data = processed_data[processed_data.type == activity_type]
+def default_fig():
+    
+    grouped_by_day_hour = processed_data.groupby(['weekday', 'hour']).agg({'id': 'count'}).reset_index()
+
+    # Custom sorting weekdays starting on monday
+    day_order = CategoricalDtype(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'], ordered=True)
+    grouped_by_day_hour['weekday'] = grouped_by_day_hour['weekday'].astype(day_order)
+    grouped_by_day_hour.sort_values('weekday', inplace=True)
+
+    # Creating new entries for hours with no data
+    mux = pd.MultiIndex.from_product([grouped_by_day_hour.weekday.unique(), range(0,24)], names=['weekday', 'hour'])
+    grouped_by_day_hour = grouped_by_day_hour.set_index(['weekday', 'hour']).reindex(mux, fill_value=0).reset_index()
+
+    # Pivoting table to get the number of activities per hour
+    pivot_data = grouped_by_day_hour.pivot_table(index='weekday', columns='hour', values='id', aggfunc='sum')
+    pivot_data.fillna(0, inplace=True)
+
+    # Creating heatmap of workouts by weekday and hour
+    hours_of_day = ['12am', '1am', '2am', '3am', '4am', '5am', '6am', '7am', '8am', '9am', '10am', '11am', '12pm', '1pm', '2pm', '3pm', '4pm', '5pm', '6pm', '7pm', '8pm', '9pm', '10pm', '11pm']
+
+    fig = px.imshow(pivot_data,
+    labels=dict(x="", y="", color="Activities"),
+    color_continuous_scale='oranges',
+    x=hours_of_day,
+    aspect="auto"
+    )
+    fig.update_xaxes(side="top")
+    fig.update_layout(
+        xaxis_nticks=8,
+        showlegend = False,
+        # autocolorscale=False,
+        plot_bgcolor='rgba(0,0,0,0)',
+        margin=dict(l=0, r=0, t=50, b=10))
+    fig.update_coloraxes(showscale=True)
+
+    return fig
+
+processed_data = processed_data[processed_data.type == activity_type]
+def switch_graph():
+    
+    grouped_by_month_day = processed_data.groupby(['month', 'day']).agg({'id': 'count'}).reset_index()
+    months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+    # Custom sorting weekdays starting on monday
+    month_order = CategoricalDtype(['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'], ordered=True)
+    # Converting month number to month name
+    grouped_by_month_day['month'] = grouped_by_month_day['month'].apply(lambda x: months[x-1])
+    grouped_by_month_day['month'] = grouped_by_month_day['month'].astype(month_order)
+    grouped_by_month_day.sort_values('month', inplace=True)
+
+    # Pivoting table to get the number of activities per hour
+    pivot_data_month_day = grouped_by_month_day.pivot_table(index='month', columns='day', values='id', aggfunc='sum')
+    pivot_data_month_day.fillna(0, inplace=True)
+
+    fig_1 = px.imshow(pivot_data_month_day,
+    labels=dict(x="", y="", color="Activities"),
+    color_continuous_scale='oranges',
+    # x=hours_of_day,
+    aspect="auto"
+    )
+    fig_1.update_xaxes(side="top")
+    fig_1.update_layout(
+        title='',
+        xaxis_nticks=8,
+        showlegend = False,
+        plot_bgcolor='rgba(0,0,0,0)')
+
+    return fig_1
+
+view = st.radio(
+     "Select view", ('Weekly', 'Monthly'), index=0)
+
+if view == 'Weekly':
+    st.plotly_chart(default_fig(), use_container_width = True, config=dict(displayModeBar = False))
+else:
+    st.plotly_chart(switch_graph(), use_container_width = True, config=dict(displayModeBar = False))
+
 #################################
 # Yearly Progressions line chart #
 #################################
@@ -425,8 +517,8 @@ fig.update_layout(
         ),
         yaxis=dict(
             showgrid=True,
-            zeroline=True,
-            showline=True,
+            zeroline=False,
+            showline=False,
             gridcolor = 'rgb(235, 236, 240)',
             showticklabels=True,
             title='',
@@ -459,9 +551,9 @@ st.plotly_chart(fig, use_container_width=True, config= dict(
 col1, col2 = st.columns(2)
 
 with col1:
-    st.metric(f'Distance Best {best_distance_year}', "{:,}".format(best_distance) + ' miles')
+    st.metric(f'Most Miles in a Year achieved in {best_distance_year}', "{:,}".format(best_distance) + ' miles')
 with col2:
-    st.metric(f'Elevation Best {best_elevation_year}', "{:,}".format(best_elevation) + ' feet')
+    st.metric(f'Most Elevation Gain in a Year achieved in {best_elevation_year}', "{:,}".format(best_elevation) + ' feet')
 
 
 
@@ -541,9 +633,16 @@ st.markdown('<h2 style="color:#45738F">The Gear</h2>', unsafe_allow_html=True)
 col1, col2 = st.columns(2)
 
 tcr_odometer = bikes_df[bikes_df.model_name == 'TCR']['converted_distance'].values[0]
+# tcr_average_speed = bikes_df[bikes_df.model_name == 'TCR']['average_speed'].values[0]
+
 storck_odometer = bikes_df[bikes_df.model_name == 'scenero G2']['converted_distance'].values[0]
+# storck_average_speed = bikes_df[bikes_df.model_name == 'scenero G2']['average_speed'].values[0]
+
 headlands_odometer = bikes_df[bikes_df.model_name == 'Headlands']['converted_distance'].values[0]
+# headlands_average_speed = bikes_df[bikes_df.model_name == 'Headlands']['average_speed'].values[0]
+
 slate_odometer = bikes_df[bikes_df.model_name == 'Slate']['converted_distance'].values[0]
+# slate_average_speed = bikes_df[bikes_df.model_name == 'Slate']['average_speed'].values[0]
 
 odometer_metric_color = '#DF553B'
 

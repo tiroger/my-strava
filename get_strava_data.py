@@ -160,6 +160,9 @@ def process_data(all_activities):
     all_activities['elapsed_time'] = (all_activities['elapsed_time'] / 3600).round(1)
     all_activities['moving_time'] = (all_activities['moving_time'] / 3600).round(1)
 
+    # Adding a column for elevation gain per mile
+    all_activities['elev_gain_per_mile'] = (all_activities['total_elevation_gain'] / all_activities['distance']).round(1)
+
     # Dropping unnecessary columns
     cols_to_remove = ['athlete', 'resource_state', 'upload_id_str', 'external_id', 
     'from_accepted_tag', 'has_kudoed', 'workout_type', 'display_hide_heartrate_option', 'visibility',
