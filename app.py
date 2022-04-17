@@ -280,8 +280,16 @@ decoded = pd.json_normalize(polylines_df[polylines_df.index == idx]['map'].apply
 
 
 # Adding elevation data from Open Street Map
-# elevation_profile = [get_elevation(coord[0], coord[1]) for coord in decoded]
-# elevation_profile_feet = [elevation_profile[i] * 3.28084 for i in range(len(elevation_profile))] # Converting elevation to feet
+@st.cache(persist=True, suppress_st_warning=True)
+
+def elev_profile_chart():
+    with st.spinner('Calculating elevation profile from Open Street Map. Hang tight...'):
+        elevation_profile = [get_elevation(coord[0], coord[1]) for coord in decoded]
+        elevation_profile_feet = [elevation_profile[i] * 3.28084 for i in range(len(elevation_profile))] # Converting elevation to feet
+
+        return elevation_profile_feet
+
+elevation_profile_feet = elev_profile_chart()
 
 # Plotting elevation data
 # fig, ax = plt.subplots(figsize=(10, 4))
@@ -301,71 +309,216 @@ decoded = pd.json_normalize(polylines_df[polylines_df.index == idx]['map'].apply
 
 
 
+# centroid = [
+#     np.mean([coord[0] for coord in decoded]), 
+#     np.mean([coord[1] for coord in decoded])
+# ]
+# my_map = folium.Map(location=centroid, zoom_start=12, tiles='OpenStreetMap')
+# folium.PolyLine(decoded).add_to(my_map)
+
+# icon = './icons/pin.png' # icon for ride start location
+# icon_image = Image.open(icon)
+        
+# icon = CustomIcon(
+# np.array(icon_image),
+# icon_size=(50, 50),
+# popup_anchor=(0, -30),
+# )
+
+# # popup image
+# image_file = './data/elevation_profile.png'
+# encoded = base64.b64encode(open(image_file, 'rb').read()).decode('UTF-8')
+
+# resolution, width, height = 50, 5, 6.5
+
+# # read png file
+# # elevation_profile = base64.b64encode(open(image_file, 'rb').read()).decode()
+
+
+# # popup text
+# html = """
+# <h3 style="font-family:arial">{}</h3>
+#     <p style="font-family:arial">
+#         <code>
+#         Date : {} <br>
+#         </code>
+#     </p>
+#     <p style="font-family:arial"> 
+#         <code>
+#             Distance&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp: {} miles <br>
+#             Elevation Gain&nbsp;&nbsp;&nbsp;&nbsp;&nbsp: {} feet <br>
+#             Average Speed&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp: {} mph<br>
+#             Average Watts&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp: {} Watts <br>
+#             Average HR&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp: {} <br>
+#             Suffer Score&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp: {} <br>
+#         </code>
+#     </p>
+# <img src="data:image/png;base64,{}">
+# """.format(
+#     polylines_df[polylines_df.index == idx]['name'].values[0], 
+#     polylines_df[polylines_df.index == idx]['start_date_local'].values[0],
+#     polylines_df[polylines_df.index == idx]['distance'].values[0], 
+#     polylines_df[polylines_df.index == idx]['total_elevation_gain'].values[0], 
+#     polylines_df[polylines_df.index == idx]['average_speed'].values[0], 
+#     polylines_df[polylines_df.index == idx]['weighted_average_watts'].values[0],  
+#     polylines_df[polylines_df.index == idx]['average_heartrate'].values[0],
+#     polylines_df[polylines_df.index == idx]['suffer_score'].values[0], 
+#     encoded
+# )
+
+# iframe = folium.IFrame(html, width=(width*resolution)+20, height=(height*resolution))
+# popup = folium.Popup(iframe, max_width=2650)
+
+# marker = folium.Marker(location=decoded[0],
+#                        popup=popup, 
+#                        icon=icon).add_to(my_map)
+
+# folium_static(my_map, width=1040)
+
+########################
+# Plotly scattermapbox #
+########################
+
 centroid = [
     np.mean([coord[0] for coord in decoded]), 
     np.mean([coord[1] for coord in decoded])
 ]
-my_map = folium.Map(location=centroid, zoom_start=12, tiles='OpenStreetMap')
-folium.PolyLine(decoded).add_to(my_map)
 
-icon = './icons/pin.png' # icon for ride start location
-icon_image = Image.open(icon)
-        
-icon = CustomIcon(
-np.array(icon_image),
-icon_size=(50, 50),
-popup_anchor=(0, -30),
+lat = [coord[0] for coord in decoded] 
+lon = [coord[1] for coord in decoded]
+
+
+token = MAPBOX_TOKEN = st.secrets['MAPBOX_TOKEN']
+
+fig = go.Figure(go.Scattermapbox(
+    mode = "lines",
+    lon = lon, lat = lat,
+    marker = dict(size = 2, color = "red"),
+    line = dict(color = "midnightblue", width = 2),
+    # text = '‣',
+    textfont=dict(color='#E58606'),
+    textposition = 'bottom center',))
+fig.update_traces(hovertext='', selector=dict(type='scattermapbox'))
+fig.update_layout(
+    mapbox = {
+        'accesstoken': token,
+        'style': "outdoors", 'zoom': 11,
+        'center': {'lon': centroid[1], 'lat': centroid[0]}
+    },
+    margin = {'l': 0, 'r': 0, 't': 0, 'b': 0},
+    showlegend = False)
+
+name = polylines_df[polylines_df.index == idx]['name'].values[0]
+distance = polylines_df[polylines_df.index == idx]['distance'].values[0]
+elev_gain = polylines_df[polylines_df.index == idx]['total_elevation_gain'].values[0]
+avg_speed = polylines_df[polylines_df.index == idx]['average_speed'].values[0]
+avg_power = polylines_df[polylines_df.index == idx]['weighted_average_watts'].values[0] 
+suffer = polylines_df[polylines_df.index == idx]['suffer_score'].values[0]
+
+fig_elev = px.line(elevation_profile_feet, x=range(len(elevation_profile_feet)), y=pd.Series(elevation_profile_feet).rolling(5).mean())
+fig_elev.update_layout(
+        xaxis=dict(
+            showline=True,
+            showgrid=False,
+            showticklabels=False,
+            linecolor='rgb(204, 204, 204)',
+            linewidth=1,
+            ticks='',
+            tickfont=dict(
+                family='Arial',
+                size=12,
+                color='rgb(82, 82, 82)',
+            ),
+        ),
+        yaxis=dict(
+            showgrid=False,
+            zeroline=False,
+            showline=False,
+            gridcolor = 'rgb(235, 236, 240)',
+            showticklabels=True,
+            title='Elevation (ft)',
+            autorange=False,
+            range=[0, 3000]
+        ),
+        autosize=True,
+        hovermode="x unified",
+        showlegend=False,
+        plot_bgcolor='rgba(0,0,0,0)',
+        xaxis_title='',
+        margin=dict(l=0, r=0, t=0, b=0),
+    )
+
+fig_elev.add_annotation(text=f"<b>RIDE STATS</b>--------------------", 
+                    align='left',
+                    showarrow=False,
+                    xref='paper',
+                    yref='paper',
+                    x=0.05,
+                    y=0.99,
+)
+fig_elev.add_annotation(text=f"<b>Name</b>: {name}", 
+                    align='left',
+                    showarrow=False,
+                    xref='paper',
+                    yref='paper',
+                    x=0.05,
+                    y=0.95,
+)                    
+fig_elev.add_annotation(text=f"<b>Distance</b>: {distance} miles", 
+                    align='left',
+                    showarrow=False,
+                    xref='paper',
+                    yref='paper',
+                    x=0.05,
+                    y=0.91,
+)
+fig_elev.add_annotation(text=f"<b>Elevation Gain</b>: {elev_gain} feet", 
+                    align='left',
+                    showarrow=False,
+                    xref='paper',
+                    yref='paper',
+                    x=0.05,
+                    y=0.87,
+)
+fig_elev.add_annotation(text=f"<b>Average Speed</b>: {avg_speed} mph", 
+                    align='left',
+                    showarrow=False,
+                    xref='paper',
+                    yref='paper',
+                    x=0.05,
+                    y=0.83,
+)     
+fig_elev.add_annotation(text=f"<b>Weighted Power</b>: {avg_power} Watts", 
+                    align='left',
+                    showarrow=False,
+                    xref='paper',
+                    yref='paper',
+                    x=0.05,
+                    y=0.79,
+)
+fig_elev.add_annotation(text=f"<b>Suffer Score</b>: {suffer.astype(int)}", 
+                    align='left',
+                    showarrow=False,
+                    xref='paper',
+                    yref='paper',
+                    x=0.05,
+                    y=0.75,
+)  
+fig_elev.add_annotation(text="----------------------------------", 
+                    align='left',
+                    showarrow=False,
+                    xref='paper',
+                    yref='paper',
+                    x=0.05,
+                    y=0.71,
 )
 
-# popup image
-image_file = './data/elevation_profile.png'
-encoded = base64.b64encode(open(image_file, 'rb').read()).decode('UTF-8')
+col1, col2 = st.columns(2)
+with col1:
+    st.plotly_chart(fig, use_container_width = True, config=dict(displayModeBar = False))
+with col2:
 
-resolution, width, height = 50, 5, 6.5
-
-# read png file
-# elevation_profile = base64.b64encode(open(image_file, 'rb').read()).decode()
-
-
-# popup text
-html = """
-<h3 style="font-family:arial">{}</h3>
-    <p style="font-family:arial">
-        <code>
-        Date : {} <br>
-        </code>
-    </p>
-    <p style="font-family:arial"> 
-        <code>
-            Distance&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp: {} miles <br>
-            Elevation Gain&nbsp;&nbsp;&nbsp;&nbsp;&nbsp: {} feet <br>
-            Average Speed&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp: {} mph<br>
-            Average Watts&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp: {} Watts <br>
-            Average HR&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp: {} <br>
-            Suffer Score&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp: {} <br>
-        </code>
-    </p>
-<img src="data:image/png;base64,{}">
-""".format(
-    polylines_df[polylines_df.index == idx]['name'].values[0], 
-    polylines_df[polylines_df.index == idx]['start_date_local'].values[0],
-    polylines_df[polylines_df.index == idx]['distance'].values[0], 
-    polylines_df[polylines_df.index == idx]['total_elevation_gain'].values[0], 
-    polylines_df[polylines_df.index == idx]['average_speed'].values[0], 
-    polylines_df[polylines_df.index == idx]['weighted_average_watts'].values[0],  
-    polylines_df[polylines_df.index == idx]['average_heartrate'].values[0],
-    polylines_df[polylines_df.index == idx]['suffer_score'].values[0], 
-    encoded
-)
-
-iframe = folium.IFrame(html, width=(width*resolution)+20, height=(height*resolution))
-popup = folium.Popup(iframe, max_width=2650)
-
-marker = folium.Marker(location=decoded[0],
-                       popup=popup, 
-                       icon=icon).add_to(my_map)
-
-folium_static(my_map, width=1040)
+    st.plotly_chart(fig_elev, use_container_width = True, config=dict(displayModeBar = False))
 
 ##########################
 # HEAT MAP OF ACTIVITIES #
