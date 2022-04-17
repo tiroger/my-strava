@@ -2,8 +2,6 @@
 # LIBRARIES #
 #############
 
-# from turtle import color, width
-from turtle import onclick
 from get_strava_data import my_data, process_data, bike_data, get_elevation # Functions to retrive data using strava api and process for visualizations
 
 import ast
