@@ -12,7 +12,7 @@ from pandas.api.types import CategoricalDtype
 import numpy as np
 import datetime as dt
 
-from PIL import Image
+# from PIL import Image
 import base64
 
 # import matplotlib.pyplot as plt
@@ -32,7 +32,8 @@ import streamlit.components.v1 as components
 ###############
 # CREDENTIALS #
 ###############
-MAPBOX_TOKEN = st.secrets['MAPBOX_TOKEN']
+
+token = MAPBOX_TOKEN = st.secrets['MAPBOX_TOKEN']
 
 
 ###########################
@@ -388,7 +389,7 @@ lat = [coord[0] for coord in decoded]
 lon = [coord[1] for coord in decoded]
 
 
-token = MAPBOX_TOKEN = st.secrets['MAPBOX_TOKEN']
+
 
 fig = go.Figure(go.Scattermapbox(
     mode = "lines",
