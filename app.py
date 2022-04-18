@@ -2,8 +2,7 @@
 # LIBRARIES #
 #############
 
-from cgitb import text
-from get_strava_data import my_data, process_data, bike_data, get_elevation, get_elev_data_GOOGLE # Functions to retrive data using strava api and process for visualizations
+from get_strava_data import my_data, process_data, bike_data, get_elev_data_GOOGLE # Functions to retrive data using strava api and process for visualizations
 
 import ast
 import polyline
