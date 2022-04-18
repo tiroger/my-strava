@@ -5,6 +5,7 @@
 from dotenv import load_dotenv
 load_dotenv()
 import os
+import ast
 
 import requests
 import urllib3
@@ -18,6 +19,7 @@ import streamlit as st
 CLIENT_ID = st.secrets['CLIENT_ID']
 CLIENT_SECRET = st.secrets['CLIENT_SECRET']
 REFRESH_TOKEN = st.secrets['REFRESH_TOKEN']
+GOOGLE_API_KEY = st.secrets['GOOGLE_API_KEY']
 
 
 #################################################
@@ -183,7 +185,22 @@ def get_elevation(latitude, longitude):
     r = requests.get(base_url, params=payload).json()['results'][0]
     return r['elevation']
 
+###################################################
+# FUNCTION TO RETRIEVE ELEVATION DATA FROM GOOGLE #
+###################################################
 
+def get_elev_data_GOOGLE(lat, lon):
+    url = f"https://maps.googleapis.com/maps/api/elevation/json?locations={lat}%2C{lon}&key={GOOGLE_API_KEY}"
+
+    payload={}
+    headers = {}
+
+    response = requests.request("GET", url, headers=headers, data=payload)
+    response = ast.literal_eval(response.text)
+    elevation = response['results'][0]['elevation']
+    elevation_feet = elevation * 3.28084
+
+    return elevation_feet
 
 
 if __name__ == '__main__':

@@ -6,12 +6,10 @@ from twilio.rest import Client
 
 import streamlit as st
 
-
+account_sid = st.secrets['TWILIO_ACCOUNT_SID']
+auth_token = st.secrets['TWILIO_AUTH_TOKEN']
+messaging_service_sid = st.secrets['MESSAGE_SERVICE_SID']
 def send_message(message_body, number):
-    account_sid = st.secrets['TWILIO_ACCOUNT_SID']
-    auth_token = st.secrets['TWILIO_AUTH_TOKEN']
-    messaging_service_sid = st.secrets['MESSAGE_SERVICE_SID']
-
     client = Client(account_sid, auth_token)
     
     message_body = client.messages.create(  

@@ -2,7 +2,8 @@
 # LIBRARIES #
 #############
 
-from get_strava_data import my_data, process_data, bike_data, get_elevation # Functions to retrive data using strava api and process for visualizations
+from cgitb import text
+from get_strava_data import my_data, process_data, bike_data, get_elevation, get_elev_data_GOOGLE # Functions to retrive data using strava api and process for visualizations
 
 import ast
 import polyline
@@ -34,6 +35,7 @@ import streamlit.components.v1 as components
 ###############
 
 token = MAPBOX_TOKEN = st.secrets['MAPBOX_TOKEN']
+GOOGLE_API_KEY = st.secrets['GOOGLE_API_KEY']
 
 
 ###########################
@@ -280,13 +282,13 @@ idx = polylines_df[polylines_df.name == option].index.values[0]
 decoded = pd.json_normalize(polylines_df[polylines_df.index == idx]['map'].apply(ast.literal_eval))['summary_polyline'].apply(polyline.decode).values[0]
 
 
-# Adding elevation data from Open Street Map
+# Adding elevation data from Google Elevation API
 @st.cache(persist=True, suppress_st_warning=True)
 
 def elev_profile_chart():
-    with st.spinner('Calculating elevation profile from Open Street Map. Hang tight...'):
-        elevation_profile = [get_elevation(coord[0], coord[1]) for coord in decoded]
-        elevation_profile_feet = [elevation_profile[i] * 3.28084 for i in range(len(elevation_profile))] # Converting elevation to feet
+    with st.spinner('Calculating elevation profile from Google Elevation. Hang tight...'):
+        elevation_profile_feet = [get_elev_data_GOOGLE(coord[0], coord[1]) for coord in decoded]
+        # elevation_profile_feet = [elevation_profile[i] * 3.28084 for i in range(len(elevation_profile))] # Converting elevation to feet
 
         return elevation_profile_feet
 
@@ -817,3 +819,56 @@ with col2:
     st.markdown('<h4 style="text-align: center;">Cannondale Slate</h4>', unsafe_allow_html=True)
     st.image('./images/slate.jpeg')
     st.markdown(f'<h5 style="color:lightgrey">Odometer: <b style="color:{odometer_metric_color}">{"{:,}".format(slate_odometer)} miles</b></h5>', unsafe_allow_html=True)
+
+
+
+######################
+# PERFORMACE METRICS #
+######################
+
+st.markdown('<h2 style="color:#45738F">Performance Insights</h2>', unsafe_allow_html=True)
+
+
+metric_1 = ['distance', 'moving_time',
+       'total_elevation_gain',
+       'achievement_count', 'kudos_count', 'comment_count', 'photo_count',
+       'average_speed',
+       'average_heartrate', 'pr_count', 'total_photo_count',
+       'suffer_score', 'average_cadence', 'average_temp', 'average_watts',
+       'max_watts', 'weighted_average_watts', 'kilojoules']
+metric_2 = ['distance', 'moving_time',
+       'total_elevation_gain',
+       'achievement_count', 'kudos_count', 'comment_count', 'photo_count',
+       'average_speed',
+       'average_heartrate', 'pr_count', 'total_photo_count',
+       'suffer_score', 'average_cadence', 'average_temp', 'average_watts',
+       'max_watts', 'weighted_average_watts', 'kilojoules']
+
+col1, col2 = st.columns(2)
+
+with col1:
+    metric_X = st.selectbox('Which metrics would you like to plot?', metric_1, key='metric_X', index=12)
+with col2:
+    metric_Y = st.selectbox('', metric_2, key='metric_Y', index=14)
+
+processed_data['year'] = processed_data['year'].astype(str)
+# Scatterplots
+fig = px.scatter(processed_data, x=metric_X, y=metric_Y, size='distance', color='year')
+
+fig.update_layout(
+    # title=f'{metric_X} vs {metric_Y}',
+    xaxis_title=f'{metric_X}',
+    yaxis_title=f'{metric_Y}',
+    plot_bgcolor='rgba(0,0,0,0)',
+    autosize=True,
+    hovermode="x unified",
+    showlegend=True,
+    margin=dict(l=0, r=0, t=30, b=0),
+    yaxis=dict(
+    showticklabels=True,
+    )
+)
+st.plotly_chart(fig, use_container_width=True, config= dict(
+            displayModeBar = False))
+st.caption('Point sizes are relative to ride distance')
+
