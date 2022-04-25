@@ -113,6 +113,9 @@ bikes_df = bikes()
 processed_data['start_date_local'] = pd.to_datetime(processed_data['start_date_local'])
 processed_data['start_date_local'] = processed_data['start_date_local'].dt.strftime('%m-%d-%Y')
 
+# Saving processed data to csv for future use
+processed_data.to_csv('./data/processed_data.csv', index=False)
+
 
 
 # Data for dahsboard
@@ -159,7 +162,7 @@ with st.sidebar:
     with col1:
         st.image('./icons/stopwatch.png', width=80, output_format='PNG')
     with col2:
-        st.metric(label="Moving Time (hours)", value=f'{total_time}')
+        st.metric(label="Moving Time (hours)", value=f'{round(total_time,1)}')
 
     col1, col2 = st.columns(2)
     with col1:
@@ -744,7 +747,7 @@ col1, col2, = st.columns(2)
 with col1:
     st.metric(f'{today_year} Distance Goal', "{:,}".format(distance_goal) + ' miles')
 with col2:
-    st.metric(f'Distance through {today.strftime("%m/%d/%Y")}', "{:,}".format(where_i_am) + ' miles', f'{pace} ' + 'miles behind' if pace <0 else f'{pace} ' + 'miles ahead')
+    st.metric(f'Distance through {today.strftime("%m/%d/%Y")}', "{:,}".format(round(where_i_am, 1)) + ' miles', f'{pace} ' + 'miles behind' if pace <0 else f'{pace} ' + 'miles ahead')
 
 
 elevation_goal = st.number_input('Choose an elevation goal for the year', value=50000) # distance goal for 2022
@@ -774,7 +777,7 @@ col1, col2, = st.columns(2)
 with col1:
     st.metric(f'{today_year} Elevation Goal', "{:,}".format(elevation_goal) + ' feet')
 with col2:
-    st.metric(f'Elevation Gain through {today.strftime("%m/%d/%Y")}', "{:,}".format(where_i_am_elev) + ' feet', f'{"{:,}".format(pace_elev)} ' + 'feet behind' if pace_elev <0 else f'{"{:,}".format(pace_elev)} ' + 'feet ahead')
+    st.metric(f'Elevation Gain through {today.strftime("%m/%d/%Y")}', "{:,}".format(round(where_i_am_elev, 1)) + ' feet', f'{"{:,}".format(pace_elev)} ' + 'feet behind' if pace_elev <0 else f'{"{:,}".format(pace_elev)} ' + 'feet ahead')
 
 
 ############
