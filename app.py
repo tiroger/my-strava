@@ -711,6 +711,12 @@ with col1:
 with col2:
     st.metric(f'Most Elevation Gain in a Year achieved in {best_elevation_year}', "{:,}".format(best_elevation) + ' feet')
 
+previous_year = this_year - 1
+# Getting previous year's best distance
+previous_best_distance = grouped_by_year_and_month[grouped_by_year_and_month['year'] == previous_year]['Cumulative Distance'].max()
+# Getting previous year's best elevation
+previous_best_elevation = grouped_by_year_and_month[grouped_by_year_and_month['year'] == previous_year]['Cumulative Elevation'].max()
+
 
 
 # Limiting the data to today's date
@@ -720,7 +726,7 @@ delta = d1 - d0
 
 days_gone_by = delta.days # number of days since the beginning of the year
 
-distance_goal = st.number_input('Choose a distance goal for the year', value=2000) # distance goal for 2022
+distance_goal = st.number_input("Choose a distance goal for the year (default is previous year's distance)", value=previous_best_distance) # distance goal for 2022
 # st.write('The current distance goal is ', distance_goal)
 
 monthly_goal = distance_goal/12 # monthly distance to reach 2500 miles
@@ -750,7 +756,7 @@ with col2:
     st.metric(f'Distance through {today.strftime("%m/%d/%Y")}', "{:,}".format(round(where_i_am, 1)) + ' miles', f'{pace} ' + 'miles behind' if pace <0 else f'{pace} ' + 'miles ahead')
 
 
-elevation_goal = st.number_input('Choose an elevation goal for the year', value=50000) # distance goal for 2022
+elevation_goal = st.number_input("Choose an elevation goal for the year (default is previous year's elevation)", value=previous_best_elevation) # distance goal for 2022
 # st.write('The current distance goal is ', distance_goal)
 
 monthly_goal_elev = elevation_goal/12 # monthly distance to reach 2500 miles
