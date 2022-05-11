@@ -162,7 +162,7 @@ with st.sidebar:
     with col1:
         st.image('./icons/stopwatch.png', width=80, output_format='PNG')
     with col2:
-        st.metric(label="Moving Time (hours)", value=f'{round(total_time,1)}')
+        st.metric(label="Moving Time (hours)", value=f'{"{:,}".format(round(total_time,1))}')
 
     col1, col2 = st.columns(2)
     with col1:
