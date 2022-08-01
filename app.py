@@ -149,7 +149,7 @@ with st.sidebar:
     # st.image('./icons/tri.jpeg')
     st.markdown('<h1 style="color:#FC4C02">Overview</h1>', unsafe_allow_html=True)
     st.subheader(f'Member since {start_date}')
-    st.image('./data/profile.png', width=300, output_format='PNG')
+    st.image('./images/profile_pic.png', width=300, output_format='PNG')
 
 
     col1, col2 = st.columns(2)
@@ -281,20 +281,26 @@ option = st.selectbox(
 idx = polylines_df[polylines_df.name == option].index.values[0]
 
 # Decoding polylines
-decoded = pd.json_normalize(polylines_df[polylines_df.index == idx]['map'].apply(ast.literal_eval))['summary_polyline'].apply(polyline.decode).values[0]
+# Setting a try block in case a ride does not have a map
+try:
+    decoded = pd.json_normalize(polylines_df[polylines_df.index == idx]['map'].apply(ast.literal_eval))['summary_polyline'].apply(polyline.decode).values[0]
 
 
-# Adding elevation data from Google Elevation API
-@st.cache(persist=True, suppress_st_warning=True)
+    # Adding elevation data from Google Elevation API
+    @st.cache(persist=True, suppress_st_warning=True)
 
-def elev_profile_chart():
-    with st.spinner('Calculating elevation profile from Google Elevation. Hang tight...'):
-        elevation_profile_feet = [get_elev_data_GOOGLE(coord[0], coord[1]) for coord in decoded]
-        # elevation_profile_feet = [elevation_profile[i] * 3.28084 for i in range(len(elevation_profile))] # Converting elevation to feet
+    def elev_profile_chart():
+        with st.spinner('Calculating elevation profile from Google Elevation. Hang tight...'):
+            elevation_profile_feet = [get_elev_data_GOOGLE(coord[0], coord[1]) for coord in decoded]
+            # elevation_profile_feet = [elevation_profile[i] * 3.28084 for i in range(len(elevation_profile))] # Converting elevation to feet
 
-        return elevation_profile_feet
+            return elevation_profile_feet
 
-elevation_profile_feet = elev_profile_chart()
+
+    elevation_profile_feet = elev_profile_chart()
+
+except:
+    st.write('Geocoordinates are unavailable for this activity')
 
 # Plotting elevation data
 # fig, ax = plt.subplots(figsize=(10, 4))
@@ -384,146 +390,150 @@ elevation_profile_feet = elev_profile_chart()
 # Plotly scattermapbox #
 ########################
 
-centroid = [
-    np.mean([coord[0] for coord in decoded]), 
-    np.mean([coord[1] for coord in decoded])
-]
+try:
+    centroid = [
+        np.mean([coord[0] for coord in decoded]), 
+        np.mean([coord[1] for coord in decoded])
+    ]
 
-lat = [coord[0] for coord in decoded] 
-lon = [coord[1] for coord in decoded]
+    lat = [coord[0] for coord in decoded] 
+    lon = [coord[1] for coord in decoded]
 
 
 
 
-fig = go.Figure(go.Scattermapbox(
-    mode = "lines",
-    lon = lon, lat = lat,
-    marker = dict(size = 2, color = "red"),
-    line = dict(color = "midnightblue", width = 2),
-    # text = '‣',
-    textfont=dict(color='#E58606'),
-    textposition = 'bottom center',))
-fig.update_traces(hovertext='', selector=dict(type='scattermapbox'))
-fig.update_layout(
-    mapbox = {
-        'accesstoken': token,
-        'style': "outdoors", 'zoom': 11,
-        'center': {'lon': centroid[1], 'lat': centroid[0]}
-    },
-    margin = {'l': 0, 'r': 0, 't': 0, 'b': 0},
-    showlegend = False)
+    fig = go.Figure(go.Scattermapbox(
+        mode = "lines",
+        lon = lon, lat = lat,
+        marker = dict(size = 2, color = "red"),
+        line = dict(color = "midnightblue", width = 2),
+        # text = '‣',
+        textfont=dict(color='#E58606'),
+        textposition = 'bottom center',))
+    fig.update_traces(hovertext='', selector=dict(type='scattermapbox'))
+    fig.update_layout(
+        mapbox = {
+            'accesstoken': token,
+            'style': "outdoors", 'zoom': 11,
+            'center': {'lon': centroid[1], 'lat': centroid[0]}
+        },
+        margin = {'l': 0, 'r': 0, 't': 0, 'b': 0},
+        showlegend = False)
 
-name = polylines_df[polylines_df.index == idx]['name'].values[0]
-distance = polylines_df[polylines_df.index == idx]['distance'].values[0]
-elev_gain = polylines_df[polylines_df.index == idx]['total_elevation_gain'].values[0]
-avg_speed = polylines_df[polylines_df.index == idx]['average_speed'].values[0]
-avg_power = polylines_df[polylines_df.index == idx]['weighted_average_watts'].values[0] 
-suffer = polylines_df[polylines_df.index == idx]['suffer_score'].values[0]
+    name = polylines_df[polylines_df.index == idx]['name'].values[0]
+    distance = polylines_df[polylines_df.index == idx]['distance'].values[0]
+    elev_gain = polylines_df[polylines_df.index == idx]['total_elevation_gain'].values[0]
+    avg_speed = polylines_df[polylines_df.index == idx]['average_speed'].values[0]
+    avg_power = polylines_df[polylines_df.index == idx]['weighted_average_watts'].values[0] 
+    suffer = polylines_df[polylines_df.index == idx]['suffer_score'].values[0]
 
-fig_elev = px.line(elevation_profile_feet, x=range(len(elevation_profile_feet)), y=pd.Series(elevation_profile_feet).rolling(5).mean())
-fig_elev.update_layout(
-        xaxis=dict(
-            showline=True,
-            showgrid=False,
-            showticklabels=False,
-            linecolor='rgb(204, 204, 204)',
-            linewidth=1,
-            ticks='',
-            tickfont=dict(
-                family='Arial',
-                size=12,
-                color='rgb(82, 82, 82)',
+    fig_elev = px.line(elevation_profile_feet, x=range(len(elevation_profile_feet)), y=pd.Series(elevation_profile_feet).rolling(5).mean())
+    fig_elev.update_layout(
+            xaxis=dict(
+                showline=True,
+                showgrid=False,
+                showticklabels=False,
+                linecolor='rgb(204, 204, 204)',
+                linewidth=1,
+                ticks='',
+                tickfont=dict(
+                    family='Arial',
+                    size=12,
+                    color='rgb(82, 82, 82)',
+                ),
             ),
-        ),
-        yaxis=dict(
-            showgrid=False,
-            zeroline=False,
-            showline=False,
-            gridcolor = 'rgb(235, 236, 240)',
-            showticklabels=True,
-            title='Elevation (ft)',
-            autorange=False,
-            range=[0, 3000]
-        ),
-        autosize=True,
-        hovermode="x unified",
-        showlegend=False,
-        plot_bgcolor='rgba(0,0,0,0)',
-        xaxis_title='',
-        margin=dict(l=0, r=0, t=0, b=0),
+            yaxis=dict(
+                showgrid=False,
+                zeroline=False,
+                showline=False,
+                gridcolor = 'rgb(235, 236, 240)',
+                showticklabels=True,
+                title='Elevation (ft)',
+                autorange=False,
+                range=[0, 3000]
+            ),
+            autosize=True,
+            hovermode="x unified",
+            showlegend=False,
+            plot_bgcolor='rgba(0,0,0,0)',
+            xaxis_title='',
+            margin=dict(l=0, r=0, t=0, b=0),
+        )
+
+    fig_elev.add_annotation(text=f"<b>RIDE STATS</b>--------------------", 
+                        align='left',
+                        showarrow=False,
+                        xref='paper',
+                        yref='paper',
+                        x=0.05,
+                        y=0.99,
+    )
+    fig_elev.add_annotation(text=f"<b>Name</b>: {name}", 
+                        align='left',
+                        showarrow=False,
+                        xref='paper',
+                        yref='paper',
+                        x=0.05,
+                        y=0.95,
+    )                    
+    fig_elev.add_annotation(text=f"<b>Distance</b>: {distance} miles", 
+                        align='left',
+                        showarrow=False,
+                        xref='paper',
+                        yref='paper',
+                        x=0.05,
+                        y=0.91,
+    )
+    fig_elev.add_annotation(text=f"<b>Elevation Gain</b>: {elev_gain} feet", 
+                        align='left',
+                        showarrow=False,
+                        xref='paper',
+                        yref='paper',
+                        x=0.05,
+                        y=0.87,
+    )
+    fig_elev.add_annotation(text=f"<b>Average Speed</b>: {avg_speed} mph", 
+                        align='left',
+                        showarrow=False,
+                        xref='paper',
+                        yref='paper',
+                        x=0.05,
+                        y=0.83,
+    )     
+    fig_elev.add_annotation(text=f"<b>Weighted Power</b>: {avg_power} Watts", 
+                        align='left',
+                        showarrow=False,
+                        xref='paper',
+                        yref='paper',
+                        x=0.05,
+                        y=0.79,
+    )
+    fig_elev.add_annotation(text=f"<b>Suffer Score</b>: {suffer.astype(int)}", 
+                        align='left',
+                        showarrow=False,
+                        xref='paper',
+                        yref='paper',
+                        x=0.05,
+                        y=0.75,
+    )  
+    fig_elev.add_annotation(text="----------------------------------", 
+                        align='left',
+                        showarrow=False,
+                        xref='paper',
+                        yref='paper',
+                        x=0.05,
+                        y=0.71,
     )
 
-fig_elev.add_annotation(text=f"<b>RIDE STATS</b>--------------------", 
-                    align='left',
-                    showarrow=False,
-                    xref='paper',
-                    yref='paper',
-                    x=0.05,
-                    y=0.99,
-)
-fig_elev.add_annotation(text=f"<b>Name</b>: {name}", 
-                    align='left',
-                    showarrow=False,
-                    xref='paper',
-                    yref='paper',
-                    x=0.05,
-                    y=0.95,
-)                    
-fig_elev.add_annotation(text=f"<b>Distance</b>: {distance} miles", 
-                    align='left',
-                    showarrow=False,
-                    xref='paper',
-                    yref='paper',
-                    x=0.05,
-                    y=0.91,
-)
-fig_elev.add_annotation(text=f"<b>Elevation Gain</b>: {elev_gain} feet", 
-                    align='left',
-                    showarrow=False,
-                    xref='paper',
-                    yref='paper',
-                    x=0.05,
-                    y=0.87,
-)
-fig_elev.add_annotation(text=f"<b>Average Speed</b>: {avg_speed} mph", 
-                    align='left',
-                    showarrow=False,
-                    xref='paper',
-                    yref='paper',
-                    x=0.05,
-                    y=0.83,
-)     
-fig_elev.add_annotation(text=f"<b>Weighted Power</b>: {avg_power} Watts", 
-                    align='left',
-                    showarrow=False,
-                    xref='paper',
-                    yref='paper',
-                    x=0.05,
-                    y=0.79,
-)
-fig_elev.add_annotation(text=f"<b>Suffer Score</b>: {suffer.astype(int)}", 
-                    align='left',
-                    showarrow=False,
-                    xref='paper',
-                    yref='paper',
-                    x=0.05,
-                    y=0.75,
-)  
-fig_elev.add_annotation(text="----------------------------------", 
-                    align='left',
-                    showarrow=False,
-                    xref='paper',
-                    yref='paper',
-                    x=0.05,
-                    y=0.71,
-)
+    col1, col2 = st.columns(2)
+    with col1:
+        st.plotly_chart(fig, use_container_width = True, config=dict(displayModeBar = False))
+    with col2:
 
-col1, col2 = st.columns(2)
-with col1:
-    st.plotly_chart(fig, use_container_width = True, config=dict(displayModeBar = False))
-with col2:
+        st.plotly_chart(fig_elev, use_container_width = True, config=dict(displayModeBar = False))
 
-    st.plotly_chart(fig_elev, use_container_width = True, config=dict(displayModeBar = False))
+except:
+    st.write('')
 
 ##########################
 # HEAT MAP OF ACTIVITIES #
@@ -641,8 +651,11 @@ grouped_by_year_and_month['year'] = grouped_by_year_and_month['year'].astype(int
 
 
 # Plotly charts
-
-selected_year = st.multiselect('Filter by Year', grouped_by_year_and_month.year.unique(), default=[2018, 2019, 2020, 2021, 2022]) # Filter for year
+try:
+    selected_year = st.multiselect('Filter by Year', grouped_by_year_and_month.year.unique(), default=[grouped_by_year_and_month.year.max()]) # Filter for year
+except: # If no data is available, we'll just show the current year
+    st.warning('No data available for the selected year')
+    selected_year = [this_year]
 selected_metric = st.selectbox('Metric', ['Cumulative Distance', 'Cumulative Elevation']) # Filter for desired metric
 
 best_distance = grouped_by_year_and_month['Cumulative Distance'].max()
@@ -726,7 +739,7 @@ delta = d1 - d0
 
 days_gone_by = delta.days # number of days since the beginning of the year
 
-distance_goal = st.number_input("Choose a distance goal for the year (default is previous year's distance)", value=previous_best_distance) # distance goal for 2022
+distance_goal = st.number_input("Choose a distance goal for the year", value=3000) # distance goal for 2022
 # st.write('The current distance goal is ', distance_goal)
 
 monthly_goal = distance_goal/12 # monthly distance to reach 2500 miles
@@ -756,7 +769,7 @@ with col2:
     st.metric(f'Distance through {today.strftime("%m/%d/%Y")}', "{:,}".format(round(where_i_am, 1)) + ' miles', f'{pace} ' + 'miles behind' if pace <0 else f'{pace} ' + 'miles ahead')
 
 
-elevation_goal = st.number_input("Choose an elevation goal for the year (default is previous year's elevation)", value=previous_best_elevation) # distance goal for 2022
+elevation_goal = st.number_input("Choose an elevation goal for the year", value=100000) # distance goal for 2022
 # st.write('The current distance goal is ', distance_goal)
 
 monthly_goal_elev = elevation_goal/12 # monthly distance to reach 2500 miles
