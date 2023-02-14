@@ -207,7 +207,8 @@ with st.sidebar:
 
 new_title = f'<H2 style="font-family:sans-serif; color:#fc4c02; font-size: 48px;">STRAVA OVERVIEW FOR {year} </H2>'
 st.markdown(new_title, unsafe_allow_html=True)
-no_activity = '<H3 style="font-family:sans-serif; color:#45738F; font-size: 42px;">No activity selected</H3>'
+no_activity = 'No activity selected'
+
 # Columns for data
 col1, col2, col3= st.columns(3)
 
@@ -230,7 +231,7 @@ with col1:
         total_activities = ''
     else:
         choice = ''
-    total_activities = f'<H3 style="font-family:sans-serif; color:#45738F; font-size: 42px;">{total_activities} {choice}</H3>'
+    total_activities = f'<p style="font-family:sans-serif; color:#45738F; font-size: 42px;">{total_activities} {choice}</p>'
     st.markdown(total_activities, unsafe_allow_html=True) 
 
 # Total distance traveled
@@ -241,9 +242,9 @@ with col2:
     total_distance = total_distance = round(processed_data[(processed_data.year == year) & (processed_data.type.isin(selected_activities))].distance.sum(), 0).astype(int)
     total_distance = f'{total_distance:,}' # Formatted with commas
     if selected_activities == []:
-        distance_traveled = f'<H3 style="font-family:sans-serif; color:#45738F; font-size: 42px;">{no_activity}</H3>'
+        distance_traveled = ''
     else:
-        distance_traveled = f'<H3 style="font-family:sans-serif; color:#45738F; font-size: 42px;">{total_distance} miles</H3>'
+        distance_traveled = f'<p style="font-family:sans-serif; color:#45738F; font-size: 42px;">{total_distance} miles</p>'
     st.markdown(distance_traveled, unsafe_allow_html=True)
     
 # Total moving time
@@ -258,9 +259,9 @@ with col3:
     # seconds = (total_moving_time*3600) % 60
     # total_moving_time = f'{hours}h {minutes}m {seconds}s'
     if selected_activities == []:
-        total_moving_time = f'<H3 style="font-family:sans-serif; color:#45738F; font-size: 42px;">{no_activity}</H3>'
+        total_moving_time = ''
     else:
-        total_moving_time = f'<H3 style="font-family:sans-serif; color:#45738F; font-size: 42px;">{total_moving_time} hours</H3>'
+        total_moving_time = f'<p style="font-family:sans-serif; color:#45738F; font-size: 42px;">{total_moving_time} hours</p>'
     st.markdown(total_moving_time, unsafe_allow_html=True)
     
     
@@ -275,9 +276,9 @@ with col4:
     total_elevation_gain = total_elevation_gain = round(processed_data[(processed_data.year == year) & (processed_data.type.isin(selected_activities))].total_elevation_gain.sum(), 0).astype(int) 
     total_elevation_gain = f'{total_elevation_gain:,}' # Formatted with commas
     if selected_activities == []:
-        total_elevation_gain = f'<H3 style="font-family:sans-serif; color:#45738F; font-size: 42px;">{no_activity}</H3>'
+        total_elevation_gain = ''
     else:
-        total_elevation_gain = f'<H3 style="font-family:sans-serif; color:#45738F; font-size: 42px;">{total_elevation_gain} feet</H3>'
+        total_elevation_gain = f'<p style="font-family:sans-serif; color:#45738F; font-size: 42px;">{total_elevation_gain} feet</p>'
     st.markdown(total_elevation_gain, unsafe_allow_html=True)
     
 # Total calories
@@ -291,9 +292,9 @@ with col5:
     # total_calories_burned = round(total_calories_burned / burger_calories, 0).astype(int)
     total_calories_burned = f'{total_calories_burned:,}' # Formatted with commas
     if selected_activities == []:
-        total_calories_burned = f'<H3 style="font-family:sans-serif; color:#45738F; font-size: 42px;">{no_activity}</H3>'
+        total_calories_burned = ''
     else:
-        total_calories_burned = f'<H3 style="font-family:sans-serif; color:#45738F; font-size: 42px;">{total_calories_burned} kcal</H3>'
+        total_calories_burned = f'<p style="font-family:sans-serif; color:#45738F; font-size: 42px;">{total_calories_burned} kcal</p>'
     st.markdown(total_calories_burned, unsafe_allow_html=True)
 
 # Total kudos
@@ -307,9 +308,9 @@ with col6:
     # total_calories_burned = round(total_calories_burned / burger_calories, 0).astype(int)
     total_kudos = f'{total_kudos:,}' # Formatted with commas
     if selected_activities == []:
-        total_kudos = f'<H3 style="font-family:sans-serif; color:#45738F; font-size: 42px;">{no_activity}</H3>'
+        total_kudos = ''
     else:
-        total_kudos = f'<H3 style="font-family:sans-serif; color:#45738F; font-size: 42px;">{total_kudos} kudos</H3>'
+        total_kudos = f'<p style="font-family:sans-serif; color:#45738F; font-size: 42px;">{total_kudos} kudos</p>'
     st.markdown(total_kudos, unsafe_allow_html=True)
 
 
@@ -371,70 +372,90 @@ try:
     # Create a calplot calendar with the number of activities per day for the selected year and activity type
     grouped_by_day_and_type = grouped_by_day_and_type[(grouped_by_day_and_type.index.year == year) & (grouped_by_day_and_type.type.isin(selected_activities))]
     fig, ax = calplot.calplot(data=grouped_by_day_and_type.id, colorbar=False, dropzero=True, edgecolor='grey', linewidth=0.5, cmap='tab20c', textcolor = '#808080')
-
     st.pyplot(fig=fig)
+    st.markdown(f'<p style="font-family:sans-serif; font-size: 20px;"><i>Longest streak:</i> <b>{longest_streak}<b> days</p>', unsafe_allow_html=True)
 except:
-    st.markdown('<H3 style="font-family:sans-serif; color:#45738F; font-size: 42px;">No Data</H3>', unsafe_allow_html=True)
-st.markdown(f'<H3 style="font-family:sans-serif; font-size: 20px;">Longest streak: {longest_streak} days</H3>', unsafe_allow_html=True)
+    st.write('No data available')
+
 st.markdown("""---""")
 
 top_performance_title =  f'<h2 style="color:#45738F">Top Performances</h2>'
 st.markdown(top_performance_title, unsafe_allow_html=True)
 
-kpi1, kpi2, kpi3, kpi4 = st.columns(4)
+kpi1, kpi2, kpi3, kpi4, kpi5 = st.columns(5)
 
-# Longest ride
-longest_ride = processed_data[(processed_data.year == year) & (processed_data.type.isin(selected_activities))].distance.max()
-# Fethcing the activity name that matches the longest ride
-longest_activity_name = processed_data[(processed_data.year == year) & (processed_data.type.isin(selected_activities)) & (processed_data.distance == longest_ride)].name.values[0]
-# Fetching the activity date that matches the longest ride
-longest_activity_date = processed_data[(processed_data.year == year) & (processed_data.type.isin(selected_activities)) & (processed_data.distance == longest_ride)].start_date_local.values[0]
-longest_ride = round(longest_ride, 1)
+try:
+    # Longest ride
+    longest_ride = processed_data[(processed_data.year == year) & (processed_data.type.isin(selected_activities))].distance.max()
+    # Fethcing the activity name that matches the longest ride
+    longest_activity_name = processed_data[(processed_data.year == year) & (processed_data.type.isin(selected_activities)) & (processed_data.distance == longest_ride)].name.values[0]
+    # Fetching the activity date that matches the longest ride
+    longest_activity_date = processed_data[(processed_data.year == year) & (processed_data.type.isin(selected_activities)) & (processed_data.distance == longest_ride)].start_date_local.values[0]
+    longest_ride = round(longest_ride, 1)
 
-# Most elevation
-most_elevation = processed_data[(processed_data.year == year) & (processed_data.type.isin(selected_activities))].total_elevation_gain.max()
+    # Most elevation
+    most_elevation = processed_data[(processed_data.year == year) & (processed_data.type.isin(selected_activities))].total_elevation_gain.max()
 
-# Fethcing the activity name that matches the most elevation
-most_elevation_name = processed_data[(processed_data.year == year) & (processed_data.type.isin(selected_activities)) & (processed_data.total_elevation_gain == most_elevation)].name.values[0]
-# Fetching the activity date that matches the most elevation
-most_elevation_date = processed_data[(processed_data.year == year) & (processed_data.type.isin(selected_activities)) & (processed_data.total_elevation_gain == most_elevation)].start_date_local.values[0]
-most_elevation = round(most_elevation, 1).astype(int)
+    # Fethcing the activity name that matches the most elevation
+    most_elevation_name = processed_data[(processed_data.year == year) & (processed_data.type.isin(selected_activities)) & (processed_data.total_elevation_gain == most_elevation)].name.values[0]
+    # Fetching the activity date that matches the most elevation
+    most_elevation_date = processed_data[(processed_data.year == year) & (processed_data.type.isin(selected_activities)) & (processed_data.total_elevation_gain == most_elevation)].start_date_local.values[0]
+    most_elevation = round(most_elevation, 1).astype(int)
 
-# Fastest pace
-fastest_ride = processed_data[(processed_data.year == year) & (processed_data.type.isin(selected_activities))].average_speed.max()
-# Fethcing the activity name that matches the fastest pace
-fastest_ride_name = processed_data[(processed_data.year == year) & (processed_data.type.isin(selected_activities)) & (processed_data.average_speed == fastest_ride)].name.values[0]
-# Fetching the activity date that matches the fastest pace
-fastest_ride_date = processed_data[(processed_data.year == year) & (processed_data.type.isin(selected_activities)) & (processed_data.average_speed == fastest_ride)].start_date_local.values[0]
+    # Fastest pace
+    fastest_ride = processed_data[(processed_data.year == year) & (processed_data.type.isin(selected_activities))].average_speed.max()
+    # Fethcing the activity name that matches the fastest pace
+    fastest_ride_name = processed_data[(processed_data.year == year) & (processed_data.type.isin(selected_activities)) & (processed_data.average_speed == fastest_ride)].name.values[0]
+    # Fetching the activity date that matches the fastest pace
+    fastest_ride_date = processed_data[(processed_data.year == year) & (processed_data.type.isin(selected_activities)) & (processed_data.average_speed == fastest_ride)].start_date_local.values[0]
+    fastest_pace = round(fastest_ride, 1)
 
-# Longest day on the bike
-longest_day = processed_data[(processed_data.year == year) & (processed_data.type.isin(selected_activities))].moving_time.max()
-# Fetching the activity name that matches the longest day on the bike
-longest_day_name = processed_data[(processed_data.year == year) & (processed_data.type.isin(selected_activities)) & (processed_data.moving_time == longest_day)].name.values[0]
-# Fetching the activity date that matches the longest day on the bike
-longest_day_date = processed_data[(processed_data.year == year) & (processed_data.type.isin(selected_activities)) & (processed_data.moving_time == longest_day)].start_date_local.values[0]
-longest_daye = round(longest_day, 1)
+    # Longest day on the bike
+    longest_day = processed_data[(processed_data.year == year) & (processed_data.type.isin(selected_activities))].moving_time.max()
+    # Fetching the activity name that matches the longest day on the bike
+    longest_day_name = processed_data[(processed_data.year == year) & (processed_data.type.isin(selected_activities)) & (processed_data.moving_time == longest_day)].name.values[0]
+    # Fetching the activity date that matches the longest day on the bike
+    longest_day_date = processed_data[(processed_data.year == year) & (processed_data.type.isin(selected_activities)) & (processed_data.moving_time == longest_day)].start_date_local.values[0]
+    longest_day = round(longest_day, 1)
 
-with kpi1:
-    st.image('./icons/distance_2.png', width=50)
-    st.markdown(f'<H3 style="font-family:sans-serif; font-size: 20px;">Longest ride: {longest_ride:,} miles</H3>', unsafe_allow_html=True)
-    st.write(longest_activity_name)
-    st.write(longest_activity_date)
-    
-with kpi2:
-    st.image('./icons/goal.png', width=50)
-    st.markdown(f'<H3 style="font-family:sans-serif; font-size: 20px;">Most elevation: {most_elevation:,} feet</H3>', unsafe_allow_html=True)
-    st.write(most_elevation_name)
-    st.write(most_elevation_date)
-    
-with kpi3:
-    st.image('./icons/rocket.png', width=50)
-    st.markdown(f'<H3 style="font-family:sans-serif; font-size: 20px;">Fastest pace: {round(fastest_ride, 1)} mph</H3>', unsafe_allow_html=True)
-    st.write(fastest_ride_name)
-    st.write(fastest_ride_date)
-    
-with kpi4:
-    st.image('./icons/clock.png', width=50)
-    st.markdown(f'<H3 style="font-family:sans-serif; font-size: 20px;">Longest day: {longest_daye} hours</H3>', unsafe_allow_html=True)
-    st.write(longest_day_name)
-    st.write(longest_day_date)
+    # Best power
+    best_power = processed_data[(processed_data.year == year) & (processed_data.type.isin(selected_activities))].average_watts.max()
+    # Fetching the activity name that matches the best power
+    best_power_name = processed_data[(processed_data.year == year) & (processed_data.type.isin(selected_activities)) & (processed_data.average_watts == best_power)].name.values[0]
+    # Fetching the activity date that matches the best power
+    best_power_date = processed_data[(processed_data.year == year) & (processed_data.type.isin(selected_activities)) & (processed_data.average_watts == best_power)].start_date_local.values[0]
+    best_power = round(best_power, 1).astype(int)
+
+
+    with kpi1:
+        st.image('./icons/distance_2.png', width=50)
+        st.markdown(f'<H3 style="font-family:sans-serif; font-size: 20px;">Longest ride: {longest_ride:,} miles</H3>', unsafe_allow_html=True)
+        st.write(longest_activity_name)
+        st.write(longest_activity_date)
+        
+    with kpi2:
+        st.image('./icons/goal.png', width=50)
+        st.markdown(f'<H3 style="font-family:sans-serif; font-size: 20px;">Most elevation: {most_elevation:,} feet</H3>', unsafe_allow_html=True)
+        st.write(most_elevation_name)
+        st.write(most_elevation_date)
+        
+    with kpi3:
+        st.image('./icons/rocket.png', width=50)
+        st.markdown(f'<H3 style="font-family:sans-serif; font-size: 20px;">Fastest pace: {fastest_ride} mph</H3>', unsafe_allow_html=True)
+        st.write(fastest_ride_name)
+        st.write(fastest_ride_date)
+        
+    with kpi4:
+        st.image('./icons/clock.png', width=50)
+        st.markdown(f'<H3 style="font-family:sans-serif; font-size: 20px;">Longest day: {longest_day} hours</H3>', unsafe_allow_html=True)
+        st.write(longest_day_name)
+        st.write(longest_day_date)
+        
+    with kpi5:
+        st.image('./icons/power.png', width=50)
+        st.markdown(f'<H3 style="font-family:sans-serif; font-size: 20px;">Best power: {best_power} watts</H3>', unsafe_allow_html=True)
+        st.write(best_power_name)
+        st.write(best_power_date)
+
+except:
+    st.write('No data available')

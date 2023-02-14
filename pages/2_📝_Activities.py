@@ -4,27 +4,27 @@
 
 from get_strava_data import my_data, process_data, bike_data, get_elev_data_GOOGLE # Functions to retrive data using strava api and process for visualizations
 
-# import ast
-# import polyline
+import ast
+import polyline
 
 import pandas as pd
 from pandas.api.types import CategoricalDtype
 import numpy as np
 import datetime as dt
 
-# # from PIL import Image
-# import base64
+# from PIL import Image
+import base64
 
 # import matplotlib.pyplot as plt
 # import seaborn as sns
 import plotly.express as px
 import plotly.graph_objects as go
 
-# import folium
-# from folium.features import CustomIcon
-# from streamlit_folium import folium_static
+import folium
+from folium.features import CustomIcon
+from streamlit_folium import folium_static
 
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 import streamlit as st
 import streamlit.components.v1 as components
@@ -85,18 +85,25 @@ bikes_dict = {'Tie Fighter': 'Storck Scenero', 'Caadie': 'Cannondale CAAD10', 'D
 
 @st.cache(show_spinner=False, max_entries=5, ttl=86400, allow_output_mutation=True)
 def fetch_activities():
-    with st.spinner('Data Refreshing...'):
+    with st.spinner('Data Refreshing... May take up to 5 minutes.'):
 
         my_data_df = my_data()
         processed_data = process_data(my_data_df)
 
         return processed_data
 
+@st.cache(show_spinner=False, max_entries=5, ttl=86400, allow_output_mutation=True)
+def bikes():
+    with st.spinner('Data Refreshing... May take up to 5 minutes.'):
+        bikes = bike_data()
+
+        return bikes
+
 processed_data = fetch_activities()
+# bikes_df = bikes()
 
 
-
-# # Get local data # For development
+# Get local data # For development
 # processed_data = pd.read_csv('./data/processed_data.csv')
 # bikes_df = pd.read_csv('./data/bike_data.csv')
 # athlete_df = pd.read_csv('./data/athlete_data.csv')
@@ -125,7 +132,87 @@ perc_around_the_earth = (distance_traveled / earth_circumference)
 total_time = processed_data.moving_time.sum()
 
 
+##################
+# SIDE BAR START #
+##################
 
+# with st.sidebar: # Option to show strava widgets
+#     st.header('Overview')
+    # components.iframe(my_week, height=170)
+    # components.iframe(latest_activities, height=500)
+
+############
+# Overview #
+############
+
+# with st.sidebar:
+#     # st.image('./icons/tri.jpeg')
+#     st.markdown('<h1 style="color:#FC4C02">Overview</h1>', unsafe_allow_html=True)
+#     st.subheader(f'Member since {start_date}')
+#     st.image('./images/profile_pic.png', width=300, output_format='PNG')
+
+
+#     col1, col2 = st.columns(2)
+#     with col1:
+#         st.image('./icons/dumbbell.png', width=80, output_format='PNG')
+#     with col2:
+#         st.metric(label="Activities", value=total_activities)
+
+#     col1, col2 = st.columns(2)
+#     with col1:
+#         st.image('./icons/stopwatch.png', width=80, output_format='PNG')
+#     with col2:
+#         st.metric(label="Moving Time (hours)", value=f'{"{:,}".format(round(total_time,1))}')
+
+#     col1, col2 = st.columns(2)
+#     with col1:
+#         st.image('./icons/road.png', width=80, output_format='PNG')
+#     with col2:
+#         st.metric(label="Distance (miles)", value=f'{"{:,}".format(distance_traveled)}')
+
+#     col1, col2 = st.columns(2)
+#     with col1:
+#         st.image('./icons/mountain.png', width=100, output_format='PNG')
+#     with col2:
+#         st.metric(label="Elevation Gain (ft)", value=f'{"{:,}".format(feet_climbed)}')
+    
+#     col1, col2 = st.columns(2)
+#     with col1:
+#         st.image('./icons/like.png', width=80, output_format='PNG')
+#     with col2:
+#         st.metric(label="Kudos", value="{:,}".format(total_kudos))
+
+    ########################
+    # Activities Pie chart #
+    ########################
+
+    # grouped_by_type = processed_data.groupby('type').agg({'type': 'count'}).rename(columns={'type': 'total'}).sort_values('total', ascending=False).reset_index()
+    # grouped_by_type.loc[grouped_by_type.total < 20, 'type'] = 'Other'
+    # pie_df = grouped_by_type.groupby('type').agg({'total': 'sum'}).rename(columns={'total': 'total'}).reset_index()
+
+    # activities = pie_df.type
+    # breakdown_by_type = pie_df.total
+
+    # fig = go.Figure(data=[go.Pie(labels=activities, values=breakdown_by_type, hole=.7)])
+    # fig.update_traces(textposition='outside', textinfo='label+value')
+    # fig.update_layout(showlegend=False, uniformtext_minsize=16, uniformtext_mode='hide', hovermode=False, paper_bgcolor='rgba(0,0,0,0)',
+    # plot_bgcolor='rgba(0,0,0,0)', margin=dict(l=0, r=0, t=0, b=0), annotations=[dict(text='Activities', x=0.5, y=0.5, font_size=20, showarrow=False)])
+
+    # st.plotly_chart(fig, use_container_width=True, config= dict(
+    #         displayModeBar = False))
+
+################
+# SIDE BAR END #
+################
+
+#######################################################################
+#######################################################################
+
+###################
+# MAIN PAGE START #
+###################
+
+# st.markdown('<h1 style="color:#FC4C02">MY STRAVA JOURNEY</h1>', unsafe_allow_html=True)
 
 
 ####################
@@ -135,7 +222,8 @@ total_time = processed_data.moving_time.sum()
 st.markdown('<h2 style="color:#45738F">Activities</h2>', unsafe_allow_html=True)
 
 # Filter by activity type
-activity_type = st.selectbox('Filter by sport', ['Ride', 'VirtualRide', 'Run']) # Select from dropdown
+activity_type = st.selectbox('Filter by sport', ['Ride', 'Workout', 'WeightTraining', 'Walk', 'Hike', 'Yoga',
+       'VirtualRide', 'Elliptical', 'Run', 'Swim', 'AlpineSki']) # Select from dropdown
 
 sort_preference = st.radio('Sort by', ('Date', 'Distance (mi)', 'Elevation Gain (ft)', 'Elevation Gain/mile (ft)', 'Avg Speed (mph)', 'Avg Power (Watts)', 'Avg Heartrate', 'Suffer Score'))
 
@@ -213,3 +301,236 @@ try:
 
 except:
     st.write('Geocoordinates are unavailable for this activity')
+
+# Plotting elevation data
+# fig, ax = plt.subplots(figsize=(10, 4))
+# ax = pd.Series(elevation_profile_feet).rolling(3).mean().plot(
+#     ax=ax, 
+#     color='steelblue', 
+#     legend=False
+# )
+# ax.set_ylabel('Elevation (ft)')
+# ax.axes.xaxis.set_visible(False)
+# ax.spines['top'].set_visible(False)
+# ax.spines['right'].set_visible(False)
+# # Saving plot
+# plt.savefig('./data/elevation_profile.png', dpi=300)
+
+# Mapping route with folium
+
+
+
+# centroid = [
+#     np.mean([coord[0] for coord in decoded]), 
+#     np.mean([coord[1] for coord in decoded])
+# ]
+# my_map = folium.Map(location=centroid, zoom_start=12, tiles='OpenStreetMap')
+# folium.PolyLine(decoded).add_to(my_map)
+
+# icon = './icons/pin.png' # icon for ride start location
+# icon_image = Image.open(icon)
+        
+# icon = CustomIcon(
+# np.array(icon_image),
+# icon_size=(50, 50),
+# popup_anchor=(0, -30),
+# )
+
+# # popup image
+# image_file = './data/elevation_profile.png'
+# encoded = base64.b64encode(open(image_file, 'rb').read()).decode('UTF-8')
+
+# resolution, width, height = 50, 5, 6.5
+
+# # read png file
+# # elevation_profile = base64.b64encode(open(image_file, 'rb').read()).decode()
+
+
+# # popup text
+# html = """
+# <h3 style="font-family:arial">{}</h3>
+#     <p style="font-family:arial">
+#         <code>
+#         Date : {} <br>
+#         </code>
+#     </p>
+#     <p style="font-family:arial"> 
+#         <code>
+#             Distance&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp: {} miles <br>
+#             Elevation Gain&nbsp;&nbsp;&nbsp;&nbsp;&nbsp: {} feet <br>
+#             Average Speed&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp: {} mph<br>
+#             Average Watts&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp: {} Watts <br>
+#             Average HR&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp: {} <br>
+#             Suffer Score&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp: {} <br>
+#         </code>
+#     </p>
+# <img src="data:image/png;base64,{}">
+# """.format(
+#     polylines_df[polylines_df.index == idx]['name'].values[0], 
+#     polylines_df[polylines_df.index == idx]['start_date_local'].values[0],
+#     polylines_df[polylines_df.index == idx]['distance'].values[0], 
+#     polylines_df[polylines_df.index == idx]['total_elevation_gain'].values[0], 
+#     polylines_df[polylines_df.index == idx]['average_speed'].values[0], 
+#     polylines_df[polylines_df.index == idx]['weighted_average_watts'].values[0],  
+#     polylines_df[polylines_df.index == idx]['average_heartrate'].values[0],
+#     polylines_df[polylines_df.index == idx]['suffer_score'].values[0], 
+#     encoded
+# )
+
+# iframe = folium.IFrame(html, width=(width*resolution)+20, height=(height*resolution))
+# popup = folium.Popup(iframe, max_width=2650)
+
+# marker = folium.Marker(location=decoded[0],
+#                        popup=popup, 
+#                        icon=icon).add_to(my_map)
+
+# folium_static(my_map, width=1040)
+
+########################
+# Plotly scattermapbox #
+########################
+
+try:
+    centroid = [
+        np.mean([coord[0] for coord in decoded]), 
+        np.mean([coord[1] for coord in decoded])
+    ]
+
+    lat = [coord[0] for coord in decoded] 
+    lon = [coord[1] for coord in decoded]
+
+
+
+
+    fig = go.Figure(go.Scattermapbox(
+        mode = "lines",
+        lon = lon, lat = lat,
+        marker = dict(size = 2, color = "red"),
+        line = dict(color = "midnightblue", width = 2),
+        # text = '‣',
+        textfont=dict(color='#E58606'),
+        textposition = 'bottom center',))
+    fig.update_traces(hovertext='', selector=dict(type='scattermapbox'))
+    fig.update_layout(
+        mapbox = {
+            'accesstoken': token,
+            'style': "outdoors", 'zoom': 11,
+            'center': {'lon': centroid[1], 'lat': centroid[0]}
+        },
+        margin = {'l': 0, 'r': 0, 't': 0, 'b': 0},
+        showlegend = False)
+
+    name = polylines_df[polylines_df.index == idx]['name'].values[0]
+    distance = polylines_df[polylines_df.index == idx]['distance'].values[0]
+    elev_gain = polylines_df[polylines_df.index == idx]['total_elevation_gain'].values[0]
+    avg_speed = polylines_df[polylines_df.index == idx]['average_speed'].values[0]
+    avg_power = polylines_df[polylines_df.index == idx]['weighted_average_watts'].values[0] 
+    suffer = polylines_df[polylines_df.index == idx]['suffer_score'].values[0]
+
+    fig_elev = px.line(elevation_profile_feet, x=range(len(elevation_profile_feet)), y=pd.Series(elevation_profile_feet).rolling(5).mean())
+    fig_elev.update_layout(
+            xaxis=dict(
+                showline=True,
+                showgrid=False,
+                showticklabels=False,
+                linecolor='rgb(204, 204, 204)',
+                linewidth=1,
+                ticks='',
+                tickfont=dict(
+                    family='Arial',
+                    size=12,
+                    color='rgb(82, 82, 82)',
+                ),
+            ),
+            yaxis=dict(
+                showgrid=False,
+                zeroline=False,
+                showline=False,
+                gridcolor = 'rgb(235, 236, 240)',
+                showticklabels=True,
+                title='Elevation (ft)',
+                autorange=False,
+                range=[0, 3000]
+            ),
+            autosize=True,
+            hovermode="x unified",
+            showlegend=False,
+            plot_bgcolor='rgba(0,0,0,0)',
+            xaxis_title='',
+            margin=dict(l=0, r=0, t=0, b=0),
+        )
+
+    fig_elev.add_annotation(text=f"<b>RIDE STATS</b>--------------------", 
+                        align='left',
+                        showarrow=False,
+                        xref='paper',
+                        yref='paper',
+                        x=0.05,
+                        y=0.99,
+    )
+    fig_elev.add_annotation(text=f"<b>Name</b>: {name}", 
+                        align='left',
+                        showarrow=False,
+                        xref='paper',
+                        yref='paper',
+                        x=0.05,
+                        y=0.95,
+    )                    
+    fig_elev.add_annotation(text=f"<b>Distance</b>: {distance} miles", 
+                        align='left',
+                        showarrow=False,
+                        xref='paper',
+                        yref='paper',
+                        x=0.05,
+                        y=0.91,
+    )
+    fig_elev.add_annotation(text=f"<b>Elevation Gain</b>: {elev_gain} feet", 
+                        align='left',
+                        showarrow=False,
+                        xref='paper',
+                        yref='paper',
+                        x=0.05,
+                        y=0.87,
+    )
+    fig_elev.add_annotation(text=f"<b>Average Speed</b>: {avg_speed} mph", 
+                        align='left',
+                        showarrow=False,
+                        xref='paper',
+                        yref='paper',
+                        x=0.05,
+                        y=0.83,
+    )     
+    fig_elev.add_annotation(text=f"<b>Weighted Power</b>: {avg_power} Watts", 
+                        align='left',
+                        showarrow=False,
+                        xref='paper',
+                        yref='paper',
+                        x=0.05,
+                        y=0.79,
+    )
+    fig_elev.add_annotation(text=f"<b>Suffer Score</b>: {suffer.astype(int)}", 
+                        align='left',
+                        showarrow=False,
+                        xref='paper',
+                        yref='paper',
+                        x=0.05,
+                        y=0.75,
+    )  
+    fig_elev.add_annotation(text="----------------------------------", 
+                        align='left',
+                        showarrow=False,
+                        xref='paper',
+                        yref='paper',
+                        x=0.05,
+                        y=0.71,
+    )
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.plotly_chart(fig, use_container_width = True, config=dict(displayModeBar = False))
+    with col2:
+
+        st.plotly_chart(fig_elev, use_container_width = True, config=dict(displayModeBar = False))
+
+except:
+    st.write('')
