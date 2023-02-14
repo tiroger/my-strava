@@ -85,7 +85,7 @@ bikes_dict = {'Tie Fighter': 'Storck Scenero', 'Caadie': 'Cannondale CAAD10', 'D
 
 @st.cache(show_spinner=False, max_entries=5, ttl=86400, allow_output_mutation=True)
 def fetch_activities():
-    with st.spinner('Data Refreshing... May take up to 5 minutes.'):
+    with st.spinner('Data Refreshing...'):
 
         my_data_df = my_data()
         processed_data = process_data(my_data_df)
