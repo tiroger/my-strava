@@ -4,27 +4,27 @@
 
 from get_strava_data import my_data, process_data, bike_data, get_elev_data_GOOGLE # Functions to retrive data using strava api and process for visualizations
 
-import ast
-import polyline
+# import ast
+# import polyline
 
 import pandas as pd
 from pandas.api.types import CategoricalDtype
 import numpy as np
 import datetime as dt
 
-# from PIL import Image
-import base64
+# # from PIL import Image
+# import base64
 
 # import matplotlib.pyplot as plt
 # import seaborn as sns
 import plotly.express as px
 import plotly.graph_objects as go
 
-import folium
-from folium.features import CustomIcon
-from streamlit_folium import folium_static
+# import folium
+# from folium.features import CustomIcon
+# from streamlit_folium import folium_static
 
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 import streamlit as st
 import streamlit.components.v1 as components

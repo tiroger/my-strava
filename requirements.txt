@@ -111,7 +111,7 @@ Send2Trash==1.8.0
 smmap==5.0.0
 sodapy==2.1.0
 soupsieve==2.3.1
-streamlit==1.4.0
+streamlit==1.18.0
 streamlit-folium==0.4.0
 tenacity==8.0.1
 terminado==0.12.1
