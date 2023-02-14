@@ -17,6 +17,7 @@ botocore==1.23.33
 # Bottleneck @ file:///opt/concourse/worker/volumes/live/51dc1780-97b5-4c4b-5601-ba5845532b9c/volume/bottleneck_1648028903302/work
 branca==0.4.2
 cachetools==5.0.0
+calplot==0.1.7.5
 certifi==2021.10.8
 cffi==1.15.0
 charset-normalizer==2.0.10
