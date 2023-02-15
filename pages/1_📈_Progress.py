@@ -83,7 +83,7 @@ bikes_dict = {'Tie Fighter': 'Storck Scenero', 'Caadie': 'Cannondale CAAD10', 'D
 
 # Get data using strava api # For deployment
 
-@st.cache(show_spinner=False, max_entries=5, ttl=86400, allow_output_mutation=True)
+@st.cache_data(show_spinner=False, max_entries=5, ttl=86400)
 def fetch_activities():
     with st.spinner('Data Refreshing...'):
 
@@ -133,7 +133,8 @@ total_time = processed_data.moving_time.sum()
 st.markdown('<h2 style="color:#45738F">Year Progressions and Goals</h2>', unsafe_allow_html=True)
 
 # activity_type = st.selectbox('Filter by sport', ['Ride','VirtualRide', 'Run']) # Select from dropdown
-activity_type = st.multiselect('Select activity', ['Ride','VirtualRide', 'Run'], default=['Ride', 'VirtualRide']) # Select from checkbox
+with st.sidebar:
+    activity_type = st.multiselect('Select activity', ['Ride','VirtualRide', 'Run'], default=['Ride', 'VirtualRide']) # Select from checkbox
 
 processed_data = processed_data[processed_data.type.isin(activity_type)]
 
@@ -183,19 +184,25 @@ grouped_by_year_and_month['day_counter'] = grouped_by_year_and_month.groupby(['y
 grouped_by_year_and_month = grouped_by_year_and_month[grouped_by_year_and_month.date <= dt.datetime.today()]
 
 
+# Getting current year
+current_year = dt.datetime.today().year
+
 # Plotly charts
-try:
-    selected_year = st.multiselect('Select year', grouped_by_year_and_month.year.unique(), default=[date for date in range(2012, 2024)]) # Filter for year
-except: # If no data is available, we'll just show the current year
-    st.warning('No data available for the selected year')
-    selected_year = [this_year]
-selected_metric = st.selectbox('Metric', ['Cumulative Distance', 'Cumulative Elevation']) # Filter for desired metric
+with st.sidebar:
+    # try:
+    #     selected_year = st.multiselect('Select year', grouped_by_year_and_month.year.unique(), default=[date for date in range(2012, current_year+1)]) # Filter for year
+    # except: # If no data is available, we'll just show the current year
+    #     st.warning('No data available for the selected year')
+    #     selected_year = [this_year]
+    selected_metric = st.selectbox('Metric', ['Cumulative Distance', 'Cumulative Elevation']) # Filter for desired metric
 
 best_distance = grouped_by_year_and_month['Cumulative Distance'].max()
 best_distance_year = grouped_by_year_and_month[grouped_by_year_and_month['Cumulative Distance'] == best_distance]['year'].unique()
 
 best_elevation = grouped_by_year_and_month['Cumulative Elevation'].max()
 best_elevation_year = grouped_by_year_and_month[grouped_by_year_and_month['Cumulative Elevation'] == best_elevation]['year'].unique()
+
+selected_year = grouped_by_year_and_month.year.unique()
 
 # Filtering year and activity type
 # grouped_by_year_and_month = grouped_by_year_and_month[grouped_by_year_and_month['type'].isin([activity_type])]
@@ -205,7 +212,8 @@ grouped_by_year_and_month = grouped_by_year_and_month[grouped_by_year_and_month[
 # Fetching the day counter for today's date
 today_date = dt.datetime.today().strftime('%Y-%m-%d')
 # Fetching the day counter for yesterday's date
-today_counter = grouped_by_year_and_month[grouped_by_year_and_month.date == today_date].day_counter.values[0]
+today_counter = grouped_by_year_and_month[grouped_by_year_and_month.date == today_date].day_counter
+
 
 
 # Projections for 2023
@@ -257,7 +265,7 @@ fig.update_layout(
         margin=dict(l=0, r=0, t=0, b=0)
     )
 # Addding annotations for projected distance for 2023
-fig.add_annotation(x=today_counter, y=today_distance if selected_metric == 'Cumulative Distance' else today_elevation, text=f'On pace for : {on_pace_for_2023_distance.astype(int):,} miles' if selected_metric == 'Cumulative Distance' else f'On pace for : {on_pace_for_2023_elevation.astype(int):,} feet', showarrow=True, font=dict(size=24, color='#26A39E'))
+fig.add_annotation(x=today_counter.values[0], y=today_distance if selected_metric == 'Cumulative Distance' else today_elevation, text=f'On pace for : {on_pace_for_2023_distance.astype(int):,} miles' if selected_metric == 'Cumulative Distance' else f'On pace for : {on_pace_for_2023_elevation.astype(int):,} feet', showarrow=True, arrowcolor= '#FFFFFF',font=dict(size=20, color='#26A39E'))
 
 fig.for_each_trace(lambda trace: fig.add_annotation(
     x=trace.x[-1], y=trace.y[-1], text='  '+trace.name, 

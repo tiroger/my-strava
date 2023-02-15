@@ -83,18 +83,18 @@ bikes_dict = {'Tie Fighter': 'Storck Scenero', 'Caadie': 'Cannondale CAAD10', 'D
 
 # Get data using strava api # For deployment
 
-@st.cache(show_spinner=False, max_entries=5, ttl=86400, allow_output_mutation=True)
+@st.cache_data(show_spinner=False, max_entries=5, ttl=43200)
 def fetch_activities():
-    with st.spinner('Data Refreshing... May take up to 5 minutes.'):
+    with st.spinner('Data Refreshing...'):
 
         my_data_df = my_data()
         processed_data = process_data(my_data_df)
 
         return processed_data
 
-@st.cache(show_spinner=False, max_entries=5, ttl=86400, allow_output_mutation=True)
+@st.cache_data(show_spinner=False, max_entries=5, ttl=43200)
 def bikes():
-    with st.spinner('Data Refreshing... May take up to 5 minutes.'):
+    with st.spinner('Data Refreshing...'):
         bikes = bike_data()
 
         return bikes
@@ -221,11 +221,12 @@ total_time = processed_data.moving_time.sum()
 
 st.markdown('<h2 style="color:#45738F">Activities</h2>', unsafe_allow_html=True)
 
-# Filter by activity type
-activity_type = st.selectbox('Filter by sport', ['Ride', 'Workout', 'WeightTraining', 'Walk', 'Hike', 'Yoga',
-       'VirtualRide', 'Elliptical', 'Run', 'Swim', 'AlpineSki']) # Select from dropdown
+with st.sidebar:
+    # Filter by activity type
+    activity_type = st.selectbox('Filter by sport', ['Ride', 'Workout', 'WeightTraining', 'Walk', 'Hike', 'Yoga',
+        'VirtualRide', 'Elliptical', 'Run', 'Swim', 'AlpineSki']) # Select from dropdown
 
-sort_preference = st.radio('Sort by', ('Date', 'Distance (mi)', 'Elevation Gain (ft)', 'Elevation Gain/mile (ft)', 'Avg Speed (mph)', 'Avg Power (Watts)', 'Avg Heartrate', 'Suffer Score'))
+    sort_preference = st.radio('Sort by', ('Date', 'Distance (mi)', 'Elevation Gain (ft)', 'Elevation Gain/mile (ft)', 'Avg Speed (mph)', 'Avg Power (Watts)', 'Avg Heartrate', 'Suffer Score'))
 
 # Processing data for table
 streamlit_df = processed_data[['start_date_local', 'name', 'type', 'moving_time', 'distance', 'total_elevation_gain', 'elev_gain_per_mile', 'average_speed', 'average_cadence', 'average_watts', 'average_heartrate', 'suffer_score']]
@@ -287,7 +288,7 @@ try:
 
 
     # Adding elevation data from Google Elevation API
-    @st.cache(persist=True, suppress_st_warning=True)
+    @st.cache_data(persist=True)
 
     def elev_profile_chart():
         with st.spinner('Calculating elevation profile from Google Elevation. Hang tight...'):

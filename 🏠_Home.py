@@ -44,7 +44,7 @@ GOOGLE_API_KEY = st.secrets['GOOGLE_API_KEY']
 # FOR IMAGES ICONS #
 ####################
 
-@st.cache(allow_output_mutation=True)
+@st.cache_data
 def get_base64_of_bin_file(bin_file):
     with open(bin_file, 'rb') as f:
         data = f.read()
@@ -111,7 +111,7 @@ bikes_dict = {'Tie Fighter': 'Storck Scenero', 'Caadie': 'Cannondale CAAD10', 'D
 
 # Get data using strava api # For deployment
 
-@st.cache(show_spinner=False, max_entries=5, ttl=43200, allow_output_mutation=True)
+@st.cache_data(show_spinner=False, max_entries=5, ttl=43200)
 def fetch_activities():
     with st.spinner('Data Refreshing...'):
 
@@ -120,7 +120,7 @@ def fetch_activities():
 
         return processed_data
 
-@st.cache(show_spinner=False, max_entries=5, ttl=43200, allow_output_mutation=True)
+@st.cache_data(show_spinner=False, max_entries=5, ttl=43200)
 def bikes():
     with st.spinner('Data Refreshing...'):
         bikes = bike_data()
