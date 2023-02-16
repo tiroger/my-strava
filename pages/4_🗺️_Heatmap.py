@@ -107,27 +107,30 @@ home_coordinates = [37.664, 122.09292]
 
 st.markdown('<h2 style="color:#45738F">Ride Heatmap</h2>', unsafe_allow_html=True)
 
-fig = go.Figure(go.Scattermapbox())
+@st.cache_resource(show_spinner=False, max_entries=5, ttl=86400)
+def load_image():
 
-# Adding a trace for each row in the dataframe
-for i in range(len(polylines_df)):
-    fig.add_trace(go.Scattermapbox(mode='lines', lat=polylines_df.lat.values[i], lon=polylines_df.lon.values[i]))
+    fig = go.Figure(go.Scattermapbox())
 
-fig.update_layout(
-    margin ={'l':0,'t':0,'b':0,'r':0})
-fig.update_layout(mapbox_accesstoken=MAPBOX_TOKEN)
-fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0},
-                  showlegend=False,
-                  mapbox = {
-                      'style': 'dark',
-                      'center': {'lon': -home_coordinates[1], 'lat': home_coordinates[0]},
-                      'zoom': 9
-                  },
-                  height=1000)
-fig.update_traces(line_color='#FC4C02', line_width=2)
+    # Adding a trace for each row in the dataframe
+    for i in range(len(polylines_df)):
+        fig.add_trace(go.Scattermapbox(mode='lines', lat=polylines_df.lat.values[i], lon=polylines_df.lon.values[i]))
 
-st.plotly_chart(fig, use_container_width=True)
+    fig.update_layout(
+        margin ={'l':0,'t':0,'b':0,'r':0})
+    fig.update_layout(mapbox_accesstoken=MAPBOX_TOKEN)
+    fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0},
+                    showlegend=False,
+                    mapbox = {
+                        'style': 'dark',
+                        'center': {'lon': -home_coordinates[1], 'lat': home_coordinates[0]},
+                        'zoom': 9
+                    },
+                    height=1000)
+    fig.update_traces(line_color='#FC4C02', line_width=2)
 
+    st.plotly_chart(fig, use_container_width=True)
+load_image()
 
 
 # # centroid = [np.mean([coord[0] for coord in all_decoded[0]]), np.mean([coord[1] for coord in all_decoded[0]])]
