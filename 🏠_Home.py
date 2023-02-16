@@ -131,11 +131,12 @@ processed_data = fetch_activities()
 bikes_df = bikes()
 
 
-# # Get local data # For development
+# Get local data # For development
 # processed_data = pd.read_csv('./data/processed_data.csv')
 # bikes_df = pd.read_csv('./data/bike_data.csv')
 # athlete_df = pd.read_csv('./data/athlete_data.csv')
 
+    #############################
 
 
 processed_data['start_date_local'] = pd.to_datetime(processed_data['start_date_local'])

@@ -81,32 +81,32 @@ bikes_dict = {'Tie Fighter': 'Storck Scenero', 'Caadie': 'Cannondale CAAD10', 'D
 
 ##### Use one of two options below #####
 
-# Get data using strava api # For deployment
+# # Get data using strava api # For deployment
 
-@st.cache_data(show_spinner=False, max_entries=5, ttl=43200)
-def fetch_activities():
-    with st.spinner('Data Refreshing...'):
+# @st.cache_data(show_spinner=False, max_entries=5, ttl=43200)
+# def fetch_activities():
+#     with st.spinner('Data Refreshing...'):
 
-        my_data_df = my_data()
-        processed_data = process_data(my_data_df)
+#         my_data_df = my_data()
+#         processed_data = process_data(my_data_df)
 
-        return processed_data
+#         return processed_data
 
-@st.cache_data(show_spinner=False, max_entries=5, ttl=43200)
-def bikes():
-    with st.spinner('Data Refreshing...'):
-        bikes = bike_data()
+# @st.cache_data(show_spinner=False, max_entries=5, ttl=43200)
+# def bikes():
+#     with st.spinner('Data Refreshing...'):
+#         bikes = bike_data()
 
-        return bikes
+#         return bikes
 
-processed_data = fetch_activities()
+# processed_data = fetch_activities()
 # bikes_df = bikes()
 
 
 # Get local data # For development
-# processed_data = pd.read_csv('./data/processed_data.csv')
+processed_data = pd.read_csv('./data/processed_data.csv')
 # bikes_df = pd.read_csv('./data/bike_data.csv')
-# athlete_df = pd.read_csv('./data/athlete_data.csv')
+athlete_df = pd.read_csv('./data/athlete_data.csv')
 
 
 
@@ -114,7 +114,7 @@ processed_data['start_date_local'] = pd.to_datetime(processed_data['start_date_l
 processed_data['start_date_local'] = processed_data['start_date_local'].dt.strftime('%m-%d-%Y')
 
 # Saving processed data to csv for future use
-processed_data.to_csv('./data/processed_data.csv', index=False)
+# processed_data.to_csv('./data/processed_data.csv', index=False)
 
 
 

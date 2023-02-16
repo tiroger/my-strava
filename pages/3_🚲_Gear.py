@@ -72,20 +72,20 @@ def set_png_as_page_bg(png_file):
 
 # Get data using strava api # For deployment
 
-@st.cache_data(show_spinner=False, max_entries=5, ttl=43200)
-def bikes():
-    with st.spinner('Data Refreshing...'):
-        bikes = bike_data()
+# @st.cache_data(show_spinner=False, max_entries=5, ttl=43200)
+# def bikes():
+#     with st.spinner('Data Refreshing...'):
+#         bikes = bike_data()
 
-        return bikes
+#         return bikes
 
 
-bikes_df = bikes()
+# bikes_df = bikes()
 
 
 # # Get local data # For development
 
-# bikes_df = pd.read_csv('./data/bike_data.csv')
+bikes_df = pd.read_csv('./data/bike_data.csv')
 
 ############
 # THE GEAR #
