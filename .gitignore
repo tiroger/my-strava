@@ -169,3 +169,4 @@ cython_debug/
 
 # All notebooks folder
 /notebooks/
+playground.ipynb
