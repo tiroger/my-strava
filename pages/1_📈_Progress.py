@@ -29,12 +29,21 @@ import plotly.graph_objects as go
 import streamlit as st
 import streamlit.components.v1 as components
 
+import os
+
 ###############
 # CREDENTIALS #
 ###############
 
-token = MAPBOX_TOKEN = st.secrets['MAPBOX_TOKEN']
-GOOGLE_API_KEY = st.secrets['GOOGLE_API_KEY']
+# token = MAPBOX_TOKEN = st.secrets['MAPBOX_TOKEN']
+# GOOGLE_API_KEY = st.secrets['GOOGLE_API_KEY']
+
+CLIENT_ID = os.environ['CLIENT_ID']
+CLIENT_SECRET = os.environ['CLIENT_SECRET']
+REFRESH_TOKEN = os.environ['REFRESH_TOKEN']
+GOOGLE_API_KEY = os.environ['GOOGLE_API_KEY']
+
+MAPBOX_TOKEN = os.environ['MAPBOX_TOKEN']
 
 
 ###########################

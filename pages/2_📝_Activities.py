@@ -31,13 +31,21 @@ import streamlit.components.v1 as components
 
 from st_aggrid import AgGrid
 
+import os
 
 ###############
 # CREDENTIALS #
 ###############
 
-token = MAPBOX_TOKEN = st.secrets['MAPBOX_TOKEN']
-GOOGLE_API_KEY = st.secrets['GOOGLE_API_KEY']
+# MAPBOX_TOKEN = st.secrets['MAPBOX_TOKEN']
+# GOOGLE_API_KEY = st.secrets['GOOGLE_API_KEY']
+
+CLIENT_ID = os.environ['CLIENT_ID']
+CLIENT_SECRET = os.environ['CLIENT_SECRET']
+REFRESH_TOKEN = os.environ['REFRESH_TOKEN']
+GOOGLE_API_KEY = os.environ['GOOGLE_API_KEY']
+
+MAPBOX_TOKEN = os.environ['MAPBOX_TOKEN']
 
 
 ###########################
@@ -419,7 +427,7 @@ try:
     fig.update_traces(hovertext='', selector=dict(type='scattermapbox'))
     fig.update_layout(
         mapbox = {
-            'accesstoken': token,
+            'accesstoken': MAPBOX_TOKEN,
             'style': "outdoors", 'zoom': 11,
             'center': {'lon': centroid[1], 'lat': centroid[0]}
         },

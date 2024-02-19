@@ -21,10 +21,10 @@ import streamlit as st
 # REFRESH_TOKEN = st.secrets['REFRESH_TOKEN']
 # GOOGLE_API_KEY = st.secrets['GOOGLE_API_KEY']
 
-CLIENT_ID = os.getenv('CLIENT_ID')
-CLIENT_SECRET = os.getenv('CLIENT_SECRET')
-REFRESH_TOKEN = os.getenv('REFRESH_TOKEN')
-GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
+CLIENT_ID = os.environ['CLIENT_ID']
+CLIENT_SECRET = os.environ['CLIENT_SECRET']
+REFRESH_TOKEN = os.environ['REFRESH_TOKEN']
+GOOGLE_API_KEY = os.environ['GOOGLE_API_KEY']
 
 
 
