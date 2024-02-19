@@ -26,8 +26,6 @@ CLIENT_SECRET = os.environ['CLIENT_SECRET']
 REFRESH_TOKEN = os.environ['REFRESH_TOKEN']
 GOOGLE_API_KEY = os.environ['GOOGLE_API_KEY']
 
-
-
 #################################################
 # FUNCTIONS TO RETRIEVE AND PROCESS STRAVA DATA #
 #################################################

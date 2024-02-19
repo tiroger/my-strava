@@ -413,9 +413,6 @@ try:
     lat = [coord[0] for coord in decoded] 
     lon = [coord[1] for coord in decoded]
 
-
-
-
     fig = go.Figure(go.Scattermapbox(
         mode = "lines",
         lon = lon, lat = lat,
