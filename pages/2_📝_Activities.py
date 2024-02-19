@@ -286,27 +286,40 @@ polylines_df.start_date_local = polylines_df.start_date_local.dt.strftime('%m-%d
 polylines_df = polylines_df[polylines_df.type == 'Ride'] # We'll only use rides which have a map
 
 
-# Convert 'map' column to dictionary once
-polylines_df['map'] = polylines_df['map'].apply(ast.literal_eval)
+try:
+    polylines_df['map'] = polylines_df['map'].apply(lambda x: ast.literal_eval(x) if isinstance(x, str) else x)
+except Exception as e:
+    st.write('Error in processing polyline data:', e)
 
 option = st.selectbox(
      'Select a ride for more details',
-     (polylines_df.name)
+     polylines_df['name'].unique()  # This should ensure dropdown is populated correctly
 )
 
 # Finding dataframe index based on ride name
-idx = polylines_df[polylines_df.name == option].index.values[0]
-
-# Decoding polylines
 try:
-    # Extract 'summary_polyline' and decode it
-    decoded = polylines_df.at[idx, 'map']['summary_polyline']
-    decoded = polyline.decode(decoded)
-except KeyError:
-    st.write('Geocoordinates are unavailable for this activity')
+    idx = polylines_df[polylines_df['name'] == option].index[0]  # Using index[0] to get first item of index array
+    polyline_str = polylines_df.at[idx, 'map'].get('summary_polyline')
+    # Decoding polylines
+    if polyline_str:
+        decoded = polyline.decode(polyline_str)
+    else:
+        decoded = None
+        st.write('No polyline data available for this activity')
+except Exception as e:
+    st.write('Error decoding polyline:', e)
     decoded = None
 
-if decoded is not None:
+# Decoding polylines
+# try:
+#     # Extract 'summary_polyline' and decode it
+#     decoded = polylines_df.at[idx, 'map']['summary_polyline']
+#     decoded = polyline.decode(decoded)
+# except KeyError:
+#     st.write('Geocoordinates are unavailable for this activity')
+#     decoded = None
+
+if decoded:
     # Adding elevation data from Google Elevation API
     @st.cache_data
     def elev_profile_chart():
