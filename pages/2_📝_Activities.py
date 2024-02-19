@@ -308,97 +308,13 @@ except KeyError:
 
 if decoded is not None:
     # Adding elevation data from Google Elevation API
-    @st.cache_data(persist=True)
+    @st.cache_data
     def elev_profile_chart():
         with st.spinner('Calculating elevation profile from Google Elevation. Hang tight...'):
             elevation_profile_feet = [get_elev_data_GOOGLE(coord[0], coord[1]) for coord in decoded]
             return elevation_profile_feet
 
     elevation_profile_feet = elev_profile_chart()
-
-# Plotting elevation data
-# fig, ax = plt.subplots(figsize=(10, 4))
-# ax = pd.Series(elevation_profile_feet).rolling(3).mean().plot(
-#     ax=ax, 
-#     color='steelblue', 
-#     legend=False
-# )
-# ax.set_ylabel('Elevation (ft)')
-# ax.axes.xaxis.set_visible(False)
-# ax.spines['top'].set_visible(False)
-# ax.spines['right'].set_visible(False)
-# # Saving plot
-# plt.savefig('./data/elevation_profile.png', dpi=300)
-
-# Mapping route with folium
-
-
-
-# centroid = [
-#     np.mean([coord[0] for coord in decoded]), 
-#     np.mean([coord[1] for coord in decoded])
-# ]
-# my_map = folium.Map(location=centroid, zoom_start=12, tiles='OpenStreetMap')
-# folium.PolyLine(decoded).add_to(my_map)
-
-# icon = './icons/pin.png' # icon for ride start location
-# icon_image = Image.open(icon)
-        
-# icon = CustomIcon(
-# np.array(icon_image),
-# icon_size=(50, 50),
-# popup_anchor=(0, -30),
-# )
-
-# # popup image
-# image_file = './data/elevation_profile.png'
-# encoded = base64.b64encode(open(image_file, 'rb').read()).decode('UTF-8')
-
-# resolution, width, height = 50, 5, 6.5
-
-# # read png file
-# # elevation_profile = base64.b64encode(open(image_file, 'rb').read()).decode()
-
-
-# # popup text
-# html = """
-# <h3 style="font-family:arial">{}</h3>
-#     <p style="font-family:arial">
-#         <code>
-#         Date : {} <br>
-#         </code>
-#     </p>
-#     <p style="font-family:arial"> 
-#         <code>
-#             Distance&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp: {} miles <br>
-#             Elevation Gain&nbsp;&nbsp;&nbsp;&nbsp;&nbsp: {} feet <br>
-#             Average Speed&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp: {} mph<br>
-#             Average Watts&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp: {} Watts <br>
-#             Average HR&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp: {} <br>
-#             Suffer Score&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp: {} <br>
-#         </code>
-#     </p>
-# <img src="data:image/png;base64,{}">
-# """.format(
-#     polylines_df[polylines_df.index == idx]['name'].values[0], 
-#     polylines_df[polylines_df.index == idx]['start_date_local'].values[0],
-#     polylines_df[polylines_df.index == idx]['distance'].values[0], 
-#     polylines_df[polylines_df.index == idx]['total_elevation_gain'].values[0], 
-#     polylines_df[polylines_df.index == idx]['average_speed'].values[0], 
-#     polylines_df[polylines_df.index == idx]['weighted_average_watts'].values[0],  
-#     polylines_df[polylines_df.index == idx]['average_heartrate'].values[0],
-#     polylines_df[polylines_df.index == idx]['suffer_score'].values[0], 
-#     encoded
-# )
-
-# iframe = folium.IFrame(html, width=(width*resolution)+20, height=(height*resolution))
-# popup = folium.Popup(iframe, max_width=2650)
-
-# marker = folium.Marker(location=decoded[0],
-#                        popup=popup, 
-#                        icon=icon).add_to(my_map)
-
-# folium_static(my_map, width=1040)
 
 ########################
 # Plotly scattermapbox #
