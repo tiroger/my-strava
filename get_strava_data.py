@@ -71,6 +71,148 @@ def my_data():
     except:
         print('There was a problem with the request.')
 
+
+import requests
+import pandas as pd
+import pickle
+from datetime import datetime
+import os
+
+# Function to fetch new activities
+import requests
+import pandas as pd
+import os
+
+def fetch_new_activities():
+    # Initialize existing_data
+    existing_data = pd.DataFrame()
+
+    # Load existing data if available
+    if os.path.exists('my_dataset_df.feather'):
+        existing_data = pd.read_feather('my_data.feather')
+        last_activity_time = existing_data['start_date'].max()  # Assuming 'start_date' contains the activity start datetime
+        last_activity_epoch = int(pd.to_datetime(last_activity_time).timestamp())
+    else:
+        last_activity_epoch = 0  # This will fetch all activities if no data exists
+
+    try:
+        # Check for the most recent activity on the server before making full API calls
+        auth_url = "https://www.strava.com/oauth/token"
+        activities_url = "https://www.strava.com/api/v3/athlete/activities"
+        payload = {
+            'client_id': CLIENT_ID,
+            'client_secret': CLIENT_SECRET,
+            'refresh_token': REFRESH_TOKEN,
+            'grant_type': "refresh_token",
+            'f': 'json'
+        }
+
+        # Authenticate and get the access token
+        res = requests.post(auth_url, data=payload, verify=False)
+        access_token = res.json()['access_token']
+
+        # Request only the most recent activity
+        header = {'Authorization': 'Bearer ' + access_token}
+        param = {'per_page': 1, 'page': 1}
+        recent_activity = requests.get(activities_url, headers=header, params=param).json()
+
+        # Check if there is new activity
+        if recent_activity and pd.to_datetime(recent_activity[0]['start_date']).timestamp() > last_activity_epoch:
+            # New activity exists, proceed to fetch all new activities
+            page = 1
+            frames = []
+            while page <= 10:  # Limiting to 10 pages for safety
+                param = {'per_page': 200, 'page': page, 'after': last_activity_epoch}
+                my_dataset = requests.get(activities_url, headers=header, params=param).json()
+                
+                if not my_dataset:
+                    break  # Exit loop if no more data is returned
+
+                output = pd.DataFrame(my_dataset)
+                frames.append(output)
+                page += 1
+
+            new_activities_df = pd.concat(frames) if frames else pd.DataFrame()
+            print('New activities fetched successfully!')
+
+            # Combine with existing data, if available
+            if not existing_data.empty:
+                updated_data = pd.concat([existing_data, new_activities_df]).drop_duplicates().reset_index(drop=True)
+            else:
+                updated_data = new_activities_df
+            
+            # Save the updated data
+            updated_data.reset_index().to_feather('my_data.feather')
+            return updated_data
+        else:
+            # No new activities, return existing data
+            print('No new activities found.')
+            return existing_data
+
+    except Exception as e:
+        print(f'There was a problem with the request: {e}')
+        return None
+
+
+def refresh_access_token():
+    auth_url = "https://www.strava.com/oauth/token"
+    payload = {
+            'client_id': CLIENT_ID,
+            'client_secret': CLIENT_SECRET,
+            'refresh_token': REFRESH_TOKEN,
+            'grant_type': "refresh_token",
+            'f': 'json'
+    }
+    res = requests.post(auth_url, data=payload)
+    return res.json()['access_token']
+
+
+
+def fetch_activity_streams(activity_id):
+    try:
+        # Authenticate and get the access token
+        auth_url = "https://www.strava.com/oauth/token"
+        payload = {
+            'client_id': CLIENT_ID,
+            'client_secret': CLIENT_SECRET,
+            'refresh_token': REFRESH_TOKEN,
+            'grant_type': 'refresh_token',
+        }
+        res = requests.post(auth_url, data=payload, verify=False)  # You should handle verification in production
+        if res.status_code != 200:
+            print(f"Failed to retrieve access token: {res.json()}")
+            return None
+        access_token = res.json()['access_token']
+
+        # Define the URL for the Strava activity streams endpoint
+        streams_url = f"https://www.strava.com/api/v3/activities/{activity_id}/streams"
+        params = {
+            'keys': 'time,distance,latlng,altitude,velocity_smooth,heartrate,cadence,watts,temp',
+            'key_by_type': 'true'  # This organizes the response by stream type
+        }
+        headers = {'Authorization': f'Bearer {access_token}'}
+
+        # Make the API request for the activity streams
+        response = requests.get(streams_url, headers=headers, params=params)
+        if response.status_code != 200:
+            print(f"Failed to retrieve activity streams: {response.json()}")
+            return None
+
+        # Process the response
+        streams_data = response.json()
+        data_dict = {}
+
+        for k, v in streams_data.items():
+            data_dict[k] = v['data']
+        
+        df = pd.DataFrame(data_dict)
+        return df
+
+    except Exception as e:
+        print(f'There was a problem with the request: {e}')
+        return None
+
+
 def athlete_data():
     print(f"Requesting data...")
     auth_url = "https://www.strava.com/oauth/token"
@@ -168,7 +310,7 @@ def process_data(all_activities):
     # Dropping unnecessary columns
     cols_to_remove = ['athlete', 'resource_state', 'upload_id_str', 'external_id', 
     'from_accepted_tag', 'has_kudoed', 'workout_type', 'display_hide_heartrate_option', 'visibility',
-    'timezone', 'upload_id', 'start_date', 'utc_offset', 'location_city', 'location_country', 
+    'timezone', 'start_date', 'utc_offset', 'location_city', 'location_country', 
     'location_state', 'heartrate_opt_out', 'flagged', 'commute', 'manual', 'athlete_count', 'private', 
     'has_heartrate', 'start_latlng', 'end_latlng', 'device_watts', 'elev_low']
     activities_df = all_activities.drop(cols_to_remove, axis=1)

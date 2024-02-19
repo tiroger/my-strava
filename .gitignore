@@ -166,3 +166,6 @@ cython_debug/
 
 # Streamlit
 .streamlit/
+
+# All notebooks folder
+/notebooks/
