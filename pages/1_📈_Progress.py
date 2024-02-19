@@ -61,6 +61,8 @@ months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'Augus
 this_month = dt.datetime.today().month
 this_year = dt.datetime.today().year
 
+current_year = dt.datetime.today().year
+
 
 #################
 # PERSONAL DATA #
@@ -167,9 +169,9 @@ grouped_by_year_and_month = processed_data.groupby(['year', 'month', 'day']).agg
 # Creating a new date column
 grouped_by_year_and_month['date'] = pd.to_datetime(grouped_by_year_and_month[['year', 'month', 'day']])
 # converting date column to datetime
-grouped_by_year_and_month['date'] = pd.to_datetime(grouped_by_year_and_month['date'])
+grouped_by_year_and_month['date'] = pd.to_datetime(grouped_by_year_and_month['date'])  #f'{current_year}'
 
-grouped_by_year_and_month = grouped_by_year_and_month.set_index('date').reindex(pd.date_range(start='2012-01-01', end='2023-12-31'), fill_value=0).reset_index().rename(columns={'index': 'date'})
+grouped_by_year_and_month = grouped_by_year_and_month.set_index('date').reindex(pd.date_range(start='2012-01-01', end=f'{current_year}-12-31'), fill_value=0).reset_index().rename(columns={'index': 'date'})
 grouped_by_year_and_month['year'] = grouped_by_year_and_month['date'].dt.year
 grouped_by_year_and_month['month'] = grouped_by_year_and_month['date'].dt.month
 grouped_by_year_and_month['day'] = grouped_by_year_and_month['date'].dt.day
@@ -216,12 +218,13 @@ today_counter = grouped_by_year_and_month[grouped_by_year_and_month.date == toda
 
 
 
-# Projections for 2023
-daily_distance_2023 = grouped_by_year_and_month[grouped_by_year_and_month.year == 2023]['distance'].sum() / grouped_by_year_and_month[grouped_by_year_and_month.year == 2023]['day_counter'].max()
-on_pace_for_2023_distance = grouped_by_year_and_month[grouped_by_year_and_month.year == 2023]['Cumulative Distance'].max() + daily_distance_2023 * (365 - grouped_by_year_and_month[grouped_by_year_and_month.year == 2023]['day_counter'].max())
+# Projections for current year
+current_year = dt.datetime.today().year
+daily_distance_2023 = grouped_by_year_and_month[grouped_by_year_and_month.year == f'{current_year}']['distance'].sum() / grouped_by_year_and_month[grouped_by_year_and_month.year == f'{current_year}']['day_counter'].max()
+on_pace_for_2023_distance = grouped_by_year_and_month[grouped_by_year_and_month.year == f'{current_year}']['Cumulative Distance'].max() + daily_distance_2023 * (365 - grouped_by_year_and_month[grouped_by_year_and_month.year == f'{current_year}']['day_counter'].max())
 
-daily_elevation_2023 = grouped_by_year_and_month[grouped_by_year_and_month.year == 2023]['total_elevation_gain'].sum() / grouped_by_year_and_month[grouped_by_year_and_month.year == 2023]['day_counter'].max()
-on_pace_for_2023_elevation = grouped_by_year_and_month[grouped_by_year_and_month.year == 2023]['Cumulative Elevation'].max() + daily_elevation_2023 * (365 - grouped_by_year_and_month[grouped_by_year_and_month.year == 2023]['day_counter'].max())
+daily_elevation_2023 = grouped_by_year_and_month[grouped_by_year_and_month.year == f'{current_year}']['total_elevation_gain'].sum() / grouped_by_year_and_month[grouped_by_year_and_month.year == f'{current_year}']['day_counter'].max()
+on_pace_for_2023_elevation = grouped_by_year_and_month[grouped_by_year_and_month.year == f'{current_year}']['Cumulative Elevation'].max() + daily_elevation_2023 * (365 - grouped_by_year_and_month[grouped_by_year_and_month.year == f'{current_year}']['day_counter'].max())
 
 # Today's total distance
 today_distance = grouped_by_year_and_month[grouped_by_year_and_month.date == today_date]['Cumulative Distance'].sum()
@@ -265,7 +268,7 @@ fig.update_layout(
         margin=dict(l=0, r=0, t=0, b=0)
     )
 # Addding annotations for projected distance for 2023
-fig.add_annotation(x=today_counter.values[0], y=today_distance if selected_metric == 'Cumulative Distance' else today_elevation, text=f'On pace for : {on_pace_for_2023_distance.astype(int):,} miles' if selected_metric == 'Cumulative Distance' else f'On pace for : {on_pace_for_2023_elevation.astype(int):,} feet', showarrow=True, arrowcolor= '#FFFFFF',font=dict(size=20, color='#26A39E'))
+# fig.add_annotation(x=today_counter.values[0], y=today_distance if selected_metric == 'Cumulative Distance' else today_elevation, text=f'On pace for : {on_pace_for_2023_distance.astype(int):,} miles' if selected_metric == 'Cumulative Distance' else f'On pace for : {on_pace_for_2023_elevation.astype(int):,} feet', showarrow=True, arrowcolor= '#FFFFFF',font=dict(size=20, color='#26A39E'))
 
 fig.for_each_trace(lambda trace: fig.add_annotation(
     x=trace.x[-1], y=trace.y[-1], text='  '+trace.name, 

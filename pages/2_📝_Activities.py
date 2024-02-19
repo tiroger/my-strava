@@ -2,7 +2,7 @@
 # LIBRARIES #
 #############
 
-from get_strava_data import my_data, process_data, bike_data, get_elev_data_GOOGLE # Functions to retrive data using strava api and process for visualizations
+from get_strava_data import my_data, process_data, bike_data, get_elev_data_GOOGLE, fetch_activity_streams # Functions to retrive data using strava api and process for visualizations
 
 import ast
 import polyline
@@ -28,6 +28,9 @@ import matplotlib.pyplot as plt
 
 import streamlit as st
 import streamlit.components.v1 as components
+
+from st_aggrid import AgGrid
+
 
 ###############
 # CREDENTIALS #
@@ -239,6 +242,8 @@ streamlit_df = streamlit_df[streamlit_df['Type'].isin([activity_type])]
 # Sorting table
 streamlit_df.sort_values(by=sort_preference, ascending=False, inplace=True)
 
+# AgGrid(streamlit_df)
+
 headerColor = '#45738F'
 rowEvenColor = 'lightcyan'
 rowOddColor = 'white'
@@ -273,6 +278,9 @@ polylines_df.start_date_local = polylines_df.start_date_local.dt.strftime('%m-%d
 polylines_df = polylines_df[polylines_df.type == 'Ride'] # We'll only use rides which have a map
 
 
+# Convert 'map' column to dictionary once
+polylines_df['map'] = polylines_df['map'].apply(ast.literal_eval)
+
 option = st.selectbox(
      'Select a ride for more details',
      (polylines_df.name)
@@ -282,26 +290,23 @@ option = st.selectbox(
 idx = polylines_df[polylines_df.name == option].index.values[0]
 
 # Decoding polylines
-# Setting a try block in case a ride does not have a map
 try:
-    decoded = pd.json_normalize(polylines_df[polylines_df.index == idx]['map'].apply(ast.literal_eval))['summary_polyline'].apply(polyline.decode).values[0]
+    # Extract 'summary_polyline' and decode it
+    decoded = polylines_df.at[idx, 'map']['summary_polyline']
+    decoded = polyline.decode(decoded)
+except KeyError:
+    st.write('Geocoordinates are unavailable for this activity')
+    decoded = None
 
-
+if decoded is not None:
     # Adding elevation data from Google Elevation API
     @st.cache_data(persist=True)
-
     def elev_profile_chart():
         with st.spinner('Calculating elevation profile from Google Elevation. Hang tight...'):
             elevation_profile_feet = [get_elev_data_GOOGLE(coord[0], coord[1]) for coord in decoded]
-            # elevation_profile_feet = [elevation_profile[i] * 3.28084 for i in range(len(elevation_profile))] # Converting elevation to feet
-
             return elevation_profile_feet
 
-
     elevation_profile_feet = elev_profile_chart()
-
-except:
-    st.write('Geocoordinates are unavailable for this activity')
 
 # Plotting elevation data
 # fig, ax = plt.subplots(figsize=(10, 4))

@@ -2,10 +2,12 @@
 # LIBRARIES #
 #############
 
-from get_strava_data import my_data, process_data, bike_data, get_elev_data_GOOGLE # Functions to retrive data using strava api and process for visualizations
+from get_strava_data import my_data, process_data, bike_data, get_elev_data_GOOGLE, fetch_new_activities # Functions to retrive data using strava api and process for visualizations
 
 # import ast
 # import polyline
+
+import pyarrow.feather as feather
 
 import pandas as pd
 from pandas.api.types import CategoricalDtype
@@ -30,6 +32,7 @@ import matplotlib.pyplot as plt
 import streamlit as st
 import streamlit.components.v1 as components
 
+import pickle
 # from PIL import Image
 
 
@@ -118,7 +121,7 @@ def fetch_activities():
         my_data_df = my_data()
         processed_data = process_data(my_data_df)
 
-        return processed_data
+        return processed_data, my_data_df
 
 @st.cache_data(show_spinner=False, max_entries=5, ttl=43200)
 def bikes():
@@ -127,9 +130,23 @@ def bikes():
 
         return bikes
 
-processed_data = fetch_activities()
+processed_data, my_data_df = fetch_activities()
 bikes_df = bikes()
 
+# Save the raw data as a feather file
+feather.write_feather(my_data_df, 'my_data.feather')
+# Last recorded activity -- use start_date_local
+last_recorded_activity = my_data_df.start_date_local.max()
+# st.write(f'Last recorded activity: {last_recorded_activity}')
+with open('last_recorded_activity.pkl', 'wb') as f:
+    pickle.dump(last_recorded_activity, f)
+
+
+
+# Save the last activity time as a pickle file
+# with open('last_activity_time.pkl', 'wb') as f:
+#     pickle.dump(last_activity_time, f)
+    
 
 # Get local data # For development
 # processed_data = pd.read_csv('./data/processed_data.csv')
@@ -208,7 +225,20 @@ with st.sidebar:
 
 new_title = f'<H2 style="font-family:sans-serif; color:#fc4c02; font-size: 48px;">STRAVA OVERVIEW FOR {year} </H2>'
 st.markdown(new_title, unsafe_allow_html=True)
+last_recorded_activity_human_readable = pd.to_datetime(last_recorded_activity).strftime('%B %d, %Y')
+last_recorded_time_activity_human_readable = pd.to_datetime(last_recorded_activity).strftime('%I:%M %p')
+st.write(f'Last recorded activity: {last_recorded_activity_human_readable} at {last_recorded_time_activity_human_readable}')
+
+
 no_activity = 'No activity selected'
+
+if st.button('Fetch New Activities'):
+    new_data = fetch_new_activities()
+    if new_data is not None:
+        st.write('New activities fetched successfully!')
+        # st.dataframe(new_data)
+    else:
+        st.write('No new activities or error in fetching data.')
 
 # Columns for data
 col1, col2, col3= st.columns(3)
@@ -460,3 +490,9 @@ try:
 
 except:
     st.write('No data available')
+    
+
+
+
+
+# st.dataframe(processed_data.head(5))
