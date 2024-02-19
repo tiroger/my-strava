@@ -297,180 +297,182 @@ option = st.selectbox(
 )
 
 # Finding dataframe index based on ride name
-try:
-    idx = polylines_df[polylines_df['name'] == option].index[0]  # Using index[0] to get first item of index array
-    polyline_str = polylines_df.at[idx, 'map'].get('summary_polyline')
-    # Decoding polylines
-    if polyline_str:
-        decoded = polyline.decode(polyline_str)
-    else:
+
+if option:
+    try:
+        idx = polylines_df[polylines_df['name'] == option].index[0]  # Using index[0] to get first item of index array
+        polyline_str = polylines_df.at[idx, 'map'].get('summary_polyline')
+        # Decoding polylines
+        if polyline_str:
+            decoded = polyline.decode(polyline_str)
+        else:
+            decoded = None
+            st.write('No polyline data available for this activity')
+    except Exception as e:
+        st.write('Error decoding polyline:', e)
         decoded = None
-        st.write('No polyline data available for this activity')
-except Exception as e:
-    st.write('Error decoding polyline:', e)
-    decoded = None
 
-# Decoding polylines
-# try:
-#     # Extract 'summary_polyline' and decode it
-#     decoded = polylines_df.at[idx, 'map']['summary_polyline']
-#     decoded = polyline.decode(decoded)
-# except KeyError:
-#     st.write('Geocoordinates are unavailable for this activity')
-#     decoded = None
+    # Decoding polylines
+    # try:
+    #     # Extract 'summary_polyline' and decode it
+    #     decoded = polylines_df.at[idx, 'map']['summary_polyline']
+    #     decoded = polyline.decode(decoded)
+    # except KeyError:
+    #     st.write('Geocoordinates are unavailable for this activity')
+    #     decoded = None
 
-if decoded:
-    # Adding elevation data from Google Elevation API
-    @st.cache_data
-    def elev_profile_chart():
-        with st.spinner('Calculating elevation profile from Google Elevation. Hang tight...'):
-            elevation_profile_feet = [get_elev_data_GOOGLE(coord[0], coord[1]) for coord in decoded]
-            return elevation_profile_feet
+    if decoded:
+        # Adding elevation data from Google Elevation API
+        @st.cache_data
+        def elev_profile_chart():
+            with st.spinner('Calculating elevation profile from Google Elevation. Hang tight...'):
+                elevation_profile_feet = [get_elev_data_GOOGLE(coord[0], coord[1]) for coord in decoded]
+                return elevation_profile_feet
 
-    elevation_profile_feet = elev_profile_chart()
+        elevation_profile_feet = elev_profile_chart()
 
-########################
-# Plotly scattermapbox #
-########################
+    ########################
+    # Plotly scattermapbox #
+    ########################
 
-try:
-    centroid = [
-        np.mean([coord[0] for coord in decoded]), 
-        np.mean([coord[1] for coord in decoded])
-    ]
+    try:
+        centroid = [
+            np.mean([coord[0] for coord in decoded]), 
+            np.mean([coord[1] for coord in decoded])
+        ]
 
-    lat = [coord[0] for coord in decoded] 
-    lon = [coord[1] for coord in decoded]
+        lat = [coord[0] for coord in decoded] 
+        lon = [coord[1] for coord in decoded]
 
-    fig = go.Figure(go.Scattermapbox(
-        mode = "lines",
-        lon = lon, lat = lat,
-        marker = dict(size = 2, color = "red"),
-        line = dict(color = "midnightblue", width = 2),
-        # text = '‣',
-        textfont=dict(color='#E58606'),
-        textposition = 'bottom center',))
-    fig.update_traces(hovertext='', selector=dict(type='scattermapbox'))
-    fig.update_layout(
-        mapbox = {
-            'accesstoken': MAPBOX_TOKEN,
-            'style': "outdoors", 'zoom': 11,
-            'center': {'lon': centroid[1], 'lat': centroid[0]}
-        },
-        margin = {'l': 0, 'r': 0, 't': 0, 'b': 0},
-        showlegend = False)
+        fig = go.Figure(go.Scattermapbox(
+            mode = "lines",
+            lon = lon, lat = lat,
+            marker = dict(size = 2, color = "red"),
+            line = dict(color = "midnightblue", width = 2),
+            # text = '‣',
+            textfont=dict(color='#E58606'),
+            textposition = 'bottom center',))
+        fig.update_traces(hovertext='', selector=dict(type='scattermapbox'))
+        fig.update_layout(
+            mapbox = {
+                'accesstoken': MAPBOX_TOKEN,
+                'style': "outdoors", 'zoom': 11,
+                'center': {'lon': centroid[1], 'lat': centroid[0]}
+            },
+            margin = {'l': 0, 'r': 0, 't': 0, 'b': 0},
+            showlegend = False)
 
-    name = polylines_df[polylines_df.index == idx]['name'].values[0]
-    distance = polylines_df[polylines_df.index == idx]['distance'].values[0]
-    elev_gain = polylines_df[polylines_df.index == idx]['total_elevation_gain'].values[0]
-    avg_speed = polylines_df[polylines_df.index == idx]['average_speed'].values[0]
-    avg_power = polylines_df[polylines_df.index == idx]['weighted_average_watts'].values[0] 
-    suffer = polylines_df[polylines_df.index == idx]['suffer_score'].values[0]
+        name = polylines_df[polylines_df.index == idx]['name'].values[0]
+        distance = polylines_df[polylines_df.index == idx]['distance'].values[0]
+        elev_gain = polylines_df[polylines_df.index == idx]['total_elevation_gain'].values[0]
+        avg_speed = polylines_df[polylines_df.index == idx]['average_speed'].values[0]
+        avg_power = polylines_df[polylines_df.index == idx]['weighted_average_watts'].values[0] 
+        suffer = polylines_df[polylines_df.index == idx]['suffer_score'].values[0]
 
-    fig_elev = px.line(elevation_profile_feet, x=range(len(elevation_profile_feet)), y=pd.Series(elevation_profile_feet).rolling(5).mean())
-    fig_elev.update_layout(
-            xaxis=dict(
-                showline=True,
-                showgrid=False,
-                showticklabels=False,
-                linecolor='rgb(204, 204, 204)',
-                linewidth=1,
-                ticks='',
-                tickfont=dict(
-                    family='Arial',
-                    size=12,
-                    color='rgb(82, 82, 82)',
+        fig_elev = px.line(elevation_profile_feet, x=range(len(elevation_profile_feet)), y=pd.Series(elevation_profile_feet).rolling(5).mean())
+        fig_elev.update_layout(
+                xaxis=dict(
+                    showline=True,
+                    showgrid=False,
+                    showticklabels=False,
+                    linecolor='rgb(204, 204, 204)',
+                    linewidth=1,
+                    ticks='',
+                    tickfont=dict(
+                        family='Arial',
+                        size=12,
+                        color='rgb(82, 82, 82)',
+                    ),
                 ),
-            ),
-            yaxis=dict(
-                showgrid=False,
-                zeroline=False,
-                showline=False,
-                gridcolor = 'rgb(235, 236, 240)',
-                showticklabels=True,
-                title='Elevation (ft)',
-                autorange=False,
-                range=[0, 3000]
-            ),
-            autosize=True,
-            hovermode="x unified",
-            showlegend=False,
-            plot_bgcolor='rgba(0,0,0,0)',
-            xaxis_title='',
-            margin=dict(l=0, r=0, t=0, b=0),
+                yaxis=dict(
+                    showgrid=False,
+                    zeroline=False,
+                    showline=False,
+                    gridcolor = 'rgb(235, 236, 240)',
+                    showticklabels=True,
+                    title='Elevation (ft)',
+                    autorange=False,
+                    range=[0, 3000]
+                ),
+                autosize=True,
+                hovermode="x unified",
+                showlegend=False,
+                plot_bgcolor='rgba(0,0,0,0)',
+                xaxis_title='',
+                margin=dict(l=0, r=0, t=0, b=0),
+            )
+
+        fig_elev.add_annotation(text=f"<b>RIDE STATS</b>--------------------", 
+                            align='left',
+                            showarrow=False,
+                            xref='paper',
+                            yref='paper',
+                            x=0.05,
+                            y=0.99,
+        )
+        fig_elev.add_annotation(text=f"<b>Name</b>: {name}", 
+                            align='left',
+                            showarrow=False,
+                            xref='paper',
+                            yref='paper',
+                            x=0.05,
+                            y=0.95,
+        )                    
+        fig_elev.add_annotation(text=f"<b>Distance</b>: {distance} miles", 
+                            align='left',
+                            showarrow=False,
+                            xref='paper',
+                            yref='paper',
+                            x=0.05,
+                            y=0.91,
+        )
+        fig_elev.add_annotation(text=f"<b>Elevation Gain</b>: {elev_gain} feet", 
+                            align='left',
+                            showarrow=False,
+                            xref='paper',
+                            yref='paper',
+                            x=0.05,
+                            y=0.87,
+        )
+        fig_elev.add_annotation(text=f"<b>Average Speed</b>: {avg_speed} mph", 
+                            align='left',
+                            showarrow=False,
+                            xref='paper',
+                            yref='paper',
+                            x=0.05,
+                            y=0.83,
+        )     
+        fig_elev.add_annotation(text=f"<b>Weighted Power</b>: {avg_power} Watts", 
+                            align='left',
+                            showarrow=False,
+                            xref='paper',
+                            yref='paper',
+                            x=0.05,
+                            y=0.79,
+        )
+        fig_elev.add_annotation(text=f"<b>Suffer Score</b>: {suffer.astype(int)}", 
+                            align='left',
+                            showarrow=False,
+                            xref='paper',
+                            yref='paper',
+                            x=0.05,
+                            y=0.75,
+        )  
+        fig_elev.add_annotation(text="----------------------------------", 
+                            align='left',
+                            showarrow=False,
+                            xref='paper',
+                            yref='paper',
+                            x=0.05,
+                            y=0.71,
         )
 
-    fig_elev.add_annotation(text=f"<b>RIDE STATS</b>--------------------", 
-                        align='left',
-                        showarrow=False,
-                        xref='paper',
-                        yref='paper',
-                        x=0.05,
-                        y=0.99,
-    )
-    fig_elev.add_annotation(text=f"<b>Name</b>: {name}", 
-                        align='left',
-                        showarrow=False,
-                        xref='paper',
-                        yref='paper',
-                        x=0.05,
-                        y=0.95,
-    )                    
-    fig_elev.add_annotation(text=f"<b>Distance</b>: {distance} miles", 
-                        align='left',
-                        showarrow=False,
-                        xref='paper',
-                        yref='paper',
-                        x=0.05,
-                        y=0.91,
-    )
-    fig_elev.add_annotation(text=f"<b>Elevation Gain</b>: {elev_gain} feet", 
-                        align='left',
-                        showarrow=False,
-                        xref='paper',
-                        yref='paper',
-                        x=0.05,
-                        y=0.87,
-    )
-    fig_elev.add_annotation(text=f"<b>Average Speed</b>: {avg_speed} mph", 
-                        align='left',
-                        showarrow=False,
-                        xref='paper',
-                        yref='paper',
-                        x=0.05,
-                        y=0.83,
-    )     
-    fig_elev.add_annotation(text=f"<b>Weighted Power</b>: {avg_power} Watts", 
-                        align='left',
-                        showarrow=False,
-                        xref='paper',
-                        yref='paper',
-                        x=0.05,
-                        y=0.79,
-    )
-    fig_elev.add_annotation(text=f"<b>Suffer Score</b>: {suffer.astype(int)}", 
-                        align='left',
-                        showarrow=False,
-                        xref='paper',
-                        yref='paper',
-                        x=0.05,
-                        y=0.75,
-    )  
-    fig_elev.add_annotation(text="----------------------------------", 
-                        align='left',
-                        showarrow=False,
-                        xref='paper',
-                        yref='paper',
-                        x=0.05,
-                        y=0.71,
-    )
+        col1, col2 = st.columns(2)
+        with col1:
+            st.plotly_chart(fig, use_container_width = True, config=dict(displayModeBar = False))
+        with col2:
 
-    col1, col2 = st.columns(2)
-    with col1:
-        st.plotly_chart(fig, use_container_width = True, config=dict(displayModeBar = False))
-    with col2:
+            st.plotly_chart(fig_elev, use_container_width = True, config=dict(displayModeBar = False))
 
-        st.plotly_chart(fig_elev, use_container_width = True, config=dict(displayModeBar = False))
-
-except:
-    st.write('Maps not available for this activity')
+    except:
+        st.write('Maps not available for this activity')
