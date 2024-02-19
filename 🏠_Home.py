@@ -27,8 +27,6 @@ import plotly.graph_objects as go
 # from folium.features import CustomIcon
 # from streamlit_folium import folium_static
 
-import matplotlib.pyplot as plt
-
 import streamlit as st
 import streamlit.components.v1 as components
 

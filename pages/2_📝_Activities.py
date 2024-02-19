@@ -20,9 +20,9 @@ import base64
 import plotly.express as px
 import plotly.graph_objects as go
 
-import folium
-from folium.features import CustomIcon
-from streamlit_folium import folium_static
+# import folium
+# from folium.features import CustomIcon
+# from streamlit_folium import folium_static
 
 import matplotlib.pyplot as plt
 
@@ -539,4 +539,4 @@ try:
         st.plotly_chart(fig_elev, use_container_width = True, config=dict(displayModeBar = False))
 
 except:
-    st.write('')
+    st.write('Maps not available for this activity')
