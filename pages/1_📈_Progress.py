@@ -180,7 +180,7 @@ st.markdown('<h2 style="color:#45738F">Yearly Progressions and Goals</h2>', unsa
 
 # activity_type = st.selectbox('Filter by sport', ['Ride','VirtualRide', 'Run']) # Select from dropdown
 with st.sidebar:
-    activity_type = st.multiselect('Select activity', ['Ride','VirtualRide', 'Run'], default=['Ride', 'VirtualRide']) # Select from checkbox
+    activity_type = st.multiselect('Select Activity Type', ['Ride','VirtualRide', 'Run'], default=['Ride', 'VirtualRide']) # Select from checkbox
 
 processed_data = processed_data[processed_data.type.isin(activity_type)]
 
