@@ -326,15 +326,17 @@ with plotly_chart_col:
                 gridcolor = 'rgb(235, 236, 240)',
                 showticklabels=True,
                 title='',
-                autorange=True
+                autorange=True,
+                # format=',.0f',
             ),
             autosize=True,
             hovermode="x unified",
             showlegend=False,
             plot_bgcolor='rgba(0,0,0,0)',
             xaxis_title='',
-            yaxis_title='Distamce (miles)' if selected_metric == 'Cumulative Distance' else 'Elevation (feet)',
-            margin=dict(l=0, r=0, t=0, b=0)
+            yaxis_title='Distance (mi)' if selected_metric == 'Cumulative Distance' else 'Elevation (ft)',
+            margin=dict(l=0, r=0, t=0, b=0),
+            yaxis_tickformat = ',.0f',
         )
     current_year_data = grouped_by_year_and_month[grouped_by_year_and_month['year'] == current_year]
     current_year_by_month_totals = current_year_data.groupby('month').agg({'distance': 'sum', 'total_elevation_gain': 'sum'}).reset_index()
@@ -352,10 +354,10 @@ with plotly_chart_col:
         yref="paper",
         x=today_counter.iloc[0],
         y=0.75,
-        text=f'On pace for  {on_pace_distance_current_year.astype(int):,} miles' if selected_metric == 'Cumulative Distance' else f'On pace for : {on_pace_elevation_current_year.astype(int):,} feet',
+        text=f'On pace for {on_pace_distance_current_year.astype(int):,} mi' if selected_metric == 'Cumulative Distance' else f'On pace for {on_pace_elevation_current_year.astype(int):,} ft',
         showarrow=False,
         arrowcolor='#41484A',
-        font=dict(size=22, color='#26A39E'),
+        font=dict(size=18, color='#26A39E'),
         align="center",
         ax=0,
         ay=-50,
@@ -409,11 +411,11 @@ with plotly_chart_col:
         y=current_year_by_month_totals['distance' if selected_metric == 'Cumulative Distance' else 'total_elevation_gain'],
         marker_color='#FC4F31',
         name='Monthly Total',
-        opacity=0.6,
-        width=month_widths,  # Adjusted widths to prevent overlap
+        opacity=0.25,
+        width=month_widths,
         showlegend=True,
         hoverinfo='skip',
-        hovertemplate='Total: %{y}',
+        hovertemplate='%{y:,.0f}mi' if selected_metric == 'Cumulative Distance' else '%{y:,.0f}ft',
         
     ))
 
@@ -452,7 +454,7 @@ delta = d1 - d0
 
 days_gone_by = delta.days # number of days since the beginning of the year
 with st.sidebar:
-    distance_goal = st.number_input("Choose a distance goal for the year", value=previous_best_distance.astype(int) + 1) # distance goal for 2023
+    distance_goal = st.number_input("Choose a distance goal for the year", value=previous_best_distance.astype(int) * 1.1) # distance goal for 2023
 # st.write('The current distance goal is ', distance_goal)
 
 monthly_goal = distance_goal/12 # monthly distance to reach goal
@@ -482,7 +484,7 @@ pace = round(today_distance - should_be_reached, 1)
 #     st.metric(f'Distance through {today.strftime("%m/%d/%Y")}', "{:,}".format(round(today_distance, 1)) + ' miles', f'{pace} ' + 'miles behind' if pace <0 else f'{pace} ' + 'miles ahead')
 
 with st.sidebar:
-    elevation_goal = st.number_input("Choose an elevation goal for the year", value=previous_best_elevation.astype(int) + 1) # distance goal for 2022
+    elevation_goal = st.number_input("Choose an elevation goal for the year", value=previous_best_elevation.astype(int) * 1.1) # distance goal for 2022
 # st.write('The current distance goal is ', distance_goal)
 
 monthly_goal_elev = elevation_goal/12
@@ -517,15 +519,15 @@ aggreated_data = processed_data.groupby(['year', 'month', 'day']).agg({'distance
 # st.markdown("""---""")
 
 with distance_col:
-    st.metric(f'Most Miles in a Year achieved in {best_distance_year[0]}', "{:,}".format(round(best_distance, 0).astype(int)) + ' miles')
-    st.metric(f'{today_year} Distance Goal', "{:,}".format(distance_goal) + ' miles')
-    st.metric(f'Distance through {today.strftime("%m/%d/%Y")}', "{:,}".format(round(today_distance, 1)) + ' miles', f'{pace} ' + 'miles behind' if pace <0 else f'{pace} ' + 'miles ahead')
+    st.metric(f'Most Miles in a Year achieved in {best_distance_year[0]}', "{:,}".format(round(best_distance, 0).astype(int)) + ' mi')
+    st.metric(f'{today_year} Distance Goal', "{:,}".format(distance_goal) + ' mi')
+    st.metric(f'Distance through {today.strftime("%m/%d/%Y")}', "{:,}".format(round(today_distance, 1)) + ' mi', f'{pace} ' + 'miles behind' if pace <0 else f'{pace} ' + 'miles ahead')
     
 
 with elevation_col:
-    st.metric(f'Most Elevation Gain in a Year achieved in {best_elevation_year[0]}', "{:,}".format(round(best_elevation, 0).astype(int)) + ' feet')
-    st.metric(f'{today_year} Elevation Goal', "{:,}".format(elevation_goal) + ' feet')
-    st.metric(f'Elevation Gain through {today.strftime("%m/%d/%Y")}', "{:,}".format(round(today_elevation, 1)) + ' feet', f'{"{:,}".format(pace_elev)} ' + 'feet behind' if pace_elev <0 else f'{"{:,}".format(pace_elev)} ' + 'feet ahead')
+    st.metric(f'Most Elevation Gain in a Year achieved in {best_elevation_year[0]}', "{:,}".format(round(best_elevation, 0).astype(int)) + ' ft')
+    st.metric(f'{today_year} Elevation Goal', "{:,}".format(elevation_goal) + ' ft')
+    st.metric(f'Elevation Gain through {today.strftime("%m/%d/%Y")}', "{:,.0f}".format(round(today_elevation, 1)) + ' ft', f'{"{:,.0f}".format(pace_elev)} ' + 'ft behind' if pace_elev <0 else f'{"{:,}".format(pace_elev)} ' + 'feet ahead')
     
     
     
@@ -768,133 +770,137 @@ def get_last_8_weeks_data():
 
 last_8_weeks_data = get_last_8_weeks_data()
 
-windows = [1,2,5,10,15,20,30,45,60,90,120,180,240,300,360,420,480,540,600,660,720,780,840,900,960,1020,1080,1140,1200,1260,1320,1380,1440, 1500, 1560, 1620, 1680, 1740, 1800, 1860, 1920, 1980, 2040, 2100, 2160, 2220, 2280, 2340, 2400, 2460, 2520, 2580, 2640, 2700, 2760, 2820, 2880, 2940, 3000, 3060, 3120, 3180, 3240, 3300, 3360, 3420, 3480, 3540, 3600, 3660, 3720, 3780, 3840, 3900, 3960, 4020, 4080, 4140, 4200, 4260, 4320, 4380, 4440, 4500, 4560, 4620, 4680, 4740, 4800, 4860, 4920, 4980, 5040, 5100, 5160, 5220, 5280, 5340, 5400, 5460, 5520, 5580, 5640, 5700, 5760, 5820, 5880, 5940, 6000, 6060, 6120, 6180, 6240, 6300, 6360, 6420, 6480, 6540, 6600, 6660, 6720, 6780, 6840, 6900, 6960, 7020, 7080, 7140, 7200, 7260, 7320, 7380, 7440, 7500, 7560, 7620, 7680, 7740, 7800, 7860, 7920, 7980, 8040, 8100, 8160, 8220, 8280, 8340, 8400, 8460, 8520, 8580, 8640, 8700, 8760, 8820, 8880, 8940]
+@st.cache_data(show_spinner=False, max_entries=5, ttl=86400)
+def plot_power_curve():
+    windows = [1,2,5,10,15,20,30,45,60,90,120,180,240,300,360,420,480,540,600,660,720,780,840,900,960,1020,1080,1140,1200,1260,1320,1380,1440, 1500, 1560, 1620, 1680, 1740, 1800, 1860, 1920, 1980, 2040, 2100, 2160, 2220, 2280, 2340, 2400, 2460, 2520, 2580, 2640, 2700, 2760, 2820, 2880, 2940, 3000, 3060, 3120, 3180, 3240, 3300, 3360, 3420, 3480, 3540, 3600, 3660, 3720, 3780, 3840, 3900, 3960, 4020, 4080, 4140, 4200, 4260, 4320, 4380, 4440, 4500, 4560, 4620, 4680, 4740, 4800, 4860, 4920, 4980, 5040, 5100, 5160, 5220, 5280, 5340, 5400, 5460, 5520, 5580, 5640, 5700, 5760, 5820, 5880, 5940, 6000, 6060, 6120, 6180, 6240, 6300, 6360, 6420, 6480, 6540, 6600, 6660, 6720, 6780, 6840, 6900, 6960, 7020, 7080, 7140, 7200, 7260, 7320, 7380, 7440, 7500, 7560, 7620, 7680, 7740, 7800, 7860, 7920, 7980, 8040, 8100, 8160, 8220, 8280, 8340, 8400, 8460, 8520, 8580, 8640, 8700, 8760, 8820, 8880, 8940]
 
-best_rolling = {}
-for window in windows:
-    rolling = last_8_weeks_data.groupby('Id')['watts'].rolling(window=window, min_periods=1).mean()
-    best_rolling[window] = rolling.max()
+    best_rolling = {}
+    for window in windows:
+        rolling = last_8_weeks_data.groupby('Id')['watts'].rolling(window=window, min_periods=1).mean()
+        best_rolling[window] = rolling.max()
 
-best_rolling_df = pd.DataFrame(list(best_rolling.items()), columns=['Duration', 'Value'])
+    best_rolling_df = pd.DataFrame(list(best_rolling.items()), columns=['Duration', 'Value'])
 
-st.markdown('<h4 style="color:#45738F">Best Efforts Power Curve for the Past 8 weeks</h4>', unsafe_allow_html=True)
+    st.markdown('<h4 style="color:#45738F">Best Efforts Power Curve for the Past 8 weeks</h4>', unsafe_allow_html=True)
 
-fig = px.line(best_rolling_df, x='Duration', y='Value', title='', labels={'Duration': 'Duration (minutes)', 'Value': 'Watts'},
-              height=400
-              )
+    fig = px.line(best_rolling_df, x='Duration', y='Value', title='', labels={'Duration': 'Duration (minutes)', 'Value': 'Power (watts)'},
+                height=400
+                )
 
-fig.update_layout(
-    # remove backgrould and gridlines
-    plot_bgcolor='rgba(0,0,0,0)',
-    xaxis=dict(showgrid=True, gridcolor='rgba(0,0,0,0.1)'),
-    yaxis=dict(showgrid=False),
-    margin=dict(l=0, r=0, t=0, b=0),
-    
-)
+    fig.update_layout(
+        # remove backgrould and gridlines
+        plot_bgcolor='rgba(0,0,0,0)',
+        xaxis=dict(showgrid=True, gridcolor='rgba(0,0,0,0.1)'),
+        yaxis=dict(showgrid=False),
+        margin=dict(l=0, r=0, t=0, b=0),
+        
+    )
 
-# Estimated FTP -- 95% of the best 20 minute power
-ftp = best_rolling_df[best_rolling_df['Duration'] == 1200]['Value'].max() * 0.95
+    # Estimated FTP -- 95% of the best 20 minute power
+    ftp = best_rolling_df[best_rolling_df['Duration'] == 1200]['Value'].max() * 0.95
 
-fig.add_hline(y=ftp, line_width=1, line_dash="dash", line_color="grey")
+    fig.add_hline(y=ftp, line_width=1, line_dash="dash", line_color="grey")
 
-x_labels = ['5s', '5min', '20min', '1hr', '2hr']
+    x_labels = ['5s', '5min', '20min', '1hr', '2hr']
 
-fig.update_xaxes(tickvals=[5, 300, 600, 3600, 7200], ticktext=x_labels)
-fig.add_annotation(
-    x=8200,
-    y=ftp+30,
-    text=f'Estimated FTP: <b>{ftp:.0f} watts</b>',
-    showarrow=False,
-    arrowhead=1,
-    font=dict(
-        size=16,
-        color='#FF4500'
-    ),
-    # bordercolor="black",
-    # borderwidth=2,
-    # borderpad=4,
-    # bgcolor="white",
-    # opacity=0.8
-)
+    fig.update_xaxes(tickvals=[5, 300, 600, 3600, 7200], ticktext=x_labels)
+    fig.add_annotation(
+        x=8200,
+        y=ftp+30,
+        text=f'Estimated FTP: <b>{ftp:.0f} watts</b>',
+        showarrow=False,
+        arrowhead=1,
+        font=dict(
+            size=18,
+            color='#FF4500'
+        ),
+        # bordercolor="black",
+        # borderwidth=2,
+        # borderpad=4,
+        # bgcolor="white",
+        # opacity=0.8
+    )
 
-# Best 5 minute power
-best_5min = best_rolling_df[best_rolling_df['Duration'] == 300]['Value'].max()
-fig.add_annotation(
-    x=350,
-    y=600,
-    text=f'Best 5min: <b>{best_5min:.0f} watts</b>',
-    showarrow=False,
-    arrowhead=1,
-    textangle=-90,
-    font=dict(
-        size=12,
-        color='#4D4D4E'
-    ),
-    # bordercolor="black",
-    # borderwidth=2,
-    # borderpad=4,
-    # bgcolor="white",
-    # opacity=0.8
-)
+    # Best 5 minute power
+    best_5min = best_rolling_df[best_rolling_df['Duration'] == 300]['Value'].max()
+    fig.add_annotation(
+        x=350,
+        y=600,
+        text=f'Best 5min: <b>{best_5min:.0f}w</b>',
+        showarrow=False,
+        arrowhead=1,
+        textangle=-90,
+        font=dict(
+            size=12,
+            color='#4D4D4E'
+        ),
+        # bordercolor="black",
+        # borderwidth=2,
+        # borderpad=4,
+        # bgcolor="white",
+        # opacity=0.8
+    )
 
-best_20min = best_rolling_df[best_rolling_df['Duration'] == 1200]['Value'].max()
-fig.add_annotation(
-    x=650,
-    y=600,
-    text=f'Best 20min: <b>{best_20min:.0f} watts</b>',
-    showarrow=False,
-    arrowhead=1,
-    textangle=-90,
-    font=dict(
-        size=12,
-        color='#4D4D4E'
-    ),
-    # bordercolor="black",
-    # borderwidth=2,
-    # borderpad=4,
-    # bgcolor="white",
-    # opacity=0.8
-)
+    best_20min = best_rolling_df[best_rolling_df['Duration'] == 1200]['Value'].max()
+    fig.add_annotation(
+        x=650,
+        y=600,
+        text=f'Best 20min: <b>{best_20min:.0f}w</b>',
+        showarrow=False,
+        arrowhead=1,
+        textangle=-90,
+        font=dict(
+            size=12,
+            color='#4D4D4E'
+        ),
+        # bordercolor="black",
+        # borderwidth=2,
+        # borderpad=4,
+        # bgcolor="white",
+        # opacity=0.8
+    )
 
-best_hour = best_rolling_df[best_rolling_df['Duration'] == 3600]['Value'].max()
-fig.add_annotation(
-    x=3650,
-    y=600,
-    text=f'Best 1hr: <b>{best_hour:.0f} watts</b>',
-    showarrow=False,
-    arrowhead=1,
-    textangle=-90,
-    font=dict(
-        size=12,
-        color='#4D4D4E'
-    ),
-    # bordercolor="black",
-    # borderwidth=2,
-    # borderpad=4,
-    # bgcolor="white",
-    # opacity=0.8
-)
+    best_hour = best_rolling_df[best_rolling_df['Duration'] == 3600]['Value'].max()
+    fig.add_annotation(
+        x=3650,
+        y=600,
+        text=f'Best 1hr: <b>{best_hour:.0f}w</b>',
+        showarrow=False,
+        arrowhead=1,
+        textangle=-90,
+        font=dict(
+            size=12,
+            color='#4D4D4E'
+        ),
+        # bordercolor="black",
+        # borderwidth=2,
+        # borderpad=4,
+        # bgcolor="white",
+        # opacity=0.8
+    )
 
-best_2hour = best_rolling_df[best_rolling_df['Duration'] == 7200]['Value'].max()
-fig.add_annotation(
-    x=7250,
-    y=600,
-    text=f'Best 2hr: <b>{best_2hour:.0f} watts</b>',
-    showarrow=False,
-    arrowhead=1,
-    textangle=-90,
-    font=dict(
-        size=12,
-        color='#4D4D4E'
-    ),
-    # bordercolor="black",
-    # borderwidth=2,
-    # borderpad=4,
-    # bgcolor="white",
-    # opacity=0.8
-)
+    best_2hour = best_rolling_df[best_rolling_df['Duration'] == 7200]['Value'].max()
+    fig.add_annotation(
+        x=7250,
+        y=600,
+        text=f'Best 2hr: <b>{best_2hour:.0f}w</b>',
+        showarrow=False,
+        arrowhead=1,
+        textangle=-90,
+        font=dict(
+            size=12,
+            color='#4D4D4E'
+        ),
+        # bordercolor="black",
+        # borderwidth=2,
+        # borderpad=4,
+        # bgcolor="white",
+        # opacity=0.8
+    )
 
-st.plotly_chart(fig, use_container_width=True, config= dict(
-                displayModeBar = False,
-                responsive = False
-                ))
+    st.plotly_chart(fig, use_container_width=True, config= dict(
+                    displayModeBar = False,
+                    responsive = False
+                    ))
+
+power_curve = plot_power_curve()

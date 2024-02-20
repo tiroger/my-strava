@@ -166,6 +166,7 @@ processed_data['start_date_local'] = processed_data['start_date_local'].dt.strft
 
 # Saving processed data to csv for future use
 processed_data.to_csv('./data/processed_data.csv', index=False)
+bikes_df.to_csv('./data/bike_data.csv', index=False)
 
 
 

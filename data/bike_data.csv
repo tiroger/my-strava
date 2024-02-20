@@ -1,10 +1,10 @@
 id,primary,name,nickname,resource_state,retired,distance,converted_distance,brand_name,model_name,frame_type,description,weight
-b8099416,True,Hillius Maximus,Hillius Maximus,3,False,3069443,1907.3,Giant,TCR,3,,17.0
-b4196400,False,Purdie Little Thang,Purdie Little Thang,3,False,472420,293.5,,,3,,17.0
-b8615449,False,Dirty McDirtBag,Dirty McDirtBag,3,False,823701,511.8,Marin,Headlands,3,,20.0
-b4073790,False,TIE Fighter,TIE Fighter,3,False,5260181,3268.5,Storck ,scenero G2,3,,14.5
-b5245627,False,Hurt Enforcer,Hurt Enforcer,3,False,729213,453.1,Cannondale,Slate,3,,19.0
-b8029179,False,Big Boss Hoss,Big Boss Hoss,3,False,96105,59.7,,,1,,30.9
+b8099416,False,Hillius Maximus,Hillius Maximus,3,False,9450822,5872.5,Giant,TCR,3,,17.0
+b4196400,False,Purdie Little Thang,Purdie Little Thang,3,False,652976,405.7,,,3,,17.0
+b8615449,False,Dirty McDirtBag,Dirty McDirtBag,3,False,1835097,1140.3,Marin,Headlands,3,,20.0
+b4073790,False,TIE Fighter,TIE Fighter,3,False,8018846,4982.7,Storck ,scenero G2,3,,14.5
+b5245627,False,Hurt Enforcer,Hurt Enforcer,3,False,1755731,1091.0,Cannondale,Slate,3,,19.0
+b8029179,False,Big Boss Hoss,Big Boss Hoss,3,False,96105,59.7,Marin,Headlands,1,,30.9
 b326351,False,Caadie,Caadie,3,True,9232128,5736.6,Cannondale,CAAD10,3,,18.0
 b804798,False,The Sound,The Sound,3,True,1417281,880.7,,,3,,20.0
 b232108,False,Red Barron,Red Barron,3,True,528429,328.4,,,3,,27.0
