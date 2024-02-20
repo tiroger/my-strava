@@ -155,7 +155,7 @@ enable_enterprise_modules=False,
 height=350, 
 width='100%',
 reload_data=False,
-theme='streamlit',
+theme='alpine',
 # Fit columns on load
 )
 
