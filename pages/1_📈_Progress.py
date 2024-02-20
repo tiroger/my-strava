@@ -180,7 +180,7 @@ st.markdown('<h2 style="color:#45738F">Yearly Progressions and Goals</h2>', unsa
 
 # activity_type = st.selectbox('Filter by sport', ['Ride','VirtualRide', 'Run']) # Select from dropdown
 with st.sidebar:
-    activity_type = st.multiselect('Select activity', ['Ride','VirtualRide', 'Run'], default=['Ride', 'VirtualRide']) # Select from checkbox
+    activity_type = st.multiselect('Select activity', ['Ride','VirtualRide', 'Run'], default=['Ride', 'VirtualRide', 'Run']) # Select from checkbox
 
 processed_data = processed_data[processed_data.type.isin(activity_type)]
 
@@ -467,9 +467,11 @@ d0 = dt.datetime(this_year, 1, 1)
 d1 = dt.datetime.today()
 delta = d1 - d0
 
+yoy_improvement_percentage = 1.1
+
 days_gone_by = delta.days # number of days since the beginning of the year
 with st.sidebar:
-    value_distance_goal = int(previous_best_distance.astype(int) * 1.1)
+    value_distance_goal = int(previous_best_distance.astype(int) * yoy_improvement_percentage)
     distance_goal = st.number_input("Choose a distance goal for the year", value=value_distance_goal) # distance goal
 # st.write('The current distance goal is ', distance_goal)
 
@@ -500,7 +502,7 @@ pace = round(today_distance - should_be_reached, 1)
 #     st.metric(f'Distance through {today.strftime("%m/%d/%Y")}', "{:,}".format(round(today_distance, 1)) + ' miles', f'{pace} ' + 'miles behind' if pace <0 else f'{pace} ' + 'miles ahead')
 
 with st.sidebar:
-    value_elev_goal = int(previous_best_elevation.astype(int) * 1.1)
+    value_elev_goal = int(previous_best_elevation.astype(int) * yoy_improvement_percentage)
     elevation_goal = st.number_input("Choose an elevation goal for the year", value=value_elev_goal) # distance goal
 # st.write('The current distance goal is ', distance_goal)
 
@@ -536,16 +538,15 @@ aggreated_data = processed_data.groupby(['year', 'month', 'day']).agg({'distance
 # st.markdown("""---""")
 
 with distance_col:
-    st.metric(f'Most Miles in a Year achieved in {best_distance_year[0]}', "{:,}".format(round(best_distance, 0).astype(int)) + ' mi')
+    st.metric(f'Most Miles in a Year ({best_distance_year[0]})', "{:,}".format(round(best_distance, 0).astype(int)) + ' mi')
     st.metric(f'{today_year} Distance Goal', "{:,}".format(distance_goal) + ' mi')
     st.metric(f'Distance through {today.strftime("%m.%d.%Y")}', "{:,}".format(round(today_distance, 1)) + ' mi', f'{pace} ' + 'mi behind' if pace <0 else f'{pace} ' + 'miles ahead')
     
 
 with elevation_col:
-    st.metric(f'Most Elevation Gain in a Year achieved in {best_elevation_year[0]}', "{:,}".format(round(best_elevation, 0).astype(int)) + ' ft')
+    st.metric(f'Most Elevation Gain in a Year ({best_elevation_year[0]})', "{:,}".format(round(best_elevation, 0).astype(int)) + ' ft')
     st.metric(f'{today_year} Elevation Goal', "{:,}".format(elevation_goal) + ' ft')
     st.metric(f'Elevation Gain through {today.strftime("%m.%d.%Y")}', "{:,.0f}".format(round(today_elevation, 1)) + ' ft', f'{"{:,.0f}".format(pace_elev)} ' + 'ft behind' if pace_elev <0 else f'{"{:,}".format(pace_elev)} ' + 'ft ahead')
-    
     
     
 current_distance = today_distance
@@ -691,7 +692,7 @@ fig.add_vline(
 fig.add_annotation(
     xref="x",
     yref="paper",
-    x=curren_elevation_gain*0.3,
+    x=curren_elevation_gain*0.2,
     y=1,
     text='TODAY',
     showarrow=False,
@@ -763,7 +764,22 @@ st.markdown("""---""")
 # POWER CURVE #
 ###############
 
-last_8_weeks_data = processed_data[processed_data.activity_date >= (dt.datetime.today() - pd.DateOffset(weeks=8))]
+offset_options = ['Last 4 weeks', 'Last 8 weeks', 'Last 12 weeks', 'Last 26 weeks', f'All of {current_year}']
+week_offset_dropdown = st.selectbox('Select a time period for the power curve', (option for option in offset_options), index=1)
+
+offset_options_dict = {
+    'Last 4 weeks': 4,
+    'Last 8 weeks': 8,
+    'Last 12 weeks': 12,
+    'Last 26 weeks': 26,
+    f'All of {current_year}': 52
+}
+
+week_offset = offset_options_dict[week_offset_dropdown]
+# st.write(week_offset)
+
+# week_offset = 8
+last_8_weeks_data = processed_data[processed_data.activity_date >= (dt.datetime.today() - pd.DateOffset(weeks=week_offset))]
 # exclude_run = last_8_weeks_data[last_8_weeks_data['type'] != 'Run']
 activity_ids_for_last_8_weeks = last_8_weeks_data['id'].tolist()
 
@@ -798,9 +814,9 @@ def plot_power_curve():
 
     best_rolling_df = pd.DataFrame(list(best_rolling.items()), columns=['Duration', 'Value'])
 
-    st.markdown('<h4 style="color:#45738F">Best Efforts Power Curve for the Past 8 weeks</h4>', unsafe_allow_html=True)
+    st.markdown(f'<h4 style="color:#45738F">Best Efforts Power Curve for the Past {week_offset} weeks</h4>', unsafe_allow_html=True)
 
-    fig = px.line(best_rolling_df, x='Duration', y='Value', title='', labels={'Duration': 'Duration (minutes)', 'Value': 'Power (watts)'},
+    fig = px.line(best_rolling_df, x='Duration', y='Value', title='', labels={'Duration': '', 'Value': 'Power (watts)'},
                 height=400
                 )
 
@@ -810,17 +826,35 @@ def plot_power_curve():
         xaxis=dict(showgrid=True, gridcolor='rgba(0,0,0,0.1)'),
         yaxis=dict(showgrid=False),
         margin=dict(l=0, r=0, t=0, b=0),
-        
-    )
-
+           shapes=[
+        # Line Horizontal y=0
+        dict(
+            type='line',
+            yref='y', y0=0, y1=0,  # y-reference is set to 'y' to use plot's y-axis
+            xref='paper', x0=0, x1=1,  # x-reference is set to 'paper' to span whole width
+            line=dict(
+                color="rgba(150, 150, 150, 0.5)",  # Set line color and transparency
+                width=2,  # Set line width
+                dash="dot",  # Set line style (optional, e.g., 'dash', 'dot', etc.)
+            ),
+        ),
+    ]
+        )
+    fig.update_traces(line=dict(width=4))
+    
     # Estimated FTP -- 95% of the best 20 minute power
     ftp = best_rolling_df[best_rolling_df['Duration'] == 1200]['Value'].max() * 0.95
 
-    fig.add_hline(y=ftp, line_width=1, line_dash="dash", line_color="grey")
+    fig.add_hline(y=ftp, 
+                  line_width=1, 
+                  line_dash="dash", 
+                  line_color="grey")
 
     x_labels = ['5s', '5min', '20min', '1hr', '2hr']
-
-    fig.update_xaxes(tickvals=[5, 300, 600, 3600, 7200], ticktext=x_labels)
+    x_labels = [f'<b>{label}</b>' for label in x_labels]
+    fig.update_xaxes(
+        tickvals=[5, 300, 600, 3600, 7200], 
+        ticktext=x_labels)
     fig.add_annotation(
         x=8200,
         y=ftp+30,
@@ -914,6 +948,67 @@ def plot_power_curve():
         # bgcolor="white",
         # opacity=0.8
     )
+    
+    # # Horozontal line for best 15 second power
+    # best_15s = best_rolling_df[best_rolling_df['Duration'] == 15]['Value'].max()
+    # best_5min = best_rolling_df[best_rolling_df['Duration'] == 300]['Value'].max()
+    
+    # fig.add_annotation(
+    #     x=8200,
+    #     y=best_15s+30,
+    #     text=f'Best 15s: <b>{best_15s:.0f}w</b>',
+    #     showarrow=False,
+    #     arrowhead=1,
+    #     font=dict(
+    #         size=12,
+    #         color='#4D4D4E'
+    #     ),
+    #     # bordercolor="black",
+    #     # borderwidth=2,
+    #     # borderpad=4,
+    #     # bgcolor="white",
+    #     # opacity=0.8
+    # )
+    
+    # fig.add_annotation(
+    #     x=8200,
+    #     y=best_5min+30,
+    #     text=f'Best 5min: <b>{best_5min:.0f}w</b>',
+    #     showarrow=False,
+    #     arrowhead=1,
+    #     font=dict(
+    #         size=12,
+    #         color='#4D4D4E'
+    #     ),
+    #     # bordercolor="black",
+    #     # borderwidth=2,
+    #     # borderpad=4,
+    #     # bgcolor="white",
+    #     # opacity=0.8
+    # )
+    
+    # fig.add_hline(y=best_15s, 
+    #               line_width=1, 
+    #               line_dash="dash", 
+    #               line_color="grey")
+    
+    # fig.add_annotation(
+    #     x=100,
+    #     y=best_15s+30,
+    #     text=f'Best 15s: <b>{best_15s:.0f}w</b>',
+    #     showarrow=False,
+    #     arrowhead=1,
+    #     font=dict(
+    #         size=12,
+    #         color='#4D4D4E'
+    #     ),
+    #     # bordercolor="black",
+    #     # borderwidth=2,
+    #     # borderpad=4,
+    #     # bgcolor="white",
+    #     # opacity=0.8
+    
+    # )
 
     st.plotly_chart(fig, use_container_width=True, config= dict(
                     displayModeBar = False,
