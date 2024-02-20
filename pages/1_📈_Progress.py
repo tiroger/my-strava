@@ -303,6 +303,14 @@ plotly_chart_col, spacer_col, distance_col, elevation_col = st.columns([2, 0.1, 
 
 with plotly_chart_col:
     fig = px.line(grouped_by_year_and_month, x='day_counter', y=selected_metric, color='year')
+    
+    months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    current_month = dt.datetime.today().month
+    # Highlight the current month using HTML bold tag
+    ticktexts = ticktexts = [
+    f'<span style="color: #FF4500;"><b>{month}</b></span>' if index + 1 == current_month else month
+    for index, month in enumerate(months)
+]
     fig.update_layout(
             xaxis=dict(
                 showline=True,
@@ -312,7 +320,7 @@ with plotly_chart_col:
                 linewidth=1,
                 ticks='outside',
                 tickvals=[1, 32, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335],
-                ticktext=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                ticktext=ticktexts,
                 tickfont=dict(
                     family='Arial',
                     size=12,
@@ -387,10 +395,18 @@ with plotly_chart_col:
 
     # Update annotations to reflect the color change
     for trace in fig.data:
-        trace_color = '#949494' if trace.name != str(current_year) else trace.line.color
+        if trace.name == str(current_year):  # Check if the trace represents the current year
+            trace.line.color = trace.line.color  # Keep the original color for the current year
+            trace.line.width = 5  # Make line thicker for the current year
+        else:
+            trace.line.color = '#949494'  # Change color to grey for other years
+            trace.line.width = 1  # Make other lines thinner
+        font_size = [16 if trace.name == str(current_year) else 12][0]  # Set font size based on the condition
         fig.add_annotation(
             x=trace.x[-1], y=trace.y[-1], text='  '+trace.name, 
-            font=dict(size=16, color=trace_color),  # Use the determined color here
+            font=dict(size=font_size,
+                      color =[trace.line.color if trace.name == str(current_year) else '#949494'][0],
+                      ),  # Use the determined color here
             ax=10, ay=10, xanchor="left", showarrow=False
     )
 
@@ -418,7 +434,6 @@ with plotly_chart_col:
         hovertemplate='%{y:,.0f}mi' if selected_metric == 'Cumulative Distance' else '%{y:,.0f}ft',
         
     ))
-
 
     st.plotly_chart(fig, use_container_width=True, config= dict(
                 displayModeBar = False,
@@ -454,7 +469,8 @@ delta = d1 - d0
 
 days_gone_by = delta.days # number of days since the beginning of the year
 with st.sidebar:
-    distance_goal = st.number_input("Choose a distance goal for the year", value=previous_best_distance.astype(int) * 1.1) # distance goal for 2023
+    value_distance_goal = int(previous_best_distance.astype(int) * 1.1)
+    distance_goal = st.number_input("Choose a distance goal for the year", value=value_distance_goal) # distance goal
 # st.write('The current distance goal is ', distance_goal)
 
 monthly_goal = distance_goal/12 # monthly distance to reach goal
@@ -484,7 +500,8 @@ pace = round(today_distance - should_be_reached, 1)
 #     st.metric(f'Distance through {today.strftime("%m/%d/%Y")}', "{:,}".format(round(today_distance, 1)) + ' miles', f'{pace} ' + 'miles behind' if pace <0 else f'{pace} ' + 'miles ahead')
 
 with st.sidebar:
-    elevation_goal = st.number_input("Choose an elevation goal for the year", value=previous_best_elevation.astype(int) * 1.1) # distance goal for 2022
+    value_elev_goal = int(previous_best_elevation.astype(int) * 1.1)
+    elevation_goal = st.number_input("Choose an elevation goal for the year", value=value_elev_goal) # distance goal
 # st.write('The current distance goal is ', distance_goal)
 
 monthly_goal_elev = elevation_goal/12
@@ -521,13 +538,13 @@ aggreated_data = processed_data.groupby(['year', 'month', 'day']).agg({'distance
 with distance_col:
     st.metric(f'Most Miles in a Year achieved in {best_distance_year[0]}', "{:,}".format(round(best_distance, 0).astype(int)) + ' mi')
     st.metric(f'{today_year} Distance Goal', "{:,}".format(distance_goal) + ' mi')
-    st.metric(f'Distance through {today.strftime("%m/%d/%Y")}', "{:,}".format(round(today_distance, 1)) + ' mi', f'{pace} ' + 'miles behind' if pace <0 else f'{pace} ' + 'miles ahead')
+    st.metric(f'Distance through {today.strftime("%m.%d.%Y")}', "{:,}".format(round(today_distance, 1)) + ' mi', f'{pace} ' + 'mi behind' if pace <0 else f'{pace} ' + 'miles ahead')
     
 
 with elevation_col:
     st.metric(f'Most Elevation Gain in a Year achieved in {best_elevation_year[0]}', "{:,}".format(round(best_elevation, 0).astype(int)) + ' ft')
     st.metric(f'{today_year} Elevation Goal', "{:,}".format(elevation_goal) + ' ft')
-    st.metric(f'Elevation Gain through {today.strftime("%m/%d/%Y")}', "{:,.0f}".format(round(today_elevation, 1)) + ' ft', f'{"{:,.0f}".format(pace_elev)} ' + 'ft behind' if pace_elev <0 else f'{"{:,}".format(pace_elev)} ' + 'feet ahead')
+    st.metric(f'Elevation Gain through {today.strftime("%m.%d.%Y")}', "{:,.0f}".format(round(today_elevation, 1)) + ' ft', f'{"{:,.0f}".format(pace_elev)} ' + 'ft behind' if pace_elev <0 else f'{"{:,}".format(pace_elev)} ' + 'ft ahead')
     
     
     
@@ -665,7 +682,7 @@ fig.add_trace(go.Bar(
     )
 ))
 
-# black line ar today's total distance
+# black line at today's total distance
 fig.add_vline(
     x=curren_elevation_gain, 
     line_width=5, 
