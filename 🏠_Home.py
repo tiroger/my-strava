@@ -27,12 +27,11 @@ import plotly.graph_objects as go
 # from folium.features import CustomIcon
 # from streamlit_folium import folium_static
 
-import matplotlib.pyplot as plt
-
 import streamlit as st
 import streamlit.components.v1 as components
 
 import pickle
+import os
 # from PIL import Image
 
 
@@ -40,8 +39,14 @@ import pickle
 # CREDENTIALS #
 ###############
 
-token = MAPBOX_TOKEN = st.secrets['MAPBOX_TOKEN']
-GOOGLE_API_KEY = st.secrets['GOOGLE_API_KEY']
+# MAPBOX_TOKEN = st.secrets['MAPBOX_TOKEN']
+# GOOGLE_API_KEY = st.secrets['GOOGLE_API_KEY']
+
+CLIENT_ID = os.environ['CLIENT_ID']
+CLIENT_SECRET = os.environ['CLIENT_SECRET']
+REFRESH_TOKEN = os.environ['REFRESH_TOKEN']
+GOOGLE_API_KEY = os.environ['GOOGLE_API_KEY']
+MAPBOX_TOKEN = os.environ['MAPBOX_TOKEN']
 
 ####################
 # FOR IMAGES ICONS #
@@ -161,6 +166,7 @@ processed_data['start_date_local'] = processed_data['start_date_local'].dt.strft
 
 # Saving processed data to csv for future use
 processed_data.to_csv('./data/processed_data.csv', index=False)
+bikes_df.to_csv('./data/bike_data.csv', index=False)
 
 
 

@@ -2,8 +2,8 @@
 # LIBRARIES #
 #############
 
-from dotenv import load_dotenv
-load_dotenv()
+# from dotenv import load_dotenv
+# load_dotenv()
 import os
 import ast
 
@@ -16,11 +16,15 @@ import pandas as pd
 import streamlit as st
 
 # Credentials
-CLIENT_ID = st.secrets['CLIENT_ID']
-CLIENT_SECRET = st.secrets['CLIENT_SECRET']
-REFRESH_TOKEN = st.secrets['REFRESH_TOKEN']
-GOOGLE_API_KEY = st.secrets['GOOGLE_API_KEY']
+# CLIENT_ID = st.secrets['CLIENT_ID']
+# CLIENT_SECRET = st.secrets['CLIENT_SECRET']
+# REFRESH_TOKEN = st.secrets['REFRESH_TOKEN']
+# GOOGLE_API_KEY = st.secrets['GOOGLE_API_KEY']
 
+CLIENT_ID = os.environ['CLIENT_ID']
+CLIENT_SECRET = os.environ['CLIENT_SECRET']
+REFRESH_TOKEN = os.environ['REFRESH_TOKEN']
+GOOGLE_API_KEY = os.environ['GOOGLE_API_KEY']
 
 #################################################
 # FUNCTIONS TO RETRIEVE AND PROCESS STRAVA DATA #
