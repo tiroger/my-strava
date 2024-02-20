@@ -339,7 +339,7 @@ if selected:
             )
             
             fig_elev.add_annotation(
-                text=f"<b>Avg Power</b>: {activity_avg_power} Watts",
+                text=f"<b>Avg Power</b>: {activity_avg_power:,.0f} Watts",
                 align='left',
                 showarrow=False,
                 xref='paper',
@@ -460,7 +460,7 @@ if selected:
         return f"{hours:02.0f}:{minutes:02.0f}:{seconds:02.0f}"
     
     total_move_time_human_readable = convert_seconds_to_hms(total_move_time)
-    st.write(f'Total Move Time: {total_move_time/60}')
+    # st.write(f'Total Move Time: {total_move_time/60}')
     
     
 

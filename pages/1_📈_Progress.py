@@ -2,7 +2,7 @@
 # LIBRARIES #
 #############
 
-from get_strava_data import my_data, process_data, bike_data, get_elev_data_GOOGLE # Functions to retrive data using strava api and process for visualizations
+from get_strava_data import my_data, process_data, bike_data, get_elev_data_GOOGLE, fetch_activity_streams # Functions to retrive data using strava api and process for visualizations
 
 # import ast
 # import polyline
@@ -120,6 +120,41 @@ processed_data['start_date_local'] = processed_data['start_date_local'].dt.strft
 # Saving processed data to csv for future use
 # processed_data.to_csv('./data/processed_data.csv', index=False)
 
+
+processed_data['activity_date'] = pd.to_datetime(processed_data['start_date_local'])
+# last_8_weeks_data = processed_data[processed_data.activity_date >= (dt.datetime.today() - pd.DateOffset(weeks=8))]
+# exclude_run = last_8_weeks_data[last_8_weeks_data['type'] != 'Run']
+# activity_ids_for_last_8_weeks = exclude_run['id'].tolist()
+
+
+# @st.cache_data(show_spinner=False, max_entries=5, ttl=86400)
+# def get_last_8_weeks_data():
+#     data_dict = {}
+#     for activity_id in activity_ids_for_last_8_weeks:
+#         stream = fetch_activity_streams(activity_id)
+#         data_dict[activity_id] = stream
+
+#     df_list = []
+#     for id_key, data in data_dict.items():
+#         temp_df = pd.DataFrame(data)
+#         temp_df['Id'] = id_key
+#         df_list.append(temp_df)
+
+#     # Combine all individual DataFrames into one
+#     combined_df = pd.concat(df_list, ignore_index=True)
+
+#     return combined_df
+
+# last_8_weeks_data = get_last_8_weeks_data()
+
+# windows = [1,2,5,10,15,20,30,45,60,90,120,180,240,300,360,420,480,540,600,660,720,780,840,900,960,1020,1080,1140,1200,1260,1320,1380,1440, 1500, 1560, 1620, 1680, 1740, 1800, 1860, 1920, 1980, 2040, 2100, 2160, 2220, 2280, 2340, 2400, 2460, 2520, 2580, 2640, 2700, 2760, 2820, 2880, 2940, 3000, 3060, 3120, 3180, 3240, 3300, 3360, 3420, 3480, 3540, 3600, 3660, 3720, 3780, 3840, 3900, 3960, 4020, 4080, 4140, 4200, 4260, 4320, 4380, 4440, 4500, 4560, 4620, 4680, 4740, 4800, 4860, 4920, 4980, 5040, 5100, 5160, 5220, 5280, 5340, 5400, 5460, 5520, 5580, 5640, 5700, 5760, 5820, 5880, 5940, 6000, 6060, 6120, 6180, 6240, 6300, 6360, 6420, 6480, 6540, 6600, 6660, 6720, 6780, 6840, 6900, 6960, 7020, 7080, 7140, 7200, 7260, 7320, 7380, 7440, 7500, 7560, 7620, 7680, 7740, 7800, 7860, 7920, 7980, 8040, 8100, 8160, 8220, 8280, 8340, 8400, 8460, 8520, 8580, 8640, 8700, 8760, 8820, 8880, 8940]
+
+# best_rolling = {}
+# for window in windows:
+#     rolling = last_8_weeks_data.groupby('Id')['watts'].rolling(window=window, min_periods=1).mean()
+#     best_rolling[window] = rolling.max()
+
+# best_rolling_df = pd.DataFrame(list(best_rolling.items()), columns=['Duration', 'Value'])
 
 
 # Data for dahsboard
@@ -305,7 +340,11 @@ with plotly_chart_col:
     current_year_by_month_totals = current_year_data.groupby('month').agg({'distance': 'sum', 'total_elevation_gain': 'sum'}).reset_index()
 
     # Adding a vertical line for today's date
-    fig.add_vline(x=today_counter.iloc[0], line_width=0.5, line_dash="dash", line_color="black")
+    fig.add_vline(
+        x=today_counter.iloc[0], 
+        line_width=0.5, 
+        line_dash="dash", 
+        line_color="grey")
 
     # Adding annotations for projected distance
     fig.add_annotation(
@@ -327,13 +366,31 @@ with plotly_chart_col:
         # opacity=0.8
     )
 
-    fig.for_each_trace(lambda trace: fig.add_annotation(
-        x=trace.x[-1], y=trace.y[-1], text='  '+trace.name, 
-        font=dict(size=16, color=trace.line.color),
-        ax=10, ay=10, xanchor="left", showarrow=False))
+    # fig.for_each_trace(lambda trace: fig.add_annotation(
+    #     x=trace.x[-1], y=trace.y[-1], text='  '+trace.name, 
+    #     font=dict(size=16, color=trace.line.color),
+    #     ax=10, ay=10, xanchor="left", showarrow=False))
     fig.update_traces(mode="lines", hovertemplate=None)
     fig.update_xaxes(showgrid=False)
     fig.update_yaxes(showgrid=False)
+    
+    for trace in fig.data:
+        if trace.name == str(current_year):  # Convert current_year to string for comparison
+            trace.line.color = '#FF4500'  # or any color you want for the current year
+        else:
+            trace.line.color = '#949494'  # Making other years grey
+    # for trace in fig.data:
+    #     if trace.name != str(current_year):  # Assuming 'year' is a string. Adjust if it's int.
+    #         trace.line.color = 'grey'  # Set non-current year lines to grey
+
+    # Update annotations to reflect the color change
+    for trace in fig.data:
+        trace_color = '#949494' if trace.name != str(current_year) else trace.line.color
+        fig.add_annotation(
+            x=trace.x[-1], y=trace.y[-1], text='  '+trace.name, 
+            font=dict(size=16, color=trace_color),  # Use the determined color here
+            ax=10, ay=10, xanchor="left", showarrow=False
+    )
 
     average_month_width = 30.44  # Average days in a month
     tickvals = [1, 32, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335]
@@ -495,7 +552,7 @@ fig.add_trace(go.Bar(
         bgcolor='rgba(76, 175, 80, 0.6)',
         font_size=16
     ),
-    text = f'{current_distance:,.0f} miles',
+    text = f'{current_distance:,.0f} mi',
     textposition='inside',
     insidetextanchor='start',
     insidetextfont=dict(
@@ -504,8 +561,22 @@ fig.add_trace(go.Bar(
     )
 ))
 
-# black libe ar today's total distance
-fig.add_vline(x=current_distance, line_width=5, line_color="black")
+# black line ar today's total distance
+fig.add_vline(
+    x=current_distance, 
+    line_width=5, 
+    line_color="black"
+    )
+
+fig.add_annotation(
+    xref="x",
+    yref="paper",
+    x=current_distance*0.45,
+    y=1,
+    text='TODAY',
+    showarrow=False,
+    font=dict(size=10, color='#26A39E'),
+)
 
 # Bar for the remaining distance to reach the goal (if applicable)
 if current_distance < distance_goal:
@@ -583,7 +654,7 @@ fig.add_trace(go.Bar(
         bgcolor='rgba(76, 175, 80, 0.6)',
         font_size=16
     ),
-    text = f'{curren_elevation_gain:,.0f} feet',
+    text = f'{curren_elevation_gain:,.0f} ft',
     textposition='inside',
     insidetextanchor='start',
     insidetextfont=dict(
@@ -592,8 +663,21 @@ fig.add_trace(go.Bar(
     )
 ))
 
-# black libe ar today's total distance
-fig.add_vline(x=curren_elevation_gain, line_width=5, line_color="black")
+# black line ar today's total distance
+fig.add_vline(
+    x=curren_elevation_gain, 
+    line_width=5, 
+    line_color="black")
+
+fig.add_annotation(
+    xref="x",
+    yref="paper",
+    x=curren_elevation_gain*0.3,
+    y=1,
+    text='TODAY',
+    showarrow=False,
+    font=dict(size=10, color='#26A39E'),
+)
 
 # Bar for the remaining distance to reach the goal (if applicable)
 if curren_elevation_gain < elevation_goal:
@@ -649,6 +733,168 @@ fig.update_layout(width=180, height=150)
 
 with elevation_col:
     st.plotly_chart(fig, use_container_width=True, config= dict(
+                displayModeBar = False,
+                responsive = False
+                ))
+    
+
+st.markdown("""---""")
+
+###############
+# POWER CURVE #
+###############
+
+last_8_weeks_data = processed_data[processed_data.activity_date >= (dt.datetime.today() - pd.DateOffset(weeks=8))]
+# exclude_run = last_8_weeks_data[last_8_weeks_data['type'] != 'Run']
+activity_ids_for_last_8_weeks = last_8_weeks_data['id'].tolist()
+
+@st.cache_data(show_spinner=False, max_entries=5, ttl=86400)
+def get_last_8_weeks_data():
+    data_dict = {}
+    for activity_id in activity_ids_for_last_8_weeks:
+        stream = fetch_activity_streams(activity_id)
+        data_dict[activity_id] = stream
+
+    df_list = []
+    for id_key, data in data_dict.items():
+        temp_df = pd.DataFrame(data)
+        temp_df['Id'] = id_key
+        df_list.append(temp_df)
+
+    # Combine all individual DataFrames into one
+    combined_df = pd.concat(df_list, ignore_index=True)
+
+    return combined_df
+
+last_8_weeks_data = get_last_8_weeks_data()
+
+windows = [1,2,5,10,15,20,30,45,60,90,120,180,240,300,360,420,480,540,600,660,720,780,840,900,960,1020,1080,1140,1200,1260,1320,1380,1440, 1500, 1560, 1620, 1680, 1740, 1800, 1860, 1920, 1980, 2040, 2100, 2160, 2220, 2280, 2340, 2400, 2460, 2520, 2580, 2640, 2700, 2760, 2820, 2880, 2940, 3000, 3060, 3120, 3180, 3240, 3300, 3360, 3420, 3480, 3540, 3600, 3660, 3720, 3780, 3840, 3900, 3960, 4020, 4080, 4140, 4200, 4260, 4320, 4380, 4440, 4500, 4560, 4620, 4680, 4740, 4800, 4860, 4920, 4980, 5040, 5100, 5160, 5220, 5280, 5340, 5400, 5460, 5520, 5580, 5640, 5700, 5760, 5820, 5880, 5940, 6000, 6060, 6120, 6180, 6240, 6300, 6360, 6420, 6480, 6540, 6600, 6660, 6720, 6780, 6840, 6900, 6960, 7020, 7080, 7140, 7200, 7260, 7320, 7380, 7440, 7500, 7560, 7620, 7680, 7740, 7800, 7860, 7920, 7980, 8040, 8100, 8160, 8220, 8280, 8340, 8400, 8460, 8520, 8580, 8640, 8700, 8760, 8820, 8880, 8940]
+
+best_rolling = {}
+for window in windows:
+    rolling = last_8_weeks_data.groupby('Id')['watts'].rolling(window=window, min_periods=1).mean()
+    best_rolling[window] = rolling.max()
+
+best_rolling_df = pd.DataFrame(list(best_rolling.items()), columns=['Duration', 'Value'])
+
+st.markdown('<h4 style="color:#45738F">Best Efforts Power Curve for the Past 8 weeks</h4>', unsafe_allow_html=True)
+
+fig = px.line(best_rolling_df, x='Duration', y='Value', title='', labels={'Duration': 'Duration (minutes)', 'Value': 'Watts'},
+              height=400
+              )
+
+fig.update_layout(
+    # remove backgrould and gridlines
+    plot_bgcolor='rgba(0,0,0,0)',
+    xaxis=dict(showgrid=True, gridcolor='rgba(0,0,0,0.1)'),
+    yaxis=dict(showgrid=False),
+    margin=dict(l=0, r=0, t=0, b=0),
+    
+)
+
+# Estimated FTP -- 95% of the best 20 minute power
+ftp = best_rolling_df[best_rolling_df['Duration'] == 1200]['Value'].max() * 0.95
+
+fig.add_hline(y=ftp, line_width=1, line_dash="dash", line_color="grey")
+
+x_labels = ['5s', '5min', '20min', '1hr', '2hr']
+
+fig.update_xaxes(tickvals=[5, 300, 600, 3600, 7200], ticktext=x_labels)
+fig.add_annotation(
+    x=8200,
+    y=ftp+30,
+    text=f'Estimated FTP: <b>{ftp:.0f} watts</b>',
+    showarrow=False,
+    arrowhead=1,
+    font=dict(
+        size=16,
+        color='#FF4500'
+    ),
+    # bordercolor="black",
+    # borderwidth=2,
+    # borderpad=4,
+    # bgcolor="white",
+    # opacity=0.8
+)
+
+# Best 5 minute power
+best_5min = best_rolling_df[best_rolling_df['Duration'] == 300]['Value'].max()
+fig.add_annotation(
+    x=350,
+    y=600,
+    text=f'Best 5min: <b>{best_5min:.0f} watts</b>',
+    showarrow=False,
+    arrowhead=1,
+    textangle=-90,
+    font=dict(
+        size=12,
+        color='#4D4D4E'
+    ),
+    # bordercolor="black",
+    # borderwidth=2,
+    # borderpad=4,
+    # bgcolor="white",
+    # opacity=0.8
+)
+
+best_20min = best_rolling_df[best_rolling_df['Duration'] == 1200]['Value'].max()
+fig.add_annotation(
+    x=650,
+    y=600,
+    text=f'Best 20min: <b>{best_20min:.0f} watts</b>',
+    showarrow=False,
+    arrowhead=1,
+    textangle=-90,
+    font=dict(
+        size=12,
+        color='#4D4D4E'
+    ),
+    # bordercolor="black",
+    # borderwidth=2,
+    # borderpad=4,
+    # bgcolor="white",
+    # opacity=0.8
+)
+
+best_hour = best_rolling_df[best_rolling_df['Duration'] == 3600]['Value'].max()
+fig.add_annotation(
+    x=3650,
+    y=600,
+    text=f'Best 1hr: <b>{best_hour:.0f} watts</b>',
+    showarrow=False,
+    arrowhead=1,
+    textangle=-90,
+    font=dict(
+        size=12,
+        color='#4D4D4E'
+    ),
+    # bordercolor="black",
+    # borderwidth=2,
+    # borderpad=4,
+    # bgcolor="white",
+    # opacity=0.8
+)
+
+best_2hour = best_rolling_df[best_rolling_df['Duration'] == 7200]['Value'].max()
+fig.add_annotation(
+    x=7250,
+    y=600,
+    text=f'Best 2hr: <b>{best_2hour:.0f} watts</b>',
+    showarrow=False,
+    arrowhead=1,
+    textangle=-90,
+    font=dict(
+        size=12,
+        color='#4D4D4E'
+    ),
+    # bordercolor="black",
+    # borderwidth=2,
+    # borderpad=4,
+    # bgcolor="white",
+    # opacity=0.8
+)
+
+st.plotly_chart(fig, use_container_width=True, config= dict(
                 displayModeBar = False,
                 responsive = False
                 ))
