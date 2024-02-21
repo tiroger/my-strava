@@ -102,7 +102,6 @@ this_year = dt.datetime.today().year
 # PERSONAL DATA #
 #################
 
-ftp = 192
 weight_lbs = 152
 weight_kg = weight_lbs * 0.453592
 
