@@ -427,7 +427,7 @@ if selected:
             window_seconds = total_duration_seconds
 
         # Calculate the rolling average for the specified time window
-        df[f'rolling_avg_power_{window_seconds}s'] = df[power_column].rolling(window=window_seconds, min_periods=1).mean()
+        df[f'rolling_avg_power_{window_seconds}s'] = df[power_column].rolling(window=window_seconds, min_periods=int(window_seconds/2)).mean()
 
         # Find and return the maximum average power for this window
         max_power = df[f'rolling_avg_power_{window_seconds}s'].max()
@@ -486,6 +486,9 @@ if selected:
     peak_power_df = peak_power_df[peak_power_df['Duration'] < total_move_time/60]
     # Drop duration column
     peak_power_df = peak_power_df.drop(columns='Duration')
+    
+    #  =invert the dataframe
+    peak_power_df = peak_power_df.iloc[::-1] 
     
     # Drop columns as soon as they begin the be duplicated
     # peak_power_df = peak_power_df.drop_duplicates()

@@ -14,6 +14,9 @@ import json
 import pandas as pd
 
 import streamlit as st
+import numpy as np
+import pickle
+from datetime import datetime
 
 # Credentials
 # CLIENT_ID = st.secrets['CLIENT_ID']
@@ -76,16 +79,6 @@ def my_data():
         print('There was a problem with the request.')
 
 
-import requests
-import pandas as pd
-import pickle
-from datetime import datetime
-import os
-
-# Function to fetch new activities
-import requests
-import pandas as pd
-import os
 
 def fetch_new_activities():
     # Initialize existing_data
