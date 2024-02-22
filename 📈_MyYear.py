@@ -122,9 +122,9 @@ with open('last_recorded_activity.pkl', 'wb') as f:
 
 
 # Get local data # For development
-processed_data = pd.read_csv('./data/processed_data.csv')
-bikes_df = pd.read_csv('./data/bike_data.csv')
-athlete_df = pd.read_csv('./data/athlete_data.csv')
+# processed_data = pd.read_csv('./data/processed_data.csv')
+# bikes_df = pd.read_csv('./data/bike_data.csv')
+# athlete_df = pd.read_csv('./data/athlete_data.csv')
 
 processed_data['start_date_local'] = pd.to_datetime(processed_data['start_date_local'])
 processed_data['start_date_local'] = processed_data['start_date_local'].dt.strftime('%m-%d-%Y')
@@ -456,8 +456,8 @@ with plotly_chart_col:
         fig.add_annotation(
             x=trace.x[-1], y=trace.y[-1], text='  '+trace.name, 
             font=dict(size=font_size,
-                      color =[trace.line.color if trace.name == str(current_year) else '#949494'][0],
-                      ),  # Use the determined color here
+                      color =[trace.line.color if trace.name == str(current_year) else '#949494'][0], # Use the determined color here
+                      ),  
             ax=10, ay=10, xanchor="left", showarrow=False
     )
 
@@ -465,12 +465,11 @@ with plotly_chart_col:
     tickvals = [1, 32, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335]
     month_widths = [t2 - t1 - 1 for t1, t2 in zip(tickvals[:-1], tickvals[1:])]  # Subtract 1 to reduce width slightly
 
-    # Calculate midpoints for each month to use as x values for bars
-    # This makes each bar centered on its respective month
+    # Calculate midpoints for each month to use as x values for bars --This makes each bar centered on its respective month
     month_midpoints = [(t1 + t2) / 2 for t1, t2 in zip(tickvals[:-1], tickvals[1:])]
 
     # Update your bar trace
-    # Note: We're mapping the 'month' value to the correct midpoint based on your data structure
+    # Note: We're mapping the 'month' value to the correct midpoint based on the data structure
     fig.add_trace(go.Bar(
         x=[month_midpoints[month - 1] for month in current_year_by_month_totals['month']],  # Align 'month' with midpoints
         
@@ -1565,11 +1564,14 @@ def plot_power_curve():
                             radialaxis_ticklen=2,
                             )
     
-    return fig, fig_polar, best_rolling_df
+    return fig, fig_polar, best_rolling_df, ftp
 
 
-fig, fig_polar, best_rolling_df = plot_power_curve()
+fig, fig_polar, best_rolling_df, ftp = plot_power_curve()
 
+# Pickling FTP for use in other parts of the app
+with open('ftp.pkl', 'wb') as f:
+    pickle.dump(ftp, f)
 
 power_curve_col, spacer, ploar_chart_col = st.columns([3, 0.05, 2])
 
