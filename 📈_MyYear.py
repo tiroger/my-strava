@@ -29,19 +29,21 @@ import streamlit.components.v1 as components
 import os
 
 import calplot
+from plotly_calplot import calplot as cplot
+
+import pickle
 
 ###############
 # CREDENTIALS #
 ###############
 
-# token = MAPBOX_TOKEN = st.secrets['MAPBOX_TOKEN']
+# MAPBOX_TOKEN = st.secrets['MAPBOX_TOKEN']
 # GOOGLE_API_KEY = st.secrets['GOOGLE_API_KEY']
 
 CLIENT_ID = os.environ['CLIENT_ID']
 CLIENT_SECRET = os.environ['CLIENT_SECRET']
 REFRESH_TOKEN = os.environ['REFRESH_TOKEN']
 GOOGLE_API_KEY = os.environ['GOOGLE_API_KEY']
-
 MAPBOX_TOKEN = os.environ['MAPBOX_TOKEN']
 
 
@@ -90,32 +92,32 @@ bikes_dict = {'Tie Fighter': 'Storck Scenero', 'Caadie': 'Cannondale CAAD10', 'D
 
 ##### Use one of two options below #####
 
-# @st.cache_data(show_spinner=False, max_entries=5, ttl=43200)
-# def fetch_activities():
-#     with st.spinner('Data Refreshing...'):
+@st.cache_data(show_spinner=False, max_entries=5, ttl=43200)
+def fetch_activities():
+    with st.spinner('Data Refreshing...'):
 
-#         my_data_df = my_data()
-#         processed_data = process_data(my_data_df)
+        my_data_df = my_data()
+        processed_data = process_data(my_data_df)
 
-#         return processed_data, my_data_df
+        return processed_data, my_data_df
 
-# @st.cache_data(show_spinner=False, max_entries=5, ttl=43200)
-# def bikes():
-#     with st.spinner('Data Refreshing...'):
-#         bikes = bike_data()
+@st.cache_data(show_spinner=False, max_entries=5, ttl=43200)
+def bikes():
+    with st.spinner('Data Refreshing...'):
+        bikes = bike_data()
 
-#         return bikes
+        return bikes
 
-# processed_data, my_data_df = fetch_activities()
-# bikes_df = bikes()
+processed_data, my_data_df = fetch_activities()
+bikes_df = bikes()
 
-# # Save the raw data as a feather file
-# feather.write_feather(my_data_df, 'my_data.feather')
-# # Last recorded activity -- use start_date_local
-# last_recorded_activity = my_data_df.start_date_local.max()
-# # st.write(f'Last recorded activity: {last_recorded_activity}')
-# with open('last_recorded_activity.pkl', 'wb') as f:
-#     pickle.dump(last_recorded_activity, f)
+# Save the raw data as a feather file
+feather.write_feather(my_data_df, 'my_data.feather')
+# Last recorded activity -- use start_date_local
+last_recorded_activity = my_data_df.start_date_local.max()
+# st.write(f'Last recorded activity: {last_recorded_activity}')
+with open('last_recorded_activity.pkl', 'wb') as f:
+    pickle.dump(last_recorded_activity, f)
 
 
 
@@ -687,7 +689,7 @@ fig.add_trace(go.Bar(
     y=[''],  # Empty string for y-axis label
     orientation='h',
     name='Current Distance',
-    marker_color='#FF4500',  # Light green color, adjust as needed
+    marker_color=['#4caf50' if pace > 0 else '#f44336'],  # Light green color, adjust as needed
     width=0.6,  # Adjust for bar thickness
     hovertext='Current Distance: %{x} miles',
     hovertemplate='Current Distance: %{x} miles',
@@ -705,24 +707,50 @@ fig.add_trace(go.Bar(
 ))
 
 # black line ar today's total distance
-fig.add_vline(
-    x=current_distance, 
-    line_width=5, 
-    line_color="black"
-    )
+# fig.add_vline(
+#     x=current_distance, 
+#     line_width=5, 
+#     line_color="black"
+#     )
+
+fig.add_shape(
+    type="line",
+    x0=current_distance,
+    y0=-0.37,  # Start of line (negative to extend below)
+    x1=current_distance,
+    y1=0.37,  # End of line (greater than 1 to extend above)
+    line=dict(
+        color="#26A39E",
+        width=4,
+    ),
+    layer="below"
+)
 
 # Line for where I should be
-fig.add_vline(
-    x=should_be_reached, 
-    line_width=2, 
-    line_color="#A9A9A9",
+# fig.add_vline(
+#     x=should_be_reached, 
+#     line_width=2, 
+#     line_color="#A9A9A9",
+#     layer="below"
+#     )
+
+fig.add_shape(
+    type="line",
+    x0=should_be_reached,
+    y0=-0.37,  # Start of line (negative to extend below)
+    x1=should_be_reached,
+    y1=0.37,  # End of line (greater than 1 to extend above)
+    line=dict(
+        color="#A9A9A9",
+        width=2,
+    ),
     layer="below"
-    )
+)
 
 fig.add_annotation(
     xref="x",
     yref="paper",
-    x=current_distance*0.45,
+    x=current_distance,
     y=1,
     text='<b>TODAY</b>',
     showarrow=False,
@@ -733,7 +761,7 @@ fig.add_annotation(
 fig.add_annotation(
     xref="x",
     yref="paper",
-    x=should_be_reached*1.45,
+    x=should_be_reached,
     y=-0.0,
     text='<b>PACE</b>',
     showarrow=False,
@@ -747,7 +775,7 @@ if current_distance < distance_goal:
         y=[''],  # Empty string for y-axis label
         orientation='h',
         name='Remaining Distance',
-        marker_color='#A9A9A9',  # Light red color, adjust as needed
+        marker_color='#F0F0F0',  # Light red color, adjust as needed
         width=0.6,  # Adjust for bar thickness
         hovertext='Remaining Distance: %{x} miles',
         hovertemplate='Remaining Distance: %{x} miles',
@@ -808,7 +836,7 @@ fig.add_trace(go.Bar(
     y=[''],  # Empty string for y-axis label
     orientation='h',
     name='Current Elevation',
-    marker_color='#FF4500',  # Light green color, adjust as needed
+    marker_color=['#4caf50' if pace_elev > 0 else '#f44336'],  # Light green color, adjust as needed
     width=0.6,  # Adjust for bar thickness
     hovertext='Current Elevation: %{x} feet',
     hovertemplate='Elevation: %{x} feet',
@@ -826,33 +854,60 @@ fig.add_trace(go.Bar(
 ))
 
 # black line at today's total distance
-fig.add_vline(
-    x=curren_elevation_gain, 
-    line_width=5, 
-    line_color="black")
+# fig.add_vline(
+#     x=curren_elevation_gain, 
+#     line_width=5, 
+#     line_color="black")
+
+fig.add_shape(
+    type="line",
+    x0=curren_elevation_gain,
+    y0=-0.37,  # Start of line (negative to extend below)
+    x1=curren_elevation_gain,
+    y1=0.37,  # End of line (greater than 1 to extend above)
+    line=dict(
+        color="#26A39E",
+        width=4,
+    ),
+    layer="below"
+)
 
 # line for where I should be
-fig.add_vline(
-    x=should_be_reached_elev, 
-    line_width=2, 
-    line_color="#A9A9A9",
+# fig.add_vline(
+#     x=should_be_reached_elev, 
+#     line_width=2, 
+#     line_color="#A9A9A9",
+#     layer="below"
+#     )
+
+fig.add_shape(
+    type="line",
+    x0=should_be_reached_elev,
+    y0=-0.37,  # Start of line (negative to extend below)
+    x1=should_be_reached_elev,
+    y1=0.37,  # End of line (greater than 1 to extend above)
+    line=dict(
+        color="#A9A9A9",
+        width=2,
+    ),
     layer="below"
-    )
+)
 
 fig.add_annotation(
     xref="x",
     yref="paper",
-    x=curren_elevation_gain*0.2,
+    x=curren_elevation_gain,
     y=1,
     text='<b>TODAY</b>',
     showarrow=False,
     font=dict(size=10, color='#26A39E'),
 )
+
 # PACE
 fig.add_annotation(
     xref="x",
     yref="paper",
-    x=should_be_reached*86,
+    x=should_be_reached_elev,
     y=-0.0,
     text='<b>PACE</b>',
     showarrow=False,
@@ -866,7 +921,7 @@ if curren_elevation_gain < elevation_goal:
         y=[''],  # Empty string for y-axis label
         orientation='h',
         name='Remaining Elevation',
-        marker_color='#A9A9A9',  # Light red color, adjust as needed
+        marker_color='#F0F0F0',  # Light red color, adjust as needed
         width=0.6,  # Adjust for bar thickness
         hovertext='Remaining Elevation: %{x} feet',
         hovertemplate='Elevation: %{x} feet',
@@ -982,7 +1037,7 @@ st.markdown(f'<h4 style="color:#45738F">Active Days<p><i><b id="bold-text">{tota
 #             </div>
 #                 """, unsafe_allow_html=True)
 
-calplot_col, pie_chart_col = st.columns([5, 2])
+calplot_col, pie_chart_col = st.columns([5, 2.16])
 
 # active_days_title =  f'<h4 style="color:#45738F">Active Days</h4>'
 # st.markdown(active_days_title, unsafe_allow_html=True)
@@ -1015,6 +1070,7 @@ def custom_cmap(data):
 custom_cmap_colors = custom_cmap(grouped_by_day_and_type['type_code'])
 
 colors = ['#45738F', '#37A6A5', '#5F4690']
+colors_2 = ['#F0F0F0', '#45738F', '#37A6A5', '#5F4690']
 cmap = mcolors.ListedColormap(colors)
 
 fig, ax = calplot.calplot(data=grouped_by_day_and_type.type_code, 
@@ -1025,10 +1081,40 @@ fig, ax = calplot.calplot(data=grouped_by_day_and_type.type_code,
                           cmap=cmap, 
                           textcolor = '#808080')
 
+grouped_by_day_and_type_reindexed = grouped_by_day_and_type.reindex(pd.date_range(start=f'{current_year}-01-01', end=f'{current_year}-12-31'), fill_value=0).reset_index().rename(columns={'index': 'date'})
+# st.dataframe(grouped_by_day_and_type_reindexed)
+
+grouped_by_day_and_type['date'] = grouped_by_day_and_type.index
+fig = cplot(grouped_by_day_and_type_reindexed, 
+              x="date", 
+              y="type_code",
+            #   gap=0,
+            years_title=False,
+            colorscale=colors_2,
+            month_lines_width=2
+              )
+fig.update_layout(
+    width=1200,
+    yaxis_title=current_year,
+    yaxis_title_font=dict(size=28, color='#808080'),
+    plot_bgcolor='rgba(0,0,0,0)',
+    margin=dict(l=0, r=0, t=0, b=0),
+    xaxis=dict(
+        tickfont=dict(size=12.5, 
+                      color='#808080',
+                      ),
+        # tickangle=0,
+    )
+)
+
 
 with calplot_col:
-    st.pyplot(fig=fig)
-    st.markdown(f'<p style="font-family:arial; font-size: 14px;"><i>Longest streak:</i> <b>{longest_streak}<b> days</p>', unsafe_allow_html=True)
+    # st.pyplot(fig=fig)
+    st.plotly_chart(fig, use_container_width=True, config= dict(
+                displayModeBar = False,
+                responsive = False
+                ))
+    st.markdown(f'<p style="font-family:arial; font-size: 16px; color: #808080"><i>Longest streak:</i> <b>{longest_streak}<b> days</p>', unsafe_allow_html=True)
     
 # PIE CHART OF ACTIVITY TYPES
 fig = px.pie(grouped_by_day_and_type, 
@@ -1041,14 +1127,18 @@ fig = px.pie(grouped_by_day_and_type,
 fig.update_layout(
     showlegend=True,
     plot_bgcolor='rgba(0,0,0,0)',
-    margin=dict(l=10, r=0, t=0, b=35),
+    margin=dict(l=0, r=0, t=0, b=35),
+    legend=dict(
+        x=1.2,  # Adjust as needed
+        y=1,  # Adjust as needed
+    ),
 )
 
 fig.update_traces(textinfo='percent+label', 
                   textfont_size=12, 
                   textposition='outside', 
-                  texttemplate=" <b>%{label}</b><br>(%{percent:.1%})",
-                  marker=dict(colors=custom_cmap_colors, line=dict(color='#FFFFFF', width=3)),
+                  texttemplate=" <b>%{label}</b><br>(%{percent:.0%})",
+                  marker=dict(colors=custom_cmap_colors, line=dict(color='#FFFFFF', width=2)),
                   )
 
 with pie_chart_col:

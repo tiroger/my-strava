@@ -14,3 +14,4 @@ requests==2.27.1
 streamlit==1.18.0
 urllib3==1.26.8
 streamlit-aggrid
+plotly-calplot
