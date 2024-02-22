@@ -33,6 +33,104 @@ from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode
 
 import os
 
+import math
+import pickle
+
+#################################
+# FUNCTIONS FOR FITNESS METRICS #
+#################################
+
+def calculate_activity_metrics(df):
+    """
+    Calculate cycling metrics for each activity in the DataFrame.
+    
+    Parameters:
+    - df: DataFrame with cycling activity data including 'watts' and 'heartrate'.
+    
+    Returns:
+    - Dictionary with calculated metrics for the activity.
+    """
+    # Assuming the DataFrame is for a single activity
+    # Calculate Average Power
+    avg_power = df['watts'].mean()
+    
+    # Calculate Normalized Power (NP)
+    # 1. Calculate the 30-second rolling average of power, raised to the fourth power.
+    rolling_avg_power = df['watts'].rolling(window=30, min_periods=1).mean().pow(4)
+    # 2. Calculate the average of these values.
+    avg_rolling_power = rolling_avg_power.mean()
+    # 3. Take the fourth root of this average.
+    np = avg_rolling_power ** (1/4)
+    
+    # Calculate Max and Average Heart Rate
+    max_hr = df['heartrate'].max()
+    avg_hr = df['heartrate'].mean()
+    
+    # Calculate total duration in seconds
+    total_seconds = df['time'].iloc[-1] - df['time'].iloc[0]
+    
+    # Calculate other metrics based on NP, avg_power, max_hr, avg_hr, and total_seconds
+    metrics = calculate_cycling_metrics(ftp, avg_power, max_hr, avg_hr, np, total_seconds)  # Replace 300 with actual FTP
+    
+    return metrics
+
+
+def calculate_cycling_metrics(ftp, avg_power, max_hr, avg_hr, np, total_seconds):
+    resting_hr = 49
+    if_intensity = np / ftp
+    tss = (total_seconds * np * if_intensity) / (ftp * 3600) * 100
+    variability_index = np / avg_power if avg_power > 0 else 0
+    power_hr_ratio = avg_power / avg_hr if avg_hr > 0 else 0
+    hrrc = max_hr - resting_hr
+    duration_in_hours = total_seconds / 3600  # Convert seconds to hours
+    trimp = duration_in_hours * avg_hr * 0.64 * math.exp(1.92 * (avg_hr / 100))
+    # trimp = total_seconds * avg_hr * 0.64 * math.exp(1.92 * avg_hr)
+    
+    return {
+        "Intensity (%)": if_intensity * 100,
+        "TSS": tss,
+        "Variability Index": variability_index,
+        "Power/HR": power_hr_ratio,
+        "HRRc": hrrc,
+        "TRIMP": trimp,
+        "Normalized Power (w)": np,
+        "Average Power (w)": avg_power,
+        "Max HR": max_hr,
+        "Avg HR": avg_hr
+    }
+    
+def calculate_zone_times(df, ftp):
+    # Define the power zones based on FTP
+    zones = {
+        'Zone 1': (0, 0.55 * ftp),
+        'Zone 2': (0.56 * ftp, 0.75 * ftp),
+        'Zone 3': (0.76 * ftp, 0.9 * ftp),
+        'Zone 4': (0.91 * ftp, 1.05 * ftp),
+        'Zone 5': (1.06 * ftp, 1.2 * ftp),
+        'Zone 6': (1.21 * ftp, 1.5 * ftp),
+        'Zone 7': (1.51 * ftp, float('inf')),
+    }
+    
+    # Initialize a dictionary to hold the total time in each zone
+    zone_times = {zone: 0 for zone in zones}
+    
+    # Iterate over each row in the DataFrame to calculate zone times
+    for _, row in df.iterrows():
+        watt = row['watts']
+        for zone, (lower_bound, upper_bound) in zones.items():
+            if lower_bound <= watt <= upper_bound:
+                zone_times[zone] += 1
+                break
+    
+    # Convert times to percentages
+    total_time = sum(zone_times.values())
+    zone_percentages = {zone: (time / total_time) * 100 for zone, time in zone_times.items()}
+    time_spent_in_zones = {zone: (time / 3600) for zone, time in zone_times.items()}
+    
+    return zone_percentages, time_spent_in_zones
+
+
+
 ###############
 # CREDENTIALS #
 ###############
@@ -77,7 +175,10 @@ this_year = dt.datetime.today().year
 # PERSONAL DATA #
 #################
 
-ftp = 192
+with open('ftp.pkl', 'rb') as f:
+    ftp = pickle.load(f)
+
+# ftp = 192
 weight_lbs = 164
 weight_kg = weight_lbs * 0.453592
 
@@ -113,7 +214,7 @@ except Exception as e:
 # Activities Table #
 ####################
 
-st.markdown('<h2 style="color:#45738F">Activity Details</h2>', unsafe_allow_html=True)
+st.markdown('<h4 style="color:#45738F">Activity Details</h4>', unsafe_allow_html=True)
 
 with st.sidebar:
     # Toggle to select runs, rides or virtual rides
@@ -167,7 +268,7 @@ if selected:
 
     selected_activity_name = selection_df['Name'].values[0]
     selected_activity_id = selection_df['id'].values[0]
-    st.markdown(f'<h4 style="color:#45738F">Activity Map</h4>', unsafe_allow_html=True)
+    st.markdown(f'<h4 style="color:#45738F">Map</h4>', unsafe_allow_html=True)
     # st.write(f'Additional Details for: {selected_activity_name}')
     
     activity_stream_df = fetch_activity_streams(selected_activity_id)
@@ -176,7 +277,11 @@ if selected:
     
     # Save the activity stream data to a csv file
     activity_stream_df.to_csv('./data/activity_stream.csv', index=False)
+    metrics = calculate_activity_metrics(activity_stream_df)
     
+    zone_percentages, time_spent_in_zones = calculate_zone_times(activity_stream_df, ftp)
+    time_spent_in_zones_values = list(time_spent_in_zones.values())
+    time_spent_in_zones_values = [round(x, 2) for x in time_spent_in_zones_values]
     
     # Filter the polylines dataframe based on the selected activity name
     try:
@@ -338,8 +443,19 @@ if selected:
                 font=font_dict
             )
             
+            # fig_elev.add_annotation(
+            #     text=f"<b>Avg Weighted Power</b>: {activity_avg_power:,.0f}w",
+            #     align='left',
+            #     showarrow=False,
+            #     xref='paper',
+            #     yref='paper',
+            #     x=0.05,
+            #     y=0.79,
+            #     font=font_dict
+            # )
+            
             fig_elev.add_annotation(
-                text=f"<b>Avg Power</b>: {activity_avg_power:,.0f} Watts",
+                text=f"<b>Suffer Score</b>: {activity_suffer.astype(int)}",
                 align='left',
                 showarrow=False,
                 xref='paper',
@@ -350,24 +466,13 @@ if selected:
             )
             
             fig_elev.add_annotation(
-                text=f"<b>Suffer Score</b>: {activity_suffer.astype(int)}",
-                align='left',
-                showarrow=False,
-                xref='paper',
-                yref='paper',
-                x=0.05,
-                y=0.75,
-                font=font_dict
-            )
-            
-            fig_elev.add_annotation(
                 text="----------------------------------------------",
                 align='left',
                 showarrow=False,
                 xref='paper',
                 yref='paper',
                 x=0.05,
-                y=0.71,
+                y=0.75,
                 font=font_dict
             )
             
@@ -512,6 +617,220 @@ if selected:
             """, unsafe_allow_html=True)
         
         st.dataframe(peak_power_df, use_container_width=True)
+    
+    # st.write('Activity Metrics:', metrics)
+    # st.dataframe(activity_stream_df)
+    # st.dataframe(polylines_df)
+    
+    ###############
+    # POWER ZOMES #
+    ###############
+    st.markdown('<h4 style="color:#45738F">Power Output</h4>', unsafe_allow_html=True)
+    
+    fig = go.Figure()
+
+    activity_stream_df_3s_smoothed = activity_stream_df.rolling(window=3).mean()
+    # Add a line chart for power
+    fig.add_trace(go.Scatter(x=activity_stream_df['time'], 
+                            y=activity_stream_df_3s_smoothed['watts'], 
+                            mode='lines', 
+                            name='Power (w)', 
+                            line=dict(color='#00426A',
+                                        width=2.5)))
+
+    fig.add_trace(go.Scatter(x=activity_stream_df['time'], 
+                            y=activity_stream_df_3s_smoothed['heartrate'], 
+                            mode='lines', 
+                            name='Heart Rate (bpm)', 
+                            line=dict(color='purple',
+                                    width=2.5)))
+    fig.add_trace(go.Scatter(x=activity_stream_df['time'], 
+                            y=activity_stream_df_3s_smoothed['cadence'], 
+                            mode='lines', 
+                            name='Cadence (rpm)', 
+                            line=dict(color='orange',
+                                    width=2.5)))
+    
+    # Veritcal box for Zone 5 and 6 --if power is greater than 300
+    
+
+    customdata = np.stack((activity_stream_df_3s_smoothed['watts'], activity_stream_df_3s_smoothed['heartrate'], activity_stream_df_3s_smoothed['cadence']), axis=-1)
+    # Custom x-axis 15 min increments
+    x_axis_labels = [f"{h}h {m}m" if h else f"{m}m" for i in range(0, int(activity_stream_df['time'].max()), 900) for h, remainder in [divmod(i, 3600)] for m, s in [divmod(remainder, 60)]]
+    fig.update_xaxes(tickvals=list(range(0, int(activity_stream_df['time'].max()), 900)), ticktext=x_axis_labels)
+    # Update the layout
+    fig.update_layout(
+        # title='Power, Normalized Power, and Heart Rate',
+        xaxis_title='Time (s)',
+        yaxis_title='Value',
+        showlegend=True,
+        # Transparent background
+        plot_bgcolor='rgba(0,0,0,0)',
+        # Transparent gridlines
+        xaxis=dict(showgrid=False, gridwidth=1, gridcolor='lightgrey'),
+        yaxis=dict(showgrid=False, gridwidth=1, gridcolor='lightgrey'),
+        margin=dict(l=50, r=0, t=30, b=50),
+        height=250,
+        hovermode='x unified',
+        legend=dict(
+            orientation="v",
+            yanchor="bottom",
+            y=0.7,
+            xanchor="right",
+            x=1
+        ),
+    )
+    
+    fig.update_traces(
+    hoverinfo='x+y',
+    line=dict(width=2.0),
+    # Hover template with customdata and formatting --for each trace
+    hovertemplate='%{fullData.name}: <b>%{y:.0f}</b><extra></extra>',
+    hoverlabel=dict(font=dict(size=12))
+    )
+    
+    st.plotly_chart(fig, use_container_width=True, config=dict(displayModeBar=False))
+
+    # transparency
+    fig.update_traces(marker=dict(size=4),
+                    selector=dict(mode='markers'))
+    
+    gauge_col, fitness_metrics_col = st.columns([1, 1])
+    
+    with gauge_col:
+        st.markdown(f'<h4 style="color:#45738F">Power Zones<p><i>FTP: <b id="bold-text">{ftp:,.0f}w</b></i></p>', unsafe_allow_html=True)
+        # st.write('Power Zones:', zone_percentages)
+        # st.dataframe(zone
+        highest_zone = max(zone_percentages, key=zone_percentages.get)
+        
+        fig = go.Figure()
+
+        num_columns = 2
+        num_rows = 3
+
+        for i in range(6):
+            row = i // num_columns
+            col = i % num_columns
+
+            zone_name = f'Zone {i+1}'
+            title_text = zone_name if zone_name != highest_zone else f"<b>{zone_name}</b>"
+            title_color = "black" if zone_name != highest_zone else "red"
+
+            # Decrease horizontal spacing by reducing the gap between gauges
+            x_padding = 0.0  # Decrease for less horizontal space
+            x_start = col / num_columns + x_padding
+            x_end = (col + 1) / num_columns - x_padding
+
+            # Increase vertical spacing by increasing the gap between gauges
+            y_padding = 0.07  # Increase for more vertical space
+            y_start = (num_rows - 1 - row) / num_rows + y_padding  # Adjust for Plotly's y-axis direction
+            y_end = (num_rows - row) / num_rows - y_padding
+            time_in_zone = time_spent_in_zones_values[i]
+            def convert_fraction_to_time(fraction):
+                hours = int(fraction)
+                minutes = int((fraction - hours) * 60)
+                return f"{hours}h {minutes}m"
+            
+            time_in_zone = convert_fraction_to_time(time_in_zone)
+             
+            fig.add_trace(go.Indicator(
+                mode="gauge+number",
+                value=zone_percentages[zone_name],
+                domain={'x': [x_start, x_end], 'y': [y_start, y_end]},
+                title={'text': f"<br><br><br><br>{title_text} ({time_in_zone})", 'font': {'color': title_color, 'size': 16}},
+                number={'suffix': "%", 'valueformat': '.0f'},
+                gauge={
+                    'axis': {'range': [None, 100], 'tickwidth': 1, 'tickcolor': "darkblue"},
+                    'bar': {'color': "darkblue"},
+                    'bgcolor': "white",
+                    'borderwidth': 2,
+                    'bordercolor': "gray",
+                    'steps': [
+                        {'range': [0, 100], 'color': 'lightgray'}
+                    ],
+                    # 'threshold': {
+                    #     'line': {'color': "red", 'width': 4},
+                    #     'thickness': 0.75,
+                    #     'value': 100
+                    # }
+                }
+                
+                
+            ))
+
+        fig.update_layout(height=430, width=600,
+                          margin=dict(l=0, r=0, t=10, b=0),)
+
+        st.plotly_chart(fig, use_container_width=True, config=dict(displayModeBar=False))
+    
+    with fitness_metrics_col:
+        # Custom CSS for styling the metrics, especially for highlighting TSS
+        st.markdown("""
+        <style>
+        .metric-block {
+            padding: 10px;
+            border-radius: 6px;
+            color: #808496;
+            margin: 5px;
+            overflow: auto;
+            font-size: 16px;
+        }
+        .metric-value {
+            font-weight: bold;
+            font-size: 20px;
+        }
+        .orange {
+            color: #fc4c02;
+        }
+        
+        </style>
+        """, unsafe_allow_html=True)
+
+        # Create a 5x2 grid layout
+        st.markdown(f'<h4 style="color:#45738F">Fitness Metrics</h4>', unsafe_allow_html=True)
+        # Create 2 columns
+        cols = st.columns(2)
+
+        # Function to display metric in the specified column
+        def display_metric(col, name, value, is_orange=False):
+            color_class = "orange" if is_orange else ""
+            col.markdown(f"""
+            <div class="metric-block">
+                <div>{name}</div>
+                <div class="metric-value {color_class}">{value}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        # Assuming 'metrics' is your dictionary containing all metrics
+        # Format all metrics to 1 decimal place
+        metrics = {k: f"{v:.1f}" if isinstance(v, float) else v for k, v in metrics.items()}
+        metric_items = list(metrics.items())
+
+        # Check if we have at least ten metrics
+        min_metrics_needed = 10
+        if len(metric_items) < min_metrics_needed:
+            # If there are fewer metrics, pad the list
+            metric_items += [(f"Placeholder {i}", "N/A") for i in range(min_metrics_needed - len(metric_items))]
+
+        # Loop through the metrics dictionary and display each metric in the appropriate column
+        # Display metrics in two columns, filling five rows
+        for i in range(5):
+            # Display metric in the first column
+            display_metric(cols[0], metric_items[i][0], metric_items[i][1], is_orange=(metric_items[i][0] == "TSS"))
+            # Display metric in the second column
+            # Check if the second column's metric exists (for cases with fewer than 10 metrics)
+            if i + 5 < len(metric_items):
+                display_metric(cols[1], metric_items[i + 5][0], metric_items[i + 5][1], is_orange=(metric_items[i + 5][0] == "TSS"))
+
+    st.markdown("""
+            - <b>TSS (Training Stress Score)</b>: Measures the total workload of a training session considering duration and intensity.
+            - <b>IF (Intensity Factor)</b>: The ratio of your NP (Normalized Power) for an activity to your FTP (Functional Threshold Power).
+            - <b>NP (Normalized Power)</b>: An estimate of the power you could have maintained for the same physiological "cost" if your power had been perfectly constant.
+            - <b>Variability Index</b>: The ratio of NP to Average Power.
+            - <b>Power/HR</b>: The ratio of average power to average heart rate.
+            - <b>TRIMP (Training Impulse)</b>: A measure of exercise volume that also considers exercise intensity.
+            - <b>HRRc (Heart Rate Reserve used in Calculation)</b>: The difference between maximum heart rate and resting heart rate.
+            """, unsafe_allow_html=True)
     
 else:
     st.info('Select an activity to view additional details')
@@ -754,3 +1073,75 @@ else:
 
 #     except:
 #         st.write('Maps not available for this activity')
+
+####################################
+# ACTIVITY ADVANCE FITNESS METRICS #
+####################################
+
+
+
+
+# def calculate_activity_metrics(df):
+#     """
+#     Calculate cycling metrics for each activity in the DataFrame.
+    
+#     Parameters:
+#     - df: DataFrame with cycling activity data including 'watts' and 'heartrate'.
+    
+#     Returns:
+#     - Dictionary with calculated metrics for the activity.
+#     """
+#     # Assuming the DataFrame is for a single activity
+#     # Calculate Average Power
+#     avg_power = df['watts'].mean()
+    
+#     # Calculate Normalized Power (NP)
+#     # 1. Calculate the 30-second rolling average of power, raised to the fourth power.
+#     rolling_avg_power = df['watts'].rolling(window=30, min_periods=1).mean().pow(4)
+#     # 2. Calculate the average of these values.
+#     avg_rolling_power = rolling_avg_power.mean()
+#     # 3. Take the fourth root of this average.
+#     np = avg_rolling_power ** (1/4)
+    
+#     # Calculate Max and Average Heart Rate
+#     max_hr = df['heartrate'].max()
+#     avg_hr = df['heartrate'].mean()
+    
+#     # Calculate total duration in seconds
+#     total_seconds = df['time'].iloc[-1] - df['time'].iloc[0]
+    
+#     # Calculate other metrics based on NP, avg_power, max_hr, avg_hr, and total_seconds
+#     metrics = calculate_cycling_metrics(ftp, avg_power, max_hr, avg_hr, np, total_seconds)  # Replace 300 with actual FTP
+    
+#     return metrics
+
+# def calculate_cycling_metrics(ftp, avg_power, max_hr, avg_hr, np, total_seconds):
+#     if_intensity = np / ftp
+#     tss = (total_seconds * np * if_intensity) / (ftp * 3600) * 100
+#     variability_index = np / avg_power if avg_power > 0 else 0
+#     power_hr_ratio = avg_power / avg_hr if avg_hr > 0 else 0
+#     hrrc = max_hr - avg_hr
+#     trimp = total_seconds * avg_hr * 0.64 * math.exp(1.92 * avg_hr)
+    
+#     return {
+#         "Intensity (%)": if_intensity * 100,
+#         "TSS": tss,
+#         "Variability Index": variability_index,
+#         "Power/HR": power_hr_ratio,
+#         "HRRc": hrrc,
+#         "TRIMP": trimp,
+#         "Normalized Power (w)": np,
+#         "Average Power (w)": avg_power,
+#         "Max HR": max_hr,
+#         "Avg HR": avg_hr
+#     }
+
+# Example usage
+# Assuming 'df' is your DataFrame for a single activity
+# df = pd.DataFrame(...)  # Your DataFrame with activity data
+
+# Calculate metrics for the activity
+# activity_stream_df = pd.read_csv('./data/activity_stream.csv')
+# metrics = calculate_activity_metrics(activity_stream_df)
+# st.dataframe(polylines_df)
+
