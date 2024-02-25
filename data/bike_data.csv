@@ -1,10 +1,13 @@
-id,primary,name,nickname,resource_state,retired,distance,converted_distance,brand_name,model_name,frame_type,description,weight
-b8099416,False,Hillius Maximus,Hillius Maximus,3,False,9450822,5872.5,Giant,TCR,3,,17.0
-b4196400,False,Purdie Little Thang,Purdie Little Thang,3,False,652976,405.7,,,3,,17.0
-b8615449,False,Dirty McDirtBag,Dirty McDirtBag,3,False,1835097,1140.3,Marin,Headlands,3,,20.0
-b4073790,False,TIE Fighter,TIE Fighter,3,False,8018846,4982.7,Storck ,scenero G2,3,,14.5
-b5245627,False,Hurt Enforcer,Hurt Enforcer,3,False,1755731,1091.0,Cannondale,Slate,3,,19.0
-b8029179,False,Big Boss Hoss,Big Boss Hoss,3,False,96105,59.7,Marin,Headlands,1,,30.9
-b326351,False,Caadie,Caadie,3,True,9232128,5736.6,Cannondale,CAAD10,3,,18.0
-b804798,False,The Sound,The Sound,3,True,1417281,880.7,,,3,,20.0
-b232108,False,Red Barron,Red Barron,3,True,528429,328.4,,,3,,27.0
+message,errors,id,primary,name,nickname,resource_state,retired,distance,converted_distance,brand_name,model_name,description,notification_distance,frame_type,weight
+Bad Request,"[{'resource': 'Gear', 'field': 'id', 'code': 'invalid'}]",,,,,,,,,,,,,,
+,,g16537882,False,Nike Zoom Fly 5,,3.0,False,3482.0,2.2,Nike,Zoom Fly 5,,300.0,,
+,,b8099416,False,Hillius Maximus,Hillius Maximus,3.0,False,9540654.0,5928.3,Giant,TCR,,,3.0,17.0
+,,b8615449,False,Dirty McDirtBag,Dirty McDirtBag,3.0,False,1835097.0,1140.3,Marin,Headlands,,,3.0,20.0
+,,b11212849,False,Stinger Mantis,Stinger Mantis,3.0,False,1188655.0,738.6,cannondale,caad13,,,3.0,16.8
+,,b5245627,False,Hurt Enforcer,Hurt Enforcer,3.0,False,1755731.0,1091.0,Cannondale,Slate,,,3.0,19.0
+,,b4073790,False,TIE Fighter,TIE Fighter,3.0,False,8151955.0,5065.4,Storck ,scenero G2,,,3.0,14.5
+,,b4196400,False,Purdie Little Thang,Purdie Little Thang,3.0,False,652976.0,405.7,,,,,3.0,17.0
+,,b8029179,False,Big Boss Hoss,Big Boss Hoss,3.0,False,96105.0,59.7,Marin,Headlands,,,1.0,30.9
+,,b326351,False,Caadie,Caadie,3.0,True,9232128.0,5736.6,Cannondale,CAAD10,,,3.0,18.0
+,,b804798,False,The Sound,The Sound,3.0,True,1417281.0,880.7,,,,,3.0,20.0
+,,b232108,False,Red Barron,Red Barron,3.0,True,528429.0,328.4,,,,,3.0,27.0
