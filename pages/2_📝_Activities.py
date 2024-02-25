@@ -190,8 +190,8 @@ bikes_dict = {'Tie Fighter': 'Storck Scenero', 'Caadie': 'Cannondale CAAD10', 'D
 #################################
 
 # Get local data # For development
-# processed_data = pd.read_csv('./data/processed_data.csv')
-processed_data = feather.read_feather('./data/processed_data.feather')
+processed_data = pd.read_csv('./data/processed_data.csv')
+# processed_data = feather.read_feather('./data/processed_data.feather')
 # bikes_df = pd.read_csv('./data/bike_data.csv')
 athlete_df = pd.read_csv('./data/athlete_data.csv')
 
