@@ -1349,14 +1349,14 @@ for i, (col, (gear_id, gear_name)) in enumerate(zip(cols, GearId_to_Name.items()
         
         # Define the styles based on the specific conditions for each bike
         if gear_name == "Nike Zoom Fly 5":
-            div_style = "background-color: #f0f2f6; padding: 16px; border-radius: 6px; text-align: center; font-family: 'Arial', sans-serif;"
-            odometer_style = "font-size: 18px; font-weight: bold; color: #808496;"
+            div_style = "background-color: #f0f2f6; padding: 11px; border-radius: 6px; text-align: center; font-family: 'Arial', sans-serif; transition: background-color 0.3s ease;"
+            odometer_style = "cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); font-size: 18px; font-weight: bold; color: #808496; background-image: linear-gradient(to right, #46738F, #46738F); color: white; padding: 5px 10px; border-radius: 6px; transition: transform 0.3s ease, box-shadow 0.3s ease;"
         else:
             div_style = "background-color: #f0f2f6; padding: 11px; border-radius: 6px; text-align: center; font-family: 'Arial', sans-serif; transition: background-color 0.3s ease;"
-            odometer_style = "cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); font-size: 18px; font-weight: bold; color: #808496; background-image: linear-gradient(to right, #244164, #244164); color: white; padding: 5px 10px; border-radius: 6px; transition: transform 0.3s ease, box-shadow 0.3s ease;"
+            odometer_style = "cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); font-size: 18px; font-weight: bold; color: #808496; background-image: linear-gradient(to right, #37A6A5, #37A6A5); color: white; padding: 5px 10px; border-radius: 6px; transition: transform 0.3s ease, box-shadow 0.3s ease;"
 
         # Insert the HTML template with the current gear's details
-        custom_html = """
+        custom_html = f"""
         <div style="{div_style}">
             <h5 style="margin-bottom: 20px;">{gear_name}</h5>
             <div id="odometer{gear_id}" style="{odometer_style}">0 mi</div>
@@ -1384,7 +1384,7 @@ for i, (col, (gear_id, gear_name)) in enumerate(zip(cols, GearId_to_Name.items()
                 }});
             </script>
         </div>
-        """.format(gear_id=gear_id, gear_name=gear_name, gear_odometer=gear_odometer, div_style=div_style, odometer_style=odometer_style)
+        """
 
         components.html(custom_html, height=150, width=160)
 
