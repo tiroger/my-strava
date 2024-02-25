@@ -35,6 +35,7 @@ import os
 
 import math
 import pickle
+import pyarrow.feather as feather
 
 #################################
 # FUNCTIONS FOR FITNESS METRICS #
@@ -92,11 +93,11 @@ def calculate_cycling_metrics(ftp, avg_power, max_hr, avg_hr, np, total_seconds)
         "Variability Index": variability_index,
         "Power/HR": power_hr_ratio,
         "HRRc": hrrc,
-        "TRIMP": trimp,
-        "Normalized Power (w)": np,
-        "Average Power (w)": avg_power,
-        "Max HR": max_hr,
-        "Avg HR": avg_hr
+        "TRIMP": f'{trimp:,.0f}',
+        "Normalized Power (w)": f'{np:,.0f}',
+        "Average Power (w)": f'{avg_power:,.0f}',
+        "Max HR": f'{max_hr:,.0f}',
+        "Avg HR": f'{avg_hr:,.0f}',
     }
     
 def calculate_zone_times(df, ftp):
@@ -189,7 +190,8 @@ bikes_dict = {'Tie Fighter': 'Storck Scenero', 'Caadie': 'Cannondale CAAD10', 'D
 #################################
 
 # Get local data # For development
-processed_data = pd.read_csv('./data/processed_data.csv')
+# processed_data = pd.read_csv('./data/processed_data.csv')
+processed_data = feather.read_feather('./data/processed_data.feather')
 # bikes_df = pd.read_csv('./data/bike_data.csv')
 athlete_df = pd.read_csv('./data/athlete_data.csv')
 
@@ -698,7 +700,7 @@ if selected:
     gauge_col, fitness_metrics_col = st.columns([1, 1])
     
     with gauge_col:
-        st.markdown(f'<h4 style="color:#45738F">Power Zones<p><i>FTP: <b id="bold-text">{ftp:,.0f}w</b></i></p>', unsafe_allow_html=True)
+        st.markdown(f'<h4 style="color:#45738F">Power Zones<p><i>Based on FTP of <b id="bold-text">{ftp:,.0f}w</b></i></p>', unsafe_allow_html=True)
         # st.write('Power Zones:', zone_percentages)
         # st.dataframe(zone
         highest_zone = max(zone_percentages, key=zone_percentages.get)
@@ -741,7 +743,7 @@ if selected:
                 number={'suffix': "%", 'valueformat': '.0f'},
                 gauge={
                     'axis': {'range': [None, 100], 'tickwidth': 1, 'tickcolor': "darkblue"},
-                    'bar': {'color': "darkblue"},
+                    'bar': {'color': "#00426A"},
                     'bgcolor': "white",
                     'borderwidth': 2,
                     'bordercolor': "gray",
