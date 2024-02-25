@@ -131,6 +131,8 @@ processed_data['start_date_local'] = processed_data['start_date_local'].dt.strft
 
 # Saving processed data to csv for future use
 # processed_data.to_csv('./data/processed_data.csv', index=False)
+feather.write_feather(processed_data, './data/processed_data.feather')
+feather.write_feather(bikes_df, './data/bike_data.feather')
 
 
 processed_data['activity_date'] = pd.to_datetime(processed_data['start_date_local'])
@@ -339,7 +341,7 @@ with plotly_chart_col:
     fig = go.Figure()
 
     for year, group in grouped_by_year_and_month.groupby('year'):
-        fig.add_trace(go.Scatter(x=group['day_counter'], y=group[selected_metric], 
+        fig.add_trace(go.Scatter(x=group['day_counter'], y=group[selected_metric],
                                 mode='lines',
                                 hovertext=all_dates,
                                 customdata=all_dates,
@@ -690,7 +692,7 @@ fig.add_trace(go.Bar(
     name='Current Distance',
     marker_color=['#4caf50' if pace > 0 else '#f44336'],  # Light green color, adjust as needed
     width=0.6,  # Adjust for bar thickness
-    hovertext='Current Distance: %{x} miles',
+    # hovertext='Current Distance: %{x} miles',
     hovertemplate='Current Distance: %{x} miles',
     hoverlabel=dict(
         bgcolor=['rgba(76, 175, 80, 0.6)' if current_distance >= distance_goal else 'rgba(255, 87, 34, 0.6)'][0],
@@ -704,6 +706,11 @@ fig.add_trace(go.Bar(
         color='white'
     )
 ))
+
+fig.update_traces(
+    hoverinfo='skip',  # Hide the hoverinfo for the bar
+    hovertemplate=None  # Remove the hovertemplate
+)
 
 # black line ar today's total distance
 # fig.add_vline(
@@ -776,7 +783,7 @@ if current_distance < distance_goal:
         name='Remaining Distance',
         marker_color='#F0F0F0',  # Light red color, adjust as needed
         width=0.6,  # Adjust for bar thickness
-        hovertext='Remaining Distance: %{x} miles',
+        # hovertext='Remaining Distance: %{x} miles',
         hovertemplate='Remaining Distance: %{x} miles',
         hoverlabel=dict(
             bgcolor=['rgba(76, 175, 80, 0.6)' if current_distance >= distance_goal else 'rgba(255, 87, 34, 0.6)'][0],
@@ -790,6 +797,11 @@ if current_distance < distance_goal:
         #     color='white'
         # )
     ))
+    
+fig.update_traces(
+    hoverinfo='skip',  # Hide the hoverinfo for the bar
+    hovertemplate=None  # Remove the hovertemplate
+)
 
 
 # Update the layout to hide all axes and place the legend at the bottom
@@ -837,7 +849,7 @@ fig.add_trace(go.Bar(
     name='Current Elevation',
     marker_color=['#4caf50' if pace_elev > 0 else '#f44336'],  # Light green color, adjust as needed
     width=0.6,  # Adjust for bar thickness
-    hovertext='Current Elevation: %{x} feet',
+    # hovertext='Current Elevation: %{x} feet',
     hovertemplate='Elevation: %{x} feet',
     hoverlabel=dict(
         bgcolor='rgba(76, 175, 80, 0.6)',
@@ -851,6 +863,11 @@ fig.add_trace(go.Bar(
         color='white'
     )
 ))
+
+fig.update_traces(
+    hoverinfo='skip',  # Hide the hoverinfo for the bar
+    hovertemplate=None  # Remove the hovertemplate
+)
 
 # black line at today's total distance
 # fig.add_vline(
@@ -922,7 +939,7 @@ if curren_elevation_gain < elevation_goal:
         name='Remaining Elevation',
         marker_color='#F0F0F0',  # Light red color, adjust as needed
         width=0.6,  # Adjust for bar thickness
-        hovertext='Remaining Elevation: %{x} feet',
+        # hovertext='Remaining Elevation: %{x} feet',
         hovertemplate='Elevation: %{x} feet',
         hoverlabel=dict(
             bgcolor='rgba(255, 87, 34, 0.6)',
@@ -936,6 +953,11 @@ if curren_elevation_gain < elevation_goal:
         #     color='white'
         # )
     ))
+
+fig.update_traces(
+    hoverinfo='skip',  # Hide the hoverinfo for the bar
+    hovertemplate=None  # Remove the hovertemplate
+)
 
 # Update the layout to hide all axes and place the legend at the bottom
 fig.update_layout(
@@ -961,9 +983,10 @@ fig.update_layout(
         x=0.5
     ),
     plot_bgcolor='rgba(0,0,0,0)',  # Transparent background
-    margin=dict(l=0, r=0, t=0, b=0)  # Reduce default margins
+    margin=dict(l=0, r=0, t=0, b=0),
+    width=180, height=150
 )
-fig.update_layout(width=180, height=150)
+# fig.update_layout(width=180, height=150)
 
 with elevation_col:
     st.plotly_chart(fig, use_container_width=True, config= dict(
@@ -972,7 +995,7 @@ with elevation_col:
                 ))
     
 
-st.markdown("""---""")
+# st.markdown("""---""")
 
 grouped_by_day_and_type = processed_data.groupby(['start_date_local', 'type']).agg({'id': 'count'}).reset_index()
 # grouped_by_day = processed_data.groupby('start_date_local').agg({'id': 'count'}).reset_index()
@@ -1002,6 +1025,371 @@ grouped_by_day_and_type['streak'] = grouped_by_day_and_type.is_consecutive.group
 grouped_by_day_and_type.set_index('start_date_local', inplace=True)
 
 longest_streak = grouped_by_day_and_type.streak.max() + 1
+
+# unique_gear = processed_data['gear_id'].unique()
+active_gear = bikes_df[bikes_df.retired == False]
+GearId_to_Name = dict(zip(active_gear.id, active_gear.name))
+num_active_gear = len(active_gear)
+active_gear_list = list(GearId_to_Name.values())
+
+processed_data['start_date_local'] = pd.to_datetime(processed_data['start_date_local'])
+active_gear_df_current_year = processed_data[(processed_data['start_date_local'].dt.year == current_year) & (processed_data['gear_id'].isin(active_gear.id))]
+
+st.markdown(f'<h4 style="color:#45738F">The Gear</h4>', unsafe_allow_html=True)
+# st.markdown(f'<h4 style="color:#45738F">The Gear<p><i>Click on a bicycle odometer to set the mileage where the chain was last waxed/lubed.</i></p></h4>', unsafe_allow_html=True)
+cols = st.columns(num_active_gear)
+
+
+import streamlit.components.v1 as components
+
+# Assuming active_gear_df_current_year and GearId_to_Name are already defined
+
+# Function to update the last waxed mileage
+def update_last_waxed(gear_id, mileage):
+    if 'last_waxed' not in st.session_state:
+        st.session_state['last_waxed'] = {}
+    st.session_state['last_waxed'][gear_id] = mileage
+
+# Function to check if the bike needs lubing
+def check_need_lubing(gear_id, current_mileage):
+    if 'last_waxed' in st.session_state and gear_id in st.session_state['last_waxed']:
+        miles_since_last_wax = current_mileage - st.session_state['last_waxed'][gear_id]
+        if miles_since_last_wax >= 15:
+            return True
+    return False
+
+
+# # Custom HTML, CSS, and JavaScript for the odometer
+# html_template = """
+# <div style="{div_style}">
+#     <h5 style="margin-bottom: 20px;">{gear_name}</h5>
+#     <div id="odometer{gear_id}" style="{odometer_style}">0 mi</div>
+#     <script>
+#         // Odometer functionality for counting up to the final number
+#         document.addEventListener('DOMContentLoaded', (event) => {{
+#             var odometerElement = document.getElementById('odometer{gear_id}');
+#             var finalValue = {gear_odometer};
+#             var currentValue = 0;
+#             var increment = Math.ceil(finalValue / 100); // Adjust the speed and smoothness of the count
+
+#             function updateDisplay() {{
+#                 currentValue += increment;
+#                 if (currentValue > finalValue) {{
+#                     currentValue = finalValue;
+#                 }}
+#                 odometerElement.innerHTML = currentValue + ' mi';
+
+#                 if (currentValue < finalValue) {{
+#                     requestAnimationFrame(updateDisplay);
+#                 }}
+#             }}
+
+#             requestAnimationFrame(updateDisplay);
+
+#             // Function to handle the wax button clicked event
+#             function handleWaxButtonClicked(gearId, gearOdometer) {{
+#                 var confirmed = confirm('Mark the chain as waxed at ' + gearOdometer + ' miles?');
+#                 if (confirmed) {{
+#                     // Placeholder for sending data to the Streamlit server
+#                     console.log('Wax confirmed for ' + gearId + ' at ' + gearOdometer + ' miles');
+#                     // Actual interaction with Streamlit server is not supported here
+#                 }}
+#             }}
+#         }});
+#     </script>
+# </div>
+# """.format(gear_id=gear_id, gear_name=gear_name, gear_odometer=gear_odometer, div_style=div_style, odometer_style=odometer_style)
+
+
+# # Displaying each bike with its odometer and maintenance status
+# cols = st.columns(len(GearId_to_Name))
+# for i, (col, (gear_id, gear_name)) in enumerate(zip(cols, GearId_to_Name.items())):
+#     with col:
+#         # Calculate the total distance for the current gear for the year
+#         gear_odometer = active_gear_df_current_year[active_gear_df_current_year['gear_id'] == gear_id]['distance'].sum()
+
+#         # Check if the gear is 'Nike Zoom Fly 5'
+#         if gear_name == "Nike Zoom Fly 5":
+#             div_style = "background-color: #f0f2f6; padding: 11px; border-radius: 6px; text-align: center; font-family: 'Arial', sans-serif; transition: background-color 0.3s ease;"
+#             odometer_style = "box-shadow: 0 2px 4px rgba(0,0,0,0.2); font-size: 18px; font-weight: bold; color: #808496; background-image: linear-gradient(to right, #46738F, #46738F); color: white; padding: 5px 10px; border-radius: 6px; transition: transform 0.3s ease, box-shadow 0.3s ease;"
+#             click_event = ""
+#         else:
+#             div_style = "background-color: #f0f2f6; padding: 11px; border-radius: 6px; text-align: center; font-family: 'Arial', sans-serif; transition: background-color 0.3s ease;"
+#             odometer_style = "cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); font-size: 18px; font-weight: bold; color: #808496; background-image: linear-gradient(to right, #37A6A5, #37A6A5); color: white; padding: 5px 10px; border-radius: 6px; transition: transform 0.3s ease, box-shadow 0.3s ease;"
+#             click_event = f"onclick=\"handleWaxButtonClicked('{gear_id}', {gear_odometer})\""
+
+#         # Render the HTML with the odometer reading for this gear, and the button if applicable
+#         custom_html = html_template.format(gear_id=gear_id, gear_name=gear_name, gear_odometer=gear_odometer, div_style=div_style, odometer_style=odometer_style, click_event=click_event)
+#         components.html(custom_html, height=150, width=160)
+
+#         # Display chain waxing status
+#         if check_need_lubing(gear_id, gear_odometer):
+#             st.warning(f'{gear_name} may need its chain lubed.')
+
+# st.markdown("""---""")
+
+# # Custom HTML template, applying the styles conditionally
+# html_template = """
+# <div style="{div_style}">
+#     <h5 style="margin-bottom: 20px;">{gear_name}</h5>
+#     <div id="odometer{gear_id}" style="{odometer_style}">{gear_odometer} mi</div>
+# </div>
+# """
+
+# # Displaying each bike with its odometer and maintenance status
+# cols = st.columns(len(GearId_to_Name))
+# for i, (col, (gear_id, gear_name)) in enumerate(zip(cols, GearId_to_Name.items())):
+#     with col:
+#         gear_odometer = active_gear_df_current_year[active_gear_df_current_year['gear_id'] == gear_id]['distance'].sum()
+
+#         # Determine if the bike needs its chain lubed
+#         needs_lubing = check_need_lubing(gear_id, gear_odometer)
+
+#         # Adjust the style based on the gear name, keeping the style for 'Nike Zoom Fly 5'
+#         if gear_name == "Nike Zoom Fly 5":
+#             div_style = "background-color: #f0f2f6; padding: 16px; border-radius: 6px; text-align: center; font-family: 'Arial', sans-serif;"
+#             odometer_style = "font-size: 18px; font-weight: bold; color: #808496;"
+#         else:
+#             div_style = "background-color: #f0f2f6; padding: 11px; border-radius: 6px; text-align: center; font-family: 'Arial', sans-serif; transition: background-color 0.3s ease;"
+#             odometer_style = "cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); font-size: 18px; font-weight: bold; color: #808496; background-image: linear-gradient(to right, #244164, #244164); color: white; padding: 5px 10px; border-radius: 6px; transition: transform 0.3s ease, box-shadow 0.3s ease;"
+
+#         # Render the HTML with the odometer reading for this gear
+#         custom_html = html_template.format(
+#             gear_id=gear_id, 
+#             gear_name=gear_name, 
+#             gear_odometer=gear_odometer, 
+#             div_style=div_style, 
+#             odometer_style=odometer_style,
+#             click_event=""  # Assuming the click event handling is managed within the script
+#         )
+#         components.html(custom_html, height=150, width=160)
+
+#         # Conditionally display the button and warning message
+#         if gear_name != "Nike Zoom Fly 5" and needs_lubing:
+#             button_key = f"log_wax_{gear_id}"  # Ensure unique key for each button
+#             if st.button(f'Log Wax Mileage', key=button_key):
+#                 update_last_waxed(gear_id, gear_odometer)
+#                 st.success(f'Chain waxed for {gear_name} at {gear_odometer} miles.')
+#                 # Optionally, reset or update the condition to reflect the change immediately
+#                 st.experimental_rerun()
+
+#         if needs_lubing:
+#             st.warning(f'{gear_name} may need its chain lubed.')
+
+# st.markdown("---")
+
+
+# Custom HTML, CSS, and JavaScript for the odometer
+# html_template = """
+# <style>
+# .odometer-container {{
+#     font-family: 'Consolas', 'Courier New', monospace;
+#     background-color: #333;
+#     color: #fff;
+#     border-radius: 8px;
+#     padding: 8px;
+#     width: auto;
+#     display: inline-block;
+#     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+# }}
+# .odometer-window {{
+#     background-color: #000;
+#     border: 1px solid #777;
+#     border-radius: 4px;
+#     padding: 4px;
+#     display: flex;
+#     justify-content: center;
+#     align-items: center;
+#     overflow: hidden;
+# }}
+# .odometer-digit {{
+#     margin: 0 2px;
+#     min-width: 20px;
+#     text-align: center;
+# }}
+# </style>
+
+# <div class="odometer-container" {click_event}>
+#     <div>{gear_name}</div>
+#     <div class="odometer-window">
+#         {digits}
+#     </div>
+# </div>
+# <script>
+# {script_content}
+# </script>
+# """
+
+# # Displaying each bike with its odometer and maintenance status
+# cols = st.columns(len(GearId_to_Name))
+# for i, (col, (gear_id, gear_name)) in enumerate(zip(cols, GearId_to_Name.items())):
+#     with col:
+#         gear_odometer = active_gear_df_current_year[active_gear_df_current_year['gear_id'] == gear_id]['distance'].sum()
+#         digits = ''.join([f'<span class="odometer-digit">{digit}</span>' for digit in str(gear_odometer)])
+
+#         if gear_name == "Nike Zoom Fly 5":
+#             click_event = ""
+#             script_content = "// No action for Nike Zoom Fly 5"
+#         else:
+#             click_event = f"onclick=\"handleWaxButtonClicked('{gear_id}', '{gear_odometer}')\""
+#             script_content = f"""
+# function handleWaxButtonClicked(gearId, gearOdometer) {{
+#     var confirmed = confirm('Mark the chain as waxed at ' + gearOdometer + ' miles?');
+#     if (confirmed) {{
+#         console.log('Wax confirmed for ' + gearId + ' at ' + gearOdometer + ' miles');
+#         // Note: Actual interaction with Streamlit server is not supported here without custom components
+#     }}
+# }}
+# """
+
+#         custom_html = html_template.format(
+#             gear_id=gear_id, 
+#             gear_name=gear_name, 
+#             gear_odometer=gear_odometer, 
+#             digits=digits, 
+#             click_event=click_event, 
+#             script_content=script_content
+#         )
+#         components.html(custom_html, height=150)
+
+#         if check_need_lubing(gear_id, gear_odometer):
+#             st.warning(f'{gear_name} may need its chain lubed.')
+
+# st.markdown("---")
+
+
+
+# def update_last_waxed(gear_id, mileage):
+#     if 'last_waxed' not in st.session_state:
+#         st.session_state['last_waxed'] = {}
+#     st.session_state['last_waxed'][gear_id] = mileage
+
+# def check_need_lubing(gear_id, current_mileage):
+#     if 'last_waxed' in st.session_state and gear_id in st.session_state['last_waxed']:
+#         miles_since_last_wax = current_mileage - st.session_state['last_waxed'][gear_id]
+#         if miles_since_last_wax >= 150:  # Assuming 150 is the threshold
+#             return True
+#     return False
+
+# # Displaying each bike with its odometer and maintenance status
+# cols = st.columns(len(GearId_to_Name))
+# for i, (col, (gear_id, gear_name)) in enumerate(zip(cols, GearId_to_Name.items())):
+#     with col:
+#         gear_odometer = active_gear_df_current_year[active_gear_df_current_year['gear_id'] == gear_id]['distance'].sum()
+
+#         # Define the custom style and HTML structure
+#         if gear_name != "Nike Zoom Fly 5":  # Exclude 'Nike Zoom Fly 5' from the clickable style
+#             button_style = """
+#             <style>
+#             .div-button {{
+#                 background-color: #f0f2f6;
+#                 border-radius: 6px;
+#                 text-align: center;
+#                 cursor: pointer;
+#                 transition: background-color 0.3s ease;
+#                 padding: 16px;
+#                 margin: 5px 0;
+#                 width: 140px;
+#             }}
+#             .div-button:hover {{
+#                 background-color: #e2e6ea;
+#             }}
+#             </style>
+#             <div class="div-button" onclick="alert('This is a Streamlit limitation workaround!')">
+#                 <h6 style="margin-bottom: 5px;">{}</h6>
+#                 <div style="font-size: 18px; font-weight: bold; color: #808496;">{} mi</div>
+#             </div>
+#             """.format(gear_name, gear_odometer)
+#             st.markdown(button_style, unsafe_allow_html=True)
+#             if st.button(f'Mark chain waxed for {gear_name}', key=gear_id):
+#                 update_last_waxed(gear_id, gear_odometer)
+#                 st.success(f'Chain for {gear_name} marked as waxed at {gear_odometer} miles.')
+#         else:
+#             # Display for 'Nike Zoom Fly 5' without the button styling
+#             st.markdown(f"""
+#             <div style="background-color: #f0f2f6; padding: 16px; border-radius: 6px; text-align: center; width:140px">
+#                 <h6 style="margin-bottom: 5px;">{gear_name}</h6>
+#                 <div style="font-size: 18px; font-weight: bold; color: #808496;">{gear_odometer} mi</div>
+#             </div>
+#             """, unsafe_allow_html=True)
+
+#         # Check and display chain waxing status
+#         if check_need_lubing(gear_id, gear_odometer):
+#             st.warning(f'{gear_name} may need its chain lubed.')
+
+# st.markdown("""---""")
+
+
+# if 'last_waxed' not in st.session_state:
+#     st.session_state['last_waxed'] = {}
+
+# for gear_id, gear_name in GearId_to_Name.items():
+#     # Display the bike information and check status
+#     if gear_name != "Nike Zoom Fly 5":  # Exclude specific bike
+#         if st.button(f"Wax Chain for {gear_name}", key=gear_id):
+#             st.session_state['last_waxed'][gear_id] = gear_odometer  # Simulate marking as waxed
+#         # Display last waxed info and whether it needs lubing
+#         last_waxed_mileage = st.session_state['last_waxed'].get(gear_id, "Not yet waxed")
+#         st.text(f"Last waxed at: {last_waxed_mileage} miles")
+#         if check_need_lubing(gear_id, gear_odometer):
+#             st.warning(f"{gear_name} may need its chain lubed.")
+
+
+import streamlit as st
+import streamlit.components.v1 as components
+
+# Assuming the setup for 'update_last_waxed', 'check_need_lubing', etc., is as before
+
+# Displaying each bike with its odometer and maintenance status
+cols = st.columns(len(GearId_to_Name))
+for i, (col, (gear_id, gear_name)) in enumerate(zip(cols, GearId_to_Name.items())):
+    with col:
+        gear_odometer = active_gear_df_current_year[active_gear_df_current_year['gear_id'] == gear_id]['distance'].sum()
+        
+        # Define the styles based on the specific conditions for each bike
+        if gear_name == "Nike Zoom Fly 5":
+            div_style = "background-color: #f0f2f6; padding: 16px; border-radius: 6px; text-align: center; font-family: 'Arial', sans-serif;"
+            odometer_style = "font-size: 18px; font-weight: bold; color: #808496;"
+        else:
+            div_style = "background-color: #f0f2f6; padding: 11px; border-radius: 6px; text-align: center; font-family: 'Arial', sans-serif; transition: background-color 0.3s ease;"
+            odometer_style = "cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); font-size: 18px; font-weight: bold; color: #808496; background-image: linear-gradient(to right, #244164, #244164); color: white; padding: 5px 10px; border-radius: 6px; transition: transform 0.3s ease, box-shadow 0.3s ease;"
+
+        # Insert the HTML template with the current gear's details
+        custom_html = """
+        <div style="{div_style}">
+            <h5 style="margin-bottom: 20px;">{gear_name}</h5>
+            <div id="odometer{gear_id}" style="{odometer_style}">0 mi</div>
+            <script>
+                // Odometer functionality and animation
+                document.addEventListener('DOMContentLoaded', (event) => {{
+                    var odometerElement = document.getElementById('odometer{gear_id}');
+                    var finalValue = {gear_odometer};
+                    var currentValue = 0;
+                    var increment = Math.ceil(finalValue / 100);
+
+                    function updateDisplay() {{
+                        currentValue += increment;
+                        if (currentValue > finalValue) {{
+                            currentValue = finalValue;
+                        }}
+                        odometerElement.innerHTML = currentValue + ' mi';
+
+                        if (currentValue < finalValue) {{
+                            requestAnimationFrame(updateDisplay);
+                        }}
+                    }}
+
+                    requestAnimationFrame(updateDisplay);
+                }});
+            </script>
+        </div>
+        """.format(gear_id=gear_id, gear_name=gear_name, gear_odometer=gear_odometer, div_style=div_style, odometer_style=odometer_style)
+
+        components.html(custom_html, height=150, width=160)
+
+        # Display chain waxing status if needed
+        if check_need_lubing(gear_id, gear_odometer):
+            st.warning(f'{gear_name} may need its chain lubed.')
 
 
 ###############
@@ -1036,7 +1424,7 @@ st.markdown(f'<h4 style="color:#45738F">Active Days<p><i><b id="bold-text">{tota
 #             </div>
 #                 """, unsafe_allow_html=True)
 
-calplot_col, pie_chart_col = st.columns([5, 2.16])
+calplot_col, spacer, pie_chart_col = st.columns([5, 0.1, 2.16])
 
 # active_days_title =  f'<h4 style="color:#45738F">Active Days</h4>'
 # st.markdown(active_days_title, unsafe_allow_html=True)
@@ -1128,15 +1516,26 @@ fig.update_layout(
     plot_bgcolor='rgba(0,0,0,0)',
     margin=dict(l=0, r=0, t=0, b=35),
     legend=dict(
-        x=1.2,  # Adjust as needed
+        x=1,  # Adjust as needed
         y=1,  # Adjust as needed
     ),
 )
+
+fig.update_traces(textinfo='percent+label',
+                    textfont_size=12, 
+                    textposition='outside', 
+                    texttemplate=" <b>%{label}</b><br>(%{percent:.0%})",
+                    hoverinfo='label+percent',
+                    hovertemplate='<b>%{value:.0f}</b> %{label}s',
+                    marker=dict(colors=custom_cmap_colors, line=dict(color='#FFFFFF', width=2)),
+                    )
 
 fig.update_traces(textinfo='percent+label', 
                   textfont_size=12, 
                   textposition='outside', 
                   texttemplate=" <b>%{label}</b><br>(%{percent:.0%})",
+                  hoverinfo='label+percent',
+                  hovertemplate='<b>%{value:.0f}</b> %{label}s',
                   marker=dict(colors=custom_cmap_colors, line=dict(color='#FFFFFF', width=2)),
                   )
 
@@ -1209,10 +1608,10 @@ def get_last_n_weeks_data(df):
 # st.write(week_offset)
 
 week_offset = 4
-previous_16_offset = 16
+previous_12_offset = 12
 
 last_8_weeks_data = processed_data[processed_data.activity_date >= (dt.datetime.today() - pd.DateOffset(weeks=week_offset))]
-last_12_weeks_data = processed_data[processed_data.activity_date >= (dt.datetime.today() - pd.DateOffset(weeks=previous_16_offset))]
+last_12_weeks_data = processed_data[processed_data.activity_date >= (dt.datetime.today() - pd.DateOffset(weeks=previous_12_offset))]
 
 exclude_run_last_8_weeks = last_8_weeks_data[last_8_weeks_data['type'] != 'Run']
 exclude_run_last_12_weeks = last_12_weeks_data[last_12_weeks_data['type'] != 'Run']
@@ -1248,7 +1647,7 @@ def plot_power_curve():
 
     best_rolling = {}
     for window in windows:
-        rolling = last_8_weeks_data.groupby('Id')['watts'].rolling(window=window, min_periods=int(window/2)).mean()
+        rolling = last_8_weeks_data.groupby('Id')['watts'].rolling(window=window, min_periods=int(window/3)).mean()
         best_rolling[window] = rolling.max()
 
     best_rolling_df = pd.DataFrame(list(best_rolling.items()), columns=['Duration', 'Value'])

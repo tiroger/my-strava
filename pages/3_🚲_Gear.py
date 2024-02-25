@@ -32,6 +32,8 @@ import streamlit.components.v1 as components
 
 import os
 
+import pyarrow.feather as feather
+
 # from PIL import Image
 
 ###############
@@ -94,7 +96,8 @@ def set_png_as_page_bg(png_file):
 
 # # Get local data # For development
 
-bikes_df = pd.read_csv('./data/bike_data.csv')
+# bikes_df = pd.read_csv('./data/bike_data.csv')
+bikes_df = feather.read_feather('./data/bike_data.feather')
 
 ############
 # THE GEAR #
