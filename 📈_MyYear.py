@@ -1982,7 +1982,7 @@ with power_curve_col:
                 ))
 
 with ploar_chart_col:
-    st.markdown(f'<h4 style="color:#45738F"><b>5DP Profile</b>: Last <span style="color:#FF4500">{week_offset}</span> vs Previous <span style="color:#F9A9A3">{previous_16_offset}</span> Weeks</h4>', unsafe_allow_html=True)
+    st.markdown(f'<h4 style="color:#45738F"><b>5DP Profile</b>: Last <span style="color:#FF4500">{week_offset}</span> vs Previous <span style="color:#F9A9A3">{previous_12_offset}</span> Weeks</h4>', unsafe_allow_html=True)
     st.plotly_chart(fig_polar, use_container_width=True, config= dict(
                 displayModeBar = False,
                 responsive = False
