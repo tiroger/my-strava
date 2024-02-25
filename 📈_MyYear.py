@@ -130,9 +130,10 @@ processed_data['start_date_local'] = pd.to_datetime(processed_data['start_date_l
 processed_data['start_date_local'] = processed_data['start_date_local'].dt.strftime('%m-%d-%Y')
 
 # Saving processed data to csv for future use
-# processed_data.to_csv('./data/processed_data.csv', index=False)
-feather.write_feather(processed_data, './data/processed_data.feather')
-feather.write_feather(bikes_df, './data/bike_data.feather')
+processed_data.to_csv('./data/processed_data.csv', index=False)
+bikes_df.to_csv('./data/bike_data.csv', index=False)
+# feather.write_feather(processed_data, './data/processed_data.feather')
+# feather.write_feather(bikes_df, './data/bike_data.feather')
 
 
 processed_data['activity_date'] = pd.to_datetime(processed_data['start_date_local'])
