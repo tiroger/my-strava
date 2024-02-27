@@ -78,10 +78,10 @@ current_year = dt.datetime.today().year
 # PERSONAL DATA #
 #################
 
-weight_lbs = 164
+weight_lbs = 155
 weight_kg = weight_lbs * 0.453592
 
-bikes_dict = {'Tie Fighter': 'Storck Scenero', 'Caadie': 'Cannondale CAAD10', 'Dirty McDirtBag': 'Marin Headlands', 'Hillius Maximus': 'Giant TCR', 'Hurt Enforcer': 'Cannondale Slate'}
+bikes_dict = {'Tie Fighter': 'Storck Scenero', 'Caadie': 'Cannondale CAAD10', 'Dirty McDirtBag': 'Marin Headlands', 'Millennium Falcon': 'Giant TCR', 'Hurt Enforcer': 'Cannondale Slate'}
 
 
 
@@ -1461,26 +1461,29 @@ colors = ['#45738F', '#37A6A5', '#5F4690']
 colors_2 = ['#F0F0F0', '#45738F', '#37A6A5', '#5F4690']
 cmap = mcolors.ListedColormap(colors)
 
-fig, ax = calplot.calplot(data=grouped_by_day_and_type.type_code, 
-                          colorbar=False, 
-                          dropzero=True, 
-                          edgecolor='grey', 
-                          linewidth=0.5, 
-                          cmap=cmap, 
-                          textcolor = '#808080')
+# fig, ax = calplot.calplot(data=grouped_by_day_and_type.type_code, 
+#                           colorbar=False, 
+#                           dropzero=True, 
+#                           edgecolor='grey', 
+#                           linewidth=0.5, 
+#                           cmap=cmap, 
+#                           textcolor = '#808080')
 
 grouped_by_day_and_type_reindexed = grouped_by_day_and_type.reindex(pd.date_range(start=f'{current_year}-01-01', end=f'{current_year}-12-31'), fill_value=0).reset_index().rename(columns={'index': 'date'})
 # st.dataframe(grouped_by_day_and_type_reindexed)
 
 grouped_by_day_and_type['date'] = grouped_by_day_and_type.index
+type_dict = {1: 'Run', 2: 'Ride', 3: 'VirtualRide'}
+grouped_by_day_and_type['type_code_desc'] = grouped_by_day_and_type['type_code'].map(type_dict)
 fig = cplot(grouped_by_day_and_type_reindexed, 
               x="date", 
               y="type_code",
             #   gap=0,
             years_title=False,
             colorscale=colors_2,
-            month_lines_width=2
+            month_lines_width=2,
               )
+
 fig.update_layout(
     width=1200,
     yaxis_title=current_year,
@@ -1494,6 +1497,11 @@ fig.update_layout(
         # tickangle=0,
     )
 )
+
+custom_data = grouped_by_day_and_type['type_code_desc'] 
+
+fig.update_traces(hovertemplate='<b>%{y}</b>',
+                  selector=dict(type='heatmap'))
 
 
 with calplot_col:
