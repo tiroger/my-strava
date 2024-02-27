@@ -168,21 +168,47 @@ selected_bike_df = bikes_df[bikes_df['name'] == selected_bike]
 # File where the DataFrame will be saved
 maintenance_file = 'maintenance_log.csv'
 
+if os.path.exists(maintenance_file) and os.stat(maintenance_file).st_size > 0:
+    try:
+        maintenance_df = pd.read_csv(maintenance_file)
+        # Continue processing the DataFrame as required
+    except pd.errors.EmptyDataError:
+        # The file exists but is empty, handle the situation appropriately
+        print("The file exists but is empty. Please check the file content.")
+        maintenance_df = pd.DataFrame()  # Create an empty DataFrame as a fallback
+    except Exception as e:
+        # Handle other potential exceptions
+        print(f"An error occurred: {e}")
+        maintenance_df = pd.DataFrame()  # Create an empty DataFrame as a fallback
+else:
+    print("File does not exist or is empty.")
+    maintenance_df = pd.DataFrame()  # Create an empty DataFrame as a fallback
+
 # Function to load data from CSV if it exists and is not empty, otherwise return empty DataFrame
 def load_maintenance_data(file_path):
-    try:
-        if os.path.exists(file_path) and os.path.getsize(file_path) > 0:  # Check if file exists and is not empty
-            df = pd.read_csv(file_path)
-            # Check if the DataFrame is empty or if it only contains headers
-            if df.empty or df.columns.empty:
-                return pd.DataFrame()
-            return df
-        else:
-            return pd.DataFrame()  # Return an empty DataFrame if file does not exist or is empty
-    except pd.errors.EmptyDataError:  # Catch the EmptyDataError specifically
-        return pd.DataFrame()  # Return an empty DataFrame if an error occurs # Return an empty DataFrame if file does not exist or is empty
+    # Check if the file exists and has content that could be a valid header
+    if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
+        with open(file_path, 'r') as file:
+            header = file.readline()
+            # Check if the header has at least one column name
+            if header and len(header.split(',')) > 0:
+                try:
+                    # File exists, is not empty, and has a valid header, attempt to read it
+                    return pd.read_csv(file_path)
+                except pd.errors.EmptyDataError:
+                    # The file exists, might not be completely empty but fails due to lack of data to form columns
+                    print("The file exists but does not contain valid data to form columns.")
+                    return pd.DataFrame(columns=['bike', 'part', 'service', 'date', 'mileage'])  # Adjust columns as necessary
+            else:
+                # File exists but the header is not valid
+                print("The file exists but the header is invalid or empty.")
+                return pd.DataFrame(columns=['bike', 'part', 'service', 'date', 'mileage'])  # Adjust columns as necessary
+    else:
+        # File does not exist or is empty
+        print("File does not exist or is empty.")
+        return pd.DataFrame()
 
-# Load existing maintenance data if available
+maintenance_file = 'maintenance_log.csv'
 maintenance_df = load_maintenance_data(maintenance_file)
 
 # Initialize session state for maintenance list
