@@ -167,6 +167,10 @@ cython_debug/
 # Streamlit
 .streamlit/
 
+/FIT_Files/
+
 # All notebooks folder
 /notebooks/
 playground.ipynb
+
+*.fit
