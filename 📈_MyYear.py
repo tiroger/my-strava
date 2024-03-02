@@ -1345,7 +1345,7 @@ import streamlit.components.v1 as components
 cols = st.columns(len(GearId_to_Name))
 for i, (col, (gear_id, gear_name)) in enumerate(zip(cols, GearId_to_Name.items())):
     with col:
-        gear_odometer = active_gear_df_current_year[active_gear_df_current_year['gear_id'] == gear_id]['distance'].sum()
+        gear_odometer = round(active_gear_df_current_year[active_gear_df_current_year['gear_id'] == gear_id]['distance'].sum(), 1)
         
         # Define the styles based on the specific conditions for each bike
         if gear_name == "Nike Zoom Fly 5":

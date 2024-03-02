@@ -300,31 +300,31 @@ try:
             lube_chain_maintenance_df = selected_bike_maintenance_df[(selected_bike_maintenance_df['part'] == 'Chain') & (selected_bike_maintenance_df['service'] == 'Lube')]
             if not lube_chain_maintenance_df.empty:
                 lube_chain_maintenance_df['NextLube'] = lube_chain_maintenance_df['mileage'] + chain_relube_schedule
-                # st.dataframe(lube_chain_maintenance_df)
+                st.dataframe(lube_chain_maintenance_df)
 
         if 'chain_rewax_schedule' in locals():
             hotwax_chain_maintenance_df = selected_bike_maintenance_df[(selected_bike_maintenance_df['part'] == 'Chain') & (selected_bike_maintenance_df['service'] == 'Hot Wax')]
             if not hotwax_chain_maintenance_df.empty:
                 hotwax_chain_maintenance_df['NextHotWax'] = hotwax_chain_maintenance_df['mileage'] + chain_rewax_schedule
-                # st.dataframe(hotwax_chain_maintenance_df)
+                st.dataframe(hotwax_chain_maintenance_df)
 
         if 'chain_topup_schedule' in locals():
             waxtopup_chain_maintenance_df = selected_bike_maintenance_df[(selected_bike_maintenance_df['part'] == 'Chain') & (selected_bike_maintenance_df['service'] == 'Top-Up')]
             if not waxtopup_chain_maintenance_df.empty:
                 waxtopup_chain_maintenance_df['NextWaxTopUp'] = waxtopup_chain_maintenance_df['mileage'] + chain_topup_schedule
-                # st.dataframe(waxtopup_chain_maintenance_df)
+                st.dataframe(waxtopup_chain_maintenance_df)
 
         if 'tire_topup_schedule' in locals():
             tiretopup_maintenance_df = selected_bike_maintenance_df[(selected_bike_maintenance_df['part'] == 'Tires') & (selected_bike_maintenance_df['service'] == 'Top-Up')]
             if not tiretopup_maintenance_df.empty:
                 tiretopup_maintenance_df['date'] = pd.to_datetime(tiretopup_maintenance_df['date'])
                 tiretopup_maintenance_df['NextSealantTopUp'] = tiretopup_maintenance_df['date'] + pd.DateOffset(months=tire_topup_schedule)
-                # st.dataframe(tiretopup_maintenance_df)
+                st.dataframe(tiretopup_maintenance_df)
         if 'tire_replace_schedule' in locals():
             tire_replaced_maintenance_df = selected_bike_maintenance_df[(selected_bike_maintenance_df['part'] == 'Tires') & (selected_bike_maintenance_df['service'] == 'New')]
             if not tire_replaced_maintenance_df.empty:
                 tire_replaced_maintenance_df['NextTireReplace'] = tire_replaced_maintenance_df['mileage'] + tire_replace_schedule
-                # st.dataframe(tire_replaced_maintenance_df)
+                st.dataframe(tire_replaced_maintenance_df)
 except:
     pass
 
