@@ -1647,7 +1647,9 @@ activity_ids_for_last_12_weeks = exclude_run_last_12_weeks['id'].tolist()
 #     return combined_df
 
 last_8_weeks_data = get_last_n_weeks_data(exclude_run_last_8_weeks)
+# st.dataframe(last_8_weeks_data)
 last_16_weeks_data = get_last_n_weeks_data(exclude_run_last_12_weeks)
+# st.dataframe(last_16_weeks_data)
 # st.markdown(f'<h4 style="color:#45738F">Best Efforts Power Curve for the Past {week_offset} weeks</h4>', unsafe_allow_html=True)
 
 @st.cache_data(show_spinner=False, max_entries=5, ttl=86400)
