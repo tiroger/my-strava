@@ -1564,91 +1564,49 @@ st.markdown("""---""")
 ###############
 
 @st.cache_data(show_spinner=False, max_entries=5, ttl=86400)
-def get_last_n_weeks_data(df):
+def get_activities_data(activity_ids):
+    """Fetch activity streams only once per unique activity ID."""
+    unique_ids = set(activity_ids)  # Remove duplicate IDs
     data_dict = {}
-    for activity_id in df['id'].tolist():
-        stream = fetch_activity_streams(activity_id)
-        data_dict[activity_id] = stream
 
+    # Fetch data only once per activity ID
+    for activity_id in unique_ids:
+        if activity_id not in data_dict:  # Check if we already fetched this
+            stream = fetch_activity_streams(activity_id)
+            data_dict[activity_id] = stream
+
+    # Convert the collected data into a DataFrame
     df_list = []
     for id_key, data in data_dict.items():
         temp_df = pd.DataFrame(data)
         temp_df['Id'] = id_key
         df_list.append(temp_df)
 
-    # Combine all individual DataFrames into one
-    combined_df = pd.concat(df_list, ignore_index=True)
+    return pd.concat(df_list, ignore_index=True)
 
-    return combined_df
-
-
-# @st.cache_data(show_spinner=False, max_entries=5, ttl=86400)
-# def get_last_16_weeks_data():
-#     data_dict = {}
-#     for activity_id in activity_ids_for_last_12_weeks:
-#         stream = fetch_activity_streams(activity_id)
-#         data_dict[activity_id] = stream
-
-#     df_list = []
-#     for id_key, data in data_dict.items():
-#         temp_df = pd.DataFrame(data)
-#         temp_df['Id'] = id_key
-#         df_list.append(temp_df)
-
-#     # Combine all individual DataFrames into one
-#     combined_df = pd.concat(df_list, ignore_index=True)
-
-#     return combined_df
-
-# offset_options = ['Last 4 weeks', 'Last 8 weeks', 'Last 12 weeks', 'Last 26 weeks', f'All of {current_year}']
-# week_offset_dropdown = st.selectbox('Select a time period for the power curve', (option for option in offset_options), index=1)
-
-# weeks_since_start_current_year = (dt.datetime.today() - dt.datetime(current_year, 1, 1)).days // 7
-
-# offset_options_dict = {
-#     'Last 4 weeks': 4,
-#     'Last 8 weeks': 8,
-#     'Last 12 weeks': 12,
-#     'Last 26 weeks': 26,
-#     f'All of {current_year}': weeks_since_start_current_year
-# }
-
-# week_offset = offset_options_dict[week_offset_dropdown]
-# st.write(week_offset)
-
+# Assuming 'processed_data' is your initial DataFrame with activities
+today = dt.datetime.today()
 week_offset = 4
 previous_12_offset = 12
 
-last_8_weeks_data = processed_data[processed_data.activity_date >= (dt.datetime.today() - pd.DateOffset(weeks=week_offset))]
-last_12_weeks_data = processed_data[processed_data.activity_date >= (dt.datetime.today() - pd.DateOffset(weeks=previous_12_offset))]
-
-exclude_run_last_8_weeks = last_8_weeks_data[last_8_weeks_data['type'] != 'Run']
+# Filter for the last 12 weeks since this encompasses the last 8 weeks
+last_12_weeks_data = processed_data[
+    processed_data.activity_date >= (today - pd.DateOffset(weeks=previous_12_offset))
+]
 exclude_run_last_12_weeks = last_12_weeks_data[last_12_weeks_data['type'] != 'Run']
 
-activity_ids_for_last_8_weeks = exclude_run_last_8_weeks['id'].tolist()
-activity_ids_for_last_12_weeks = exclude_run_last_12_weeks['id'].tolist()
+# Fetch data for the last 12 weeks (which includes data for the last 8 weeks)
+all_activity_data = get_activities_data(exclude_run_last_12_weeks['id'].tolist())
 
-# @st.cache_data(show_spinner=False, max_entries=5, ttl=86400)
-# def get_last_8_weeks_data():
-#     data_dict = {}
-#     for activity_id in activity_ids_for_last_8_weeks:
-#         stream = fetch_activity_streams(activity_id)
-#         data_dict[activity_id] = stream
+# Now, separate this data for the last 8 weeks
+last_8_weeks_ids = exclude_run_last_12_weeks[
+    exclude_run_last_12_weeks.activity_date >= (today - pd.DateOffset(weeks=week_offset))
+]['id'].tolist()
 
-#     df_list = []
-#     for id_key, data in data_dict.items():
-#         temp_df = pd.DataFrame(data)
-#         temp_df['Id'] = id_key
-#         df_list.append(temp_df)
+# Filter the all_activity_data DataFrame for activities in the last 8 weeks
+last_8_weeks_data = all_activity_data[all_activity_data['Id'].isin(last_8_weeks_ids)]
+last_12_weeks_data = all_activity_data  # Already fetched and filtered from runs
 
-#     # Combine all individual DataFrames into one
-#     combined_df = pd.concat(df_list, ignore_index=True)
-
-#     return combined_df
-
-last_8_weeks_data = get_last_n_weeks_data(exclude_run_last_8_weeks)
-# st.dataframe(last_8_weeks_data)
-last_16_weeks_data = get_last_n_weeks_data(exclude_run_last_12_weeks)
 # st.dataframe(last_16_weeks_data)
 # st.markdown(f'<h4 style="color:#45738F">Best Efforts Power Curve for the Past {week_offset} weeks</h4>', unsafe_allow_html=True)
 
@@ -1665,7 +1623,7 @@ def plot_power_curve():
     
     best_rolling_16 = {}
     for window in windows:
-        rolling = last_16_weeks_data.groupby('Id')['watts'].rolling(window=window, min_periods=window).mean()
+        rolling = last_12_weeks_data.groupby('Id')['watts'].rolling(window=window, min_periods=window).mean()
         best_rolling_16[window] = rolling.max()
         
     best_rolling_16_df = pd.DataFrame(list(best_rolling_16.items()), columns=['Duration', 'Value'])
