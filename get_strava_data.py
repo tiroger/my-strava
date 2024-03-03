@@ -34,49 +34,61 @@ GOOGLE_API_KEY = os.environ['GOOGLE_API_KEY']
 #################################################
 
 
+import requests
+import pandas as pd
+
 def my_data():
-
+    session = requests.Session()  # Use session for connection pooling
     try:
-        page = 1
-        frames = []
         print('Getting data...')
-        while page < 10: # Iterating through all pages
+        frames = []
+        page = 1
+        access_token = None
+
+        while True:  # Use a condition that always starts as true
+            if page == 1 or not access_token:  # Refresh token only initially or if not set
+                print('Refreshing access token...')
+                auth_url = "https://www.strava.com/oauth/token"
+                payload = {
+                    'client_id': CLIENT_ID,
+                    'client_secret': CLIENT_SECRET,
+                    'refresh_token': REFRESH_TOKEN,
+                    'grant_type': "refresh_token",
+                    'f': 'json'
+                }
+                res = session.post(auth_url, data=payload, verify=False)
+                if res.status_code != 200:
+                    print('Failed to refresh token:', res.text)
+                    break  # Stop if token refresh fails
+                access_token = res.json()['access_token']
+
             print(f"Requesting page {page}...")
-            auth_url = "https://www.strava.com/oauth/token"
-            activites_url = "https://www.strava.com/api/v3/athlete/activities"
-
-            payload = {
-                'client_id': CLIENT_ID,
-                'client_secret': CLIENT_SECRET,
-                'refresh_token': REFRESH_TOKEN,
-                'grant_type': "refresh_token",
-                'f': 'json'
-            }
-
-            
-            res = requests.post(auth_url, data=payload, verify=False)
-            print(res)
-            access_token = res.json()['access_token']
-            # print("Access Token = {}\n".format(access_token))
-
             header = {'Authorization': 'Bearer ' + access_token}
             param = {'per_page': 200, 'page': page}
-            my_dataset = requests.get(activites_url, headers=header, params=param).json()
-            if my_dataset == []:
-                break
-            output = pd.DataFrame(my_dataset) # Converting json to datarame
+            response = session.get("https://www.strava.com/api/v3/athlete/activities", headers=header, params=param)
+            if response.status_code != 200:
+                print('Failed to retrieve data:', response.text)
+                break  # Stop if data retrieval fails
 
-            frames.append(output)
-            
-            page = page + 1 # Incrementing page number
+            my_dataset = response.json()
+            if not my_dataset:
+                break  # Exit loop if no more data
 
-            my_dataset_df = pd.concat(frames) # Concatenating all pages into dataframe
-            
-        print('Data retrieved successfully!')
-        return my_dataset_df
-            
-    except:
-        print('There was a problem with the request.')
+            frames.append(pd.DataFrame(my_dataset))  # Add the data frame from the current page
+            page += 1  # Move to the next page
+
+        if frames:
+            my_dataset_df = pd.concat(frames)  # Combine all data frames
+            print('Data retrieved successfully!')
+            return my_dataset_df
+        else:
+            print('No data found.')
+            return pd.DataFrame()  # Return an empty DataFrame if no data was retrieved
+
+    except Exception as e:
+        print('There was a problem with the request:', str(e))
+        return pd.DataFrame()  # Return an empty DataFrame in case of exception
+
 
 
 
@@ -238,40 +250,58 @@ def athlete_data():
     # return athlete_df
     return df
 
+
 def bike_data():
+    session = requests.Session()  # Use session for connection pooling
+    bikes = [np.nan, 'g16537882', 'b8099416', 'b8615449', 'b11212849', 'b5245627',
+             'b4073790', 'b4196400', 'b8029179', 'b326351', 'b804798',
+             'b232108']
+    frames = []
+    access_token = None  # Initialize access_token outside the loop
+
     try:
-        bikes = [np.nan, 'g16537882', 'b8099416', 'b8615449', 'b11212849', 'b5245627',
-       'b4073790', 'b4196400', 'b8029179', 'b326351', 'b804798',
-       'b232108']
-        frames = []
+        print('Requesting data...')
         for b in bikes:
-            print('Requesting data...')
-            auth_url = "https://www.strava.com/oauth/token"
+            if not b:  # Skip if bike ID is NaN or None
+                continue
+            if not access_token:  # Refresh token only if it's not set
+                auth_url = "https://www.strava.com/oauth/token"
+                payload = {
+                    'client_id': CLIENT_ID,
+                    'client_secret': CLIENT_SECRET,
+                    'refresh_token': REFRESH_TOKEN,
+                    'grant_type': "refresh_token",
+                    'f': 'json'
+                }
+                res = session.post(auth_url, data=payload, verify=False)
+                if res.status_code != 200:
+                    print('Failed to refresh token:', res.text)
+                    break  # Stop if token refresh fails
+                access_token = res.json().get('access_token')
+
             gears_url = f'https://www.strava.com/api/v3/gear/{b}'
-            
-            payload = {
-                'client_id': CLIENT_ID,
-                'client_secret': CLIENT_SECRET,
-                'refresh_token': REFRESH_TOKEN,
-                'grant_type': "refresh_token",
-                'f': 'json'
-            }
-
-            res = requests.post(auth_url, data=payload, verify=False)
-            print(res)
-            access_token = res.json()['access_token']
-            # print("Access Token = {}\n".format(access_token))
-
             header = {'Authorization': 'Bearer ' + access_token}
-            param = {'per_page': 200, 'page': 1}
-            gears = requests.get(gears_url, headers=header).json()
-            df = pd.json_normalize(gears) # Converting json to datarame
+            response = session.get(gears_url, headers=header)
+            if response.status_code != 200:
+                print(f'Failed to retrieve data for gear {b}:', response.text)
+                continue  # Skip this bike and continue with the next
+
+            gears_data = response.json()
+            df = pd.json_normalize(gears_data)  # Convert json to dataframe
             frames.append(df)
-            bikes_df = pd.concat(frames) # Concatenating all pages into dataframe
+
+        if frames:
+            bikes_df = pd.concat(frames)  # Concatenate outside the loop
             print('Data retrieved successfully!')
-        return bikes_df
-    except:
-        print('There was a problem with the request.')
+            return bikes_df
+        else:
+            print('No data found.')
+            return pd.DataFrame()  # Return an empty DataFrame if no data was retrieved
+
+    except Exception as e:
+        print(f'There was a problem with the request: {e}')
+        return pd.DataFrame()  # Return an empty DataFrame in case of exception
+
 
 
 def process_data(all_activities):
