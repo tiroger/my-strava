@@ -464,19 +464,26 @@ with plotly_chart_col:
             ax=10, ay=10, xanchor="left", showarrow=False
     )
 
+    # Calculate month widths and midpoints correctly
     average_month_width = 30.44  # Average days in a month
     tickvals = [1, 32, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335]
-    month_widths = [t2 - t1 - 1 for t1, t2 in zip(tickvals[:-1], tickvals[1:])]  # Subtract 1 to reduce width slightly
+    month_widths = []
+    month_midpoints = []
 
-    # Calculate midpoints for each month to use as x values for bars --This makes each bar centered on its respective month
-    month_midpoints = [(t1 + t2) / 2 for t1, t2 in zip(tickvals[:-1], tickvals[1:])]
+    # Calculate widths and midpoints for each month
+    for i in range(len(tickvals)-1):
+        width = tickvals[i+1] - tickvals[i]
+        month_widths.append(width)
+        midpoint = tickvals[i] + width/2
+        month_midpoints.append(midpoint)
+    # Add the last month's width and midpoint
+    last_width = 365 - tickvals[-1]
+    month_widths.append(last_width)
+    month_midpoints.append(tickvals[-1] + last_width/2)
 
-    # Update your bar trace
-    # Note: We're mapping the 'month' value to the correct midpoint based on the data structure
+    # Update the bar trace with correct month alignment
     fig.add_trace(go.Bar(
-        x=[month_midpoints[month - 1] for month in current_year_by_month_totals['month']],  # Align 'month' with midpoints
-        
-        # monthly_metric = 'distance' if selected_metric == 'Total Distance' else 'total_elevation_gain' else 'id'
+        x=[month_midpoints[month - 1] for month in current_year_by_month_totals['month'] if 0 < month <= 12],
         y=current_year_by_month_totals['distance' if selected_metric == 'Total Distance' else 'total_elevation_gain'],
         marker_color='#FC4F31',
         name='Monthly Total',
@@ -485,7 +492,6 @@ with plotly_chart_col:
         showlegend=True,
         hoverinfo='skip',
         hovertemplate='%{y:,.0f}mi' if selected_metric == 'Total Distance' else '%{y:,.0f}ft',
-        
     ))
 
     st.plotly_chart(fig, use_container_width=True, config= dict(
