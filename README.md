@@ -5,15 +5,33 @@ and comparing performance with your own previous seasons.
 
 ## What it does
 
-- Tracks Strava activities by sport, including cycling, running, and Pickleball.
-- Compares monthly distance, active time, and session counts across years using
-  Apache ECharts, with tooltips, zoom, and a sport filter.
-- Summarizes training volume and personal bests for the selected activity type.
-- Shows recent activity, searchable history, GPS route traces, and bike mileage.
-- Keeps public viewing separate from maintenance edits, which require an owner
+- **Overview:** cumulative year-over-year progress by day of the year (distance,
+  elevation, time or sessions), "on pace for" projection, annual goals with
+  ahead/behind and what is needed per week, a GitHub-style active-days calendar
+  with streaks, and the sport mix.
+- **Every sport, including pickleball,** with metrics that fit it: sessions and
+  hours where distance means nothing.
+- **Activity detail:** VeloViewer-style gradient profile (hover to read, drag to
+  measure), a map coloured by gradient with a 3D profile view, climb breakdown,
+  power and heart rate, zones, and corrected Normalized Power, IF, TSS,
+  efficiency factor, aerobic decoupling and TRIMP.
+- **Saved routes:** your public Strava routes with the same profile, 2D/3D map
+  and climb breakdown.
+- **Routes and heatmap** on real maps, with the first and last 500 m of every
+  route hidden so the public site never shows where you live.
+- **Performance:** FTP history (critical-power model with a 90-day window),
+  power curves, a five-point power profile in W/kg, and fitness, fatigue and
+  form from power or heart-rate load. The app explains each method.
+- **Garage:** every bike and pair of shoes Strava knows about, including new
+  gear found on activities, miles this year, photos, and a maintenance log with
+  next-due chain and tire service.
+- **Year in review:** totals, calories, kudos, named personal bests and the
+  year's calendar.
+- Public to view; goals, athlete settings and maintenance edits need the owner
   passphrase.
-- Refreshes new and updated activities from Strava webhooks, with a daily
-  incremental reconciliation as a safety net.
+- Updates within a minute of a Strava upload via webhooks, with daily
+  reconciliation, a two-hourly backfill of second-by-second data, and a daily
+  saved-route sync.
 
 The new web app is in `apps/web`. The original Streamlit source files remain in
 the repository as a migration reference; they are not part of the AWS deployment.
@@ -30,7 +48,11 @@ npm run dev
 
 Without `APP_DATA_BUCKET`, the app reads the checked-in
 `data/processed_data.csv` and `data/bike_data.csv` as a development snapshot.
-Local changes to maintenance records require the AWS-backed API and credentials.
+`npm run preview` serves a production build against the same snapshot. Activity
+detail, performance and saved routes also read optional local files
+(`data/streams-index.json`, `data/streams/`, `data/saved-routes.json`,
+`data/saved-routes/`), which are gitignored. Owner edits require the AWS-backed
+API and credentials.
 
 Frontend checks:
 
@@ -103,8 +125,8 @@ the same run.
    tooling from files kept outside the repository:
 
    - `strava_secret_arn` (worker only): `client_id`, `client_secret`,
-     `refresh_token`. Authorize the token with `activity:read` and
-     `profile:read_all`. Avoid `activity:read_all`: the dashboard is public,
+     `refresh_token`. Authorize the token with `read`, `activity:read` and
+     `profile:read_all` (`read` covers saved routes; private ones are skipped). Avoid `activity:read_all`: the dashboard is public,
      and that scope includes privacy-zone route data. The worker also skips
      "Only You" activities.
    - `web_secret_arn` (web app only): `webhook_verify_token` (at least 16
