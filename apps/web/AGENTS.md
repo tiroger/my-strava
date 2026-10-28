@@ -1,9 +1,7 @@
-<!-- BEGIN:nextjs-agent-rules -->
+# Agent notes
 
-## This is NOT the Next.js you know
-
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
-
-This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
-
-<!-- END:nextjs-agent-rules -->
+- **Next.js is pinned to 15.** AWS Amplify Hosting compute supports Next.js 12 through 15; do not upgrade to 16 until Amplify's supported matrix includes it (see `amplify.yml`). ESLint therefore uses `eslint-config-next` 15 through `FlatCompat`.
+- Server runtime configuration reaches the SSR bundle only through `.env.production`, written in `amplify.yml`; add any new runtime variable to that list and to the Terraform `web` module.
+- Activity dates are wall-clock strings. Read them with the helpers in `lib/activity-types.ts`, never with `new Date(...)` getters, which shift them into the viewer's timezone.
+- Route coordinates near either end are private: every API that returns them goes through `lib/polyline.ts` (`publicPolyline`, `hideRouteEnds`).
+- `npm test` runs under `TZ=America/Los_Angeles` on purpose.

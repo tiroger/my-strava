@@ -193,3 +193,8 @@ infrastructure/terraform/environments/*/backend.hcl
 playground.ipynb
 
 *.fitapps/web/.npm/
+apps/web/public/maplibre-gl-*.mjs
+data/streams/
+data/streams-index.json
+data/saved-routes/
+data/saved-routes.json

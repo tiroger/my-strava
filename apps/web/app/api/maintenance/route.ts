@@ -1,7 +1,7 @@
 import { isAdminSessionValid } from "@/lib/admin-session";
 import {
+  ConflictError,
   loadMaintenanceRecords,
-  MaintenanceConflictError,
   updateMaintenanceRecords,
 } from "@/lib/activities";
 import type { MaintenanceRecord } from "@/lib/activity-types";
@@ -56,13 +56,15 @@ export async function POST(request: Request) {
     typeof input.mileage !== "number" ||
     !Number.isFinite(input.mileage) ||
     input.mileage < 0 ||
-    input.mileage > 1_000_000
+    input.mileage > 1_000_000 ||
+    (input.bikeId !== undefined && (typeof input.bikeId !== "string" || !/^[bg]\d{1,20}$/.test(input.bikeId)))
   ) {
     return NextResponse.json({ error: "Invalid maintenance record" }, { status: 400 });
   }
 
   const record: MaintenanceRecord = {
     id: randomUUID(),
+    ...(input.bikeId ? { bikeId: input.bikeId } : {}),
     bike: input.bike,
     part: input.part,
     service: input.service,
@@ -73,7 +75,7 @@ export async function POST(request: Request) {
     await updateMaintenanceRecords((records) => [record, ...records]);
     return NextResponse.json(record, { status: 201 });
   } catch (error) {
-    if (error instanceof MaintenanceConflictError) return conflictResponse();
+    if (error instanceof ConflictError) return conflictResponse();
     console.error("Could not save maintenance record", error);
     return NextResponse.json({ error: "Could not save record" }, { status: 503 });
   }
@@ -94,7 +96,7 @@ export async function DELETE(request: Request) {
       return updated;
     });
   } catch (error) {
-    if (error instanceof MaintenanceConflictError) return conflictResponse();
+    if (error instanceof ConflictError) return conflictResponse();
     console.error("Could not delete maintenance record", error);
     return NextResponse.json({ error: "Could not delete record" }, { status: 503 });
   }

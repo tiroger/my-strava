@@ -4,11 +4,10 @@ import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3
 import { parse } from "csv-parse/sync";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import type {
-  Activity,
-  Bike,
-  MaintenanceRecord,
-} from "@/lib/activity-types";
+import type { Activity, Gear, MaintenanceRecord } from "@/lib/activity-types";
+import type { ActivityStream, StreamsIndex } from "@/lib/metrics/performance";
+import type { SavedRoute } from "@/lib/metrics/route-profile";
+import { settingsOrDefaults, type Settings } from "@/lib/settings";
 
 const s3 = new S3Client({});
 
@@ -18,11 +17,11 @@ export type ActivityRecord = Omit<Activity, "hasRoute"> & {
   polyline: string | null;
 };
 
-type StoredArray<T> = { etag: string; value: T[] };
+type Stored<T> = { etag: string; value: T };
 
-export class MaintenanceConflictError extends Error {
-  constructor() {
-    super("Maintenance records changed during the update");
+export class ConflictError extends Error {
+  constructor(what: string) {
+    super(`${what} changed during the update`);
   }
 }
 
@@ -48,6 +47,11 @@ function textOrFallback(...values: unknown[]): string {
     }
   }
   return "Activity";
+}
+
+function textOrNull(value: unknown): string | null {
+  const text = textOrFallback(value);
+  return text === "Activity" ? null : text;
 }
 
 function mapValue(value: unknown): string | null {
@@ -76,8 +80,14 @@ export function normalizeActivity(row: Record<string, unknown>): ActivityRecord 
     total_elevation_gain: numberOrNull(row.total_elevation_gain) ?? 0,
     average_speed: numberOrNull(row.average_speed) ?? 0,
     average_heartrate: numberOrNull(row.average_heartrate),
+    max_heartrate: numberOrNull(row.max_heartrate),
+    average_watts: numberOrNull(row.average_watts),
     weighted_average_watts: numberOrNull(row.weighted_average_watts),
+    max_watts: numberOrNull(row.max_watts),
+    kilojoules: numberOrNull(row.kilojoules),
+    suffer_score: numberOrNull(row.suffer_score),
     kudos_count: numberOrNull(row.kudos_count) ?? 0,
+    gear_id: textOrNull(row.gear_id),
     polyline:
       typeof row.map === "string"
         ? mapValue(row.map)
@@ -89,20 +99,24 @@ export function normalizeActivity(row: Record<string, unknown>): ActivityRecord 
   };
 }
 
-function normalizeBike(row: Record<string, unknown>): Bike {
+export function normalizeGear(row: Record<string, unknown>): Gear {
+  const id = textOrFallback(row.id, "");
+  const kind = row.kind === "shoe" || row.kind === "bike" ? row.kind : id.startsWith("g") ? "shoe" : "bike";
   return {
-    id: textOrFallback(row.id, ""),
-    name: textOrFallback(row.name, row.nickname, "Bike"),
-    brand: textOrFallback(row.brand, row.brand_name, ""),
-    model: textOrFallback(row.model, row.model_name, ""),
+    id,
+    name: textOrFallback(row.name, row.nickname, kind === "shoe" ? "Shoes" : "Bike"),
+    brand: textOrFallback(row.brand, row.brand_name, "").replace(/^Activity$/, ""),
+    model: textOrFallback(row.model, row.model_name, "").replace(/^Activity$/, ""),
     distance: numberOrNull(row.distance) ?? 0,
-    retired: row.retired === true,
+    retired: row.retired === true || row.retired === "True",
+    kind,
   };
 }
 
 function normalizeMaintenance(row: Record<string, unknown>): MaintenanceRecord {
   return {
     id: String(row.id ?? ""),
+    ...(typeof row.bikeId === "string" ? { bikeId: row.bikeId } : {}),
     bike: String(row.bike ?? ""),
     part: String(row.part ?? ""),
     service: String(row.service ?? ""),
@@ -111,9 +125,15 @@ function normalizeMaintenance(row: Record<string, unknown>): MaintenanceRecord {
   };
 }
 
+// A production build reads the CSV snapshot only when explicitly asked to (by
+// `npm run preview`), so a deployment missing its bucket fails loudly.
 function dataBucket(): string | undefined {
   const bucket = process.env.APP_DATA_BUCKET;
-  if (!bucket && process.env.NODE_ENV === "production") {
+  if (
+    !bucket &&
+    process.env.NODE_ENV === "production" &&
+    process.env.ALLOW_LOCAL_SNAPSHOT !== "true"
+  ) {
     throw new Error("APP_DATA_BUCKET is not configured");
   }
   return bucket;
@@ -121,8 +141,13 @@ function dataBucket(): string | undefined {
 
 const objectKeys = {
   activities: () => process.env.ACTIVITIES_S3_KEY ?? "activities.json",
-  bikes: () => process.env.BIKES_S3_KEY ?? "bikes.json",
+  gear: () => process.env.BIKES_S3_KEY ?? "bikes.json",
   maintenance: () => process.env.MAINTENANCE_S3_KEY ?? "maintenance.json",
+  settings: () => process.env.SETTINGS_S3_KEY ?? "settings.json",
+  streamsIndex: () => process.env.STREAMS_INDEX_S3_KEY ?? "streams-index.json",
+  stream: (id: string) => `${process.env.STREAMS_S3_PREFIX ?? "streams/"}${id}.json`,
+  savedRoutes: () => process.env.SAVED_ROUTES_S3_KEY ?? "saved-routes.json",
+  savedRoute: (id: string) => `${process.env.SAVED_ROUTES_S3_PREFIX ?? "saved-routes/"}${id}.json`,
 };
 
 function httpStatus(error: unknown): number | undefined {
@@ -130,101 +155,196 @@ function httpStatus(error: unknown): number | undefined {
     ?.httpStatusCode;
 }
 
-const objectCache = new Map<string, StoredArray<unknown>>();
+const objectCache = new Map<string, Stored<unknown>>();
 
-// Reads a JSON array from S3, reusing the parsed value while its ETag is
-// unchanged. A missing object (before the first sync) reads as empty.
-async function readArray<T>(
+/**
+ * Reads a JSON object from S3, reusing the parsed value while its ETag is
+ * unchanged. A missing object (before the first sync) reads as `empty`.
+ */
+async function readJson<T>(
   bucket: string,
   key: string,
-  label: string,
-  normalize: (row: Record<string, unknown>) => T,
-): Promise<StoredArray<T>> {
-  const cached = objectCache.get(key) as StoredArray<T> | undefined;
+  parseValue: (raw: unknown) => T,
+  empty: T,
+  cache = true,
+): Promise<Stored<T>> {
+  const cached = cache ? (objectCache.get(key) as Stored<T> | undefined) : undefined;
   try {
     const response = await s3.send(
       new GetObjectCommand({ Bucket: bucket, Key: key, IfNoneMatch: cached?.etag }),
     );
-    if (!response.Body) throw new Error(`${label} object has an empty body`);
-    const rows = JSON.parse(await response.Body.transformToString()) as unknown;
-    if (!Array.isArray(rows)) {
-      throw new Error(`${label} object must contain a JSON array`);
-    }
+    if (!response.Body) throw new Error(`${key} has an empty body`);
     const stored = {
       etag: response.ETag ?? "",
-      value: rows.map((row) => normalize(objectRecord(row, label))),
+      value: parseValue(JSON.parse(await response.Body.transformToString())),
     };
-    objectCache.set(key, stored);
+    if (cache) objectCache.set(key, stored);
     return stored;
   } catch (error) {
     if (cached && httpStatus(error) === 304) return cached;
     if (httpStatus(error) === 404) {
       objectCache.delete(key);
-      return { etag: "", value: [] };
+      return { etag: "", value: empty };
     }
     throw error;
   }
 }
 
+function arrayOf<T>(label: string, normalize: (row: Record<string, unknown>) => T) {
+  return (raw: unknown): T[] => {
+    if (!Array.isArray(raw)) throw new Error(`${label} object must contain a JSON array`);
+    return raw.map((row) => normalize(objectRecord(row, label)));
+  };
+}
+
+const objectOf = (label: string) => (raw: unknown) => objectRecord(raw, label);
+
+async function readLocalFile(file: string): Promise<string | null> {
+  try {
+    return await readFile(path.resolve(process.cwd(), "../../data", file), "utf8");
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
+    throw error;
+  }
+}
+
 async function readLocalCsv(file: string): Promise<Record<string, unknown>[]> {
-  const contents = await readFile(path.resolve(process.cwd(), "../../data", file), "utf8");
+  const contents = await readLocalFile(file);
+  if (!contents) return [];
   const rows = parse(contents, { columns: true, skip_empty_lines: true }) as
     | Record<string, unknown>[]
     | undefined;
   return rows ?? [];
 }
 
-async function loadActivityRecords(): Promise<StoredArray<ActivityRecord>> {
+async function loadActivityRecords(): Promise<Stored<ActivityRecord[]>> {
   const bucket = dataBucket();
   if (bucket) {
-    return readArray(bucket, objectKeys.activities(), "Activity", normalizeActivity);
+    return readJson(bucket, objectKeys.activities(), arrayOf("Activity", normalizeActivity), []);
   }
   const rows = await readLocalCsv("processed_data.csv");
   return { etag: "local", value: rows.map(normalizeActivity) };
 }
 
-async function loadBikes(): Promise<StoredArray<Bike>> {
+async function loadGear(): Promise<Stored<Gear[]>> {
   const bucket = dataBucket();
-  if (bucket) return readArray(bucket, objectKeys.bikes(), "Bike", normalizeBike);
+  if (bucket) return readJson(bucket, objectKeys.gear(), arrayOf("Gear", normalizeGear), []);
   const rows = await readLocalCsv("bike_data.csv");
   return {
     etag: "local",
-    value: rows.map((row) => ({
-      id: String(row.id ?? ""),
-      name: String(row.nickname || row.name || row.id || "Bike"),
-      brand: String(row.brand_name ?? ""),
-      model: String(row.model_name ?? ""),
-      distance: numberOrNull(row.converted_distance) ?? 0,
-      retired: row.retired === true || row.retired === "True",
-    })),
+    value: rows.map((row) =>
+      normalizeGear({ ...row, distance: row.converted_distance, name: row.nickname || row.name }),
+    ),
   };
 }
 
-async function loadMaintenance(): Promise<StoredArray<MaintenanceRecord>> {
+async function loadMaintenance(): Promise<Stored<MaintenanceRecord[]>> {
   const bucket = dataBucket();
   if (!bucket) return { etag: "local", value: [] };
-  return readArray(bucket, objectKeys.maintenance(), "Maintenance", normalizeMaintenance);
+  return readJson(bucket, objectKeys.maintenance(), arrayOf("Maintenance", normalizeMaintenance), []);
+}
+
+async function loadSettings(): Promise<Stored<Settings>> {
+  const bucket = dataBucket();
+  if (!bucket) return { etag: "local", value: settingsOrDefaults(null) };
+  return readJson(bucket, objectKeys.settings(), settingsOrDefaults, settingsOrDefaults(null));
+}
+
+export async function loadStreamsIndex(): Promise<StreamsIndex> {
+  const bucket = dataBucket();
+  if (bucket) {
+    const stored = await readJson(bucket, objectKeys.streamsIndex(), objectOf("Streams index"), {});
+    return stored.value as StreamsIndex;
+  }
+  const local = await readLocalFile("streams-index.json");
+  return local ? (JSON.parse(local) as StreamsIndex) : {};
+}
+
+export async function loadActivityStream(id: string): Promise<ActivityStream | null> {
+  const bucket = dataBucket();
+  if (bucket) {
+    // Individual streams are not cached: there are many and each is read rarely.
+    const stored = await readJson(bucket, objectKeys.stream(id), objectOf("Stream"), null, false);
+    return stored.value as ActivityStream | null;
+  }
+  const local = await readLocalFile(`streams/${id}.json`);
+  return local ? (JSON.parse(local) as ActivityStream) : null;
+}
+
+function normalizeSavedRoute(row: Record<string, unknown>): SavedRoute {
+  const type = row.type === "ride" || row.type === "run" ? row.type : "other";
+  const subTypes = ["road", "mtb", "cx", "trail", "mixed"] as const;
+  return {
+    id: String(row.id ?? ""),
+    name: textOrFallback(row.name, "Route"),
+    description: typeof row.description === "string" ? row.description : "",
+    type,
+    sub_type: subTypes.find((value) => value === row.sub_type) ?? null,
+    distance: numberOrNull(row.distance) ?? 0,
+    elevation_gain: numberOrNull(row.elevation_gain) ?? 0,
+    estimated_moving_time: numberOrNull(row.estimated_moving_time),
+    starred: row.starred === true,
+    created_at: String(row.created_at ?? ""),
+    updated_at: String(row.updated_at ?? ""),
+    profile_updated_at: typeof row.profile_updated_at === "string" ? row.profile_updated_at : null,
+    polyline: typeof row.polyline === "string" && row.polyline ? row.polyline : null,
+  };
+}
+
+export type RawRouteProfile = {
+  id: string;
+  updated_at: string;
+  distance: number[];
+  altitude: number[];
+  latlng: Array<[number, number]>;
+};
+
+export async function loadSavedRoutes(): Promise<SavedRoute[]> {
+  const bucket = dataBucket();
+  if (bucket) {
+    return (await readJson(bucket, objectKeys.savedRoutes(), arrayOf("Saved route", normalizeSavedRoute), [])).value;
+  }
+  const local = await readLocalFile("saved-routes.json");
+  return local ? arrayOf("Saved route", normalizeSavedRoute)(JSON.parse(local)) : [];
+}
+
+export async function loadSavedRouteProfile(id: string): Promise<RawRouteProfile | null> {
+  const bucket = dataBucket();
+  if (bucket) {
+    const stored = await readJson(bucket, objectKeys.savedRoute(id), objectOf("Route profile"), null, false);
+    return stored.value as RawRouteProfile | null;
+  }
+  const local = await readLocalFile(`saved-routes/${id}.json`);
+  return local ? (JSON.parse(local) as RawRouteProfile) : null;
+}
+
+export function toActivity({ polyline, ...activity }: ActivityRecord): Activity {
+  return { ...activity, hasRoute: !!polyline };
+}
+
+export async function loadActivities(): Promise<Activity[]> {
+  return (await loadActivityRecords()).value.map(toActivity);
 }
 
 export async function loadDashboardData(): Promise<{
   activities: Activity[];
-  bikes: Bike[];
+  gear: Gear[];
   maintenance: MaintenanceRecord[];
+  settings: Settings;
   version: string;
 }> {
-  const [activities, bikes, maintenance] = await Promise.all([
+  const [activities, gear, maintenance, settings] = await Promise.all([
     loadActivityRecords(),
-    loadBikes(),
+    loadGear(),
     loadMaintenance(),
+    loadSettings(),
   ]);
   return {
-    activities: activities.value.map(({ polyline, ...activity }) => ({
-      ...activity,
-      hasRoute: !!polyline,
-    })),
-    bikes: bikes.value,
+    activities: activities.value.map(toActivity),
+    gear: gear.value,
     maintenance: maintenance.value,
-    version: [activities.etag, bikes.etag, maintenance.etag].join("|"),
+    settings: settings.value,
+    version: [activities.etag, gear.etag, maintenance.etag, settings.etag].join("|"),
   };
 }
 
@@ -232,36 +352,50 @@ export async function loadDashboardData(): Promise<{
 export async function loadDataVersion(): Promise<string> {
   const objects = await Promise.all([
     loadActivityRecords(),
-    loadBikes(),
+    loadGear(),
     loadMaintenance(),
+    loadSettings(),
   ]);
   return objects.map((object) => object.etag).join("|");
 }
 
-export async function loadActivityRoute(id: string): Promise<string | null> {
+export async function loadActivityRecord(id: string): Promise<ActivityRecord | null> {
   const { value } = await loadActivityRecords();
-  return value.find((activity) => activity.id === id)?.polyline ?? null;
+  return value.find((activity) => activity.id === id) ?? null;
+}
+
+export async function loadActivityRoute(id: string): Promise<string | null> {
+  return (await loadActivityRecord(id))?.polyline ?? null;
+}
+
+export async function loadRoutes(): Promise<ActivityRecord[]> {
+  return (await loadActivityRecords()).value.filter((activity) => activity.polyline);
 }
 
 export async function loadMaintenanceRecords(): Promise<MaintenanceRecord[]> {
   return (await loadMaintenance()).value;
 }
 
+export async function loadSettingsValue(): Promise<Settings> {
+  return (await loadSettings()).value;
+}
+
 // Writes are conditional on the version that was read, so two concurrent
 // edits cannot silently overwrite each other.
-export async function updateMaintenanceRecords(
-  update: (records: MaintenanceRecord[]) => MaintenanceRecord[],
+async function writeConditionally<T>(
+  key: string,
+  current: Stored<T>,
+  value: T,
+  what: string,
 ): Promise<void> {
   const bucket = process.env.APP_DATA_BUCKET;
   if (!bucket) throw new Error("APP_DATA_BUCKET is not configured");
-  const key = objectKeys.maintenance();
-  const current = await readArray(bucket, key, "Maintenance", normalizeMaintenance);
   try {
     await s3.send(
       new PutObjectCommand({
         Bucket: bucket,
         Key: key,
-        Body: JSON.stringify(update(current.value)),
+        Body: JSON.stringify(value),
         ContentType: "application/json",
         CacheControl: "no-cache",
         ...(current.etag ? { IfMatch: current.etag } : { IfNoneMatch: "*" }),
@@ -270,8 +404,22 @@ export async function updateMaintenanceRecords(
   } catch (error) {
     if (httpStatus(error) === 412 || httpStatus(error) === 409) {
       objectCache.delete(key);
-      throw new MaintenanceConflictError();
+      throw new ConflictError(what);
     }
     throw error;
   }
+}
+
+export async function updateMaintenanceRecords(
+  update: (records: MaintenanceRecord[]) => MaintenanceRecord[],
+): Promise<void> {
+  if (!process.env.APP_DATA_BUCKET) throw new Error("APP_DATA_BUCKET is not configured");
+  const current = await loadMaintenance();
+  await writeConditionally(objectKeys.maintenance(), current, update(current.value), "Maintenance records");
+}
+
+export async function saveSettings(settings: Settings): Promise<void> {
+  if (!process.env.APP_DATA_BUCKET) throw new Error("APP_DATA_BUCKET is not configured");
+  const current = await loadSettings();
+  await writeConditionally(objectKeys.settings(), current, settings, "Settings");
 }

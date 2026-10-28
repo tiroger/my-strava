@@ -229,6 +229,222 @@ table tr:last-child td { border-bottom: 0; }
 .best-icon { color: #fc815a; font-size: 13px; }
 .year-review-empty { padding: 25px; color: #89949a; }
 
+/* ---- shared additions ---------------------------------------------- */
+.sport-icon { width: 1.05em; height: 1.05em; }
+.tone-orange { background: #32231e; color: #fd7851; }
+.tone-blue { background: #1d3038; color: #71b3c0; }
+.tone-green { background: #1f3529; color: #8bc69f; }
+.tone-gold { background: #3a3120; color: #e2bd6a; }
+.tone-violet { background: #2d2840; color: #ad97db; }
+.tone-muted { background: #22292d; color: #9aa4a9; }
+.welcome-row.compact { margin-bottom: 18px; }
+h1.section-title { margin: 8px 0 0; font-size: clamp(22px, 2.2vw, 28px); letter-spacing: -1px; }
+.crumb-link { border: 0; background: none; padding: 0; color: #9aa4a9; cursor: pointer; font-size: 12px; }
+.crumb-link:hover { color: #fff; }
+.owner-control { position: relative; }
+.owner-button { height: 31px; border: 1px solid #2a3136; border-radius: 7px; background: #171d21; padding: 0 11px; color: #b7c0c5; cursor: pointer; font: 10px var(--mono); letter-spacing: .6px; }
+.owner-button:hover { border-color: #66737b; color: #fff; }
+.owner-button.active { border-color: #4d6b55; color: #8fd0a6; }
+.owner-popover { position: absolute; z-index: 20; top: 40px; right: 0; width: 300px; padding: 14px; box-shadow: 0 16px 40px #0009; }
+.owner-popover label { color: #89949a; font-size: 9px; }
+.owner-popover p { margin: 8px 0 0; color: #78838a; font-size: 9px; line-height: 1.5; }
+.legend-swatch { display: inline-block; width: 14px; height: 3px; margin: 0 5px 2px 10px; border-radius: 2px; vertical-align: middle; }
+.legend-swatch:first-child { margin-left: 0; }
+.legend-swatch.orange { background: var(--orange); }
+.legend-swatch.light { background: #a9b4b9; }
+.legend-swatch.faint { background: #3a4449; }
+.legend-swatch.bar { height: 8px; width: 8px; background: rgba(252, 103, 55, .3); }
+.volume-card .year-metric-tabs { margin-top: 0; flex-wrap: wrap; justify-content: flex-end; }
+
+/* goals */
+.goals-card { min-width: 0; padding: 19px 20px; }
+.goal-row { margin-top: 18px; padding-top: 16px; border-top: 1px solid #252c30; }
+.goal-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.goal-header strong, .goal-header small { display: block; }
+.goal-header strong { color: #e3e7e8; font-size: 12px; font-weight: 600; }
+.goal-header small { margin-top: 3px; color: #7e898f; font-size: 9px; }
+.goal-editor { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 10px; }
+.goal-editor input, .settings-form input { width: 110px; height: 30px; border: 1px solid #333d42; border-radius: 5px; background: #111619; padding: 0 9px; color: #e6eaec; outline: none; font-size: 11px; }
+.goal-editor .primary-button { height: 30px; }
+.goal-track { position: relative; height: 10px; margin-top: 13px; border-radius: 5px; background: #20272b; }
+.goal-fill { position: absolute; inset: 0 auto 0 0; border-radius: 5px; }
+.goal-fill.ahead { background: linear-gradient(90deg, #2f7d55, #66bb8a); }
+.goal-fill.behind { background: linear-gradient(90deg, #a23d24, #fc6737); }
+.goal-pace { position: absolute; top: -4px; bottom: -4px; width: 2px; background: #e8ecee; border-radius: 1px; box-shadow: 0 0 0 2px #14191d; }
+.goal-figures { display: flex; justify-content: space-between; gap: 10px; margin-top: 9px; color: #9aa4a9; font-size: 10px; }
+.goal-figures strong { color: #f0f2f3; font: 600 13px var(--display); }
+.goal-ahead { color: #7ac89b; }
+.goal-behind { color: #ff8f70; }
+.goal-note { margin: 7px 0 0; color: #7b868c; font-size: 10px; line-height: 1.5; }
+
+/* active days */
+.active-days { margin-top: 12px; }
+.active-days-stats { display: flex; flex-wrap: wrap; gap: 26px; }
+.active-days-stats strong, .active-days-stats small { display: block; }
+.active-days-stats strong { color: #f0f2f3; font: 700 22px var(--display); }
+.active-days-stats small { margin-top: 2px; color: #7e898f; font-size: 9px; }
+.active-days-body { display: grid; grid-template-columns: minmax(0, 1fr) 220px; align-items: center; gap: 12px; margin-top: 6px; }
+.active-days.compact .active-days-body { grid-template-columns: minmax(0, 1fr); }
+.sport-mix { display: grid; grid-template-columns: 110px 1fr; align-items: center; }
+.active-days.compact .sport-mix { grid-template-columns: 112px minmax(0, 260px); }
+.sport-mix ul { margin: 0; padding: 0; list-style: none; }
+.sport-mix li { display: flex; align-items: center; gap: 7px; padding: 3px 0; color: #9aa4a9; font-size: 10px; }
+.sport-mix li i { width: 7px; height: 7px; border-radius: 2px; }
+.sport-mix li b { margin-left: auto; color: #dfe3e5; font: 10px var(--mono); }
+
+/* clickable rows */
+button.activity-row { width: 100%; border: 0; border-bottom: 1px solid #242a2e; background: transparent; cursor: pointer; text-align: left; }
+button.activity-row:hover strong { color: #ff9a7d; }
+.activity-avatar .sport-icon { width: 17px; height: 17px; }
+button.activity-name-cell { border: 0; background: transparent; padding: 0; cursor: pointer; text-align: left; font: inherit; }
+button.activity-name-cell:hover span:last-child { color: #ff9a7d; }
+
+/* maps */
+.route-map { width: 100%; margin-top: 14px; overflow: hidden; border: 1px solid #293237; border-radius: 7px; background: #10191c; }
+.map-loading { display: grid; min-height: 260px; place-items: center; color: #7e898f; font-size: 11px; }
+.heatmap-card { padding: 20px; }
+.maplibregl-ctrl-attrib { font-size: 9px; }
+
+/* activity detail */
+.activity-detail { display: grid; gap: 14px; }
+.detail-heading { padding: 18px 20px; }
+.back-button { padding: 0; }
+.detail-title { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+.detail-title p { margin: 4px 0 0; color: #87929a; font-size: 11px; }
+.detail-icon { width: 38px; height: 38px; }
+.detail-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px 18px; margin-top: 18px; padding-top: 16px; border-top: 1px solid #252c30; }
+.detail-stats small, .detail-stats strong { display: block; }
+.detail-stats small { color: #77838a; font: 8px var(--mono); letter-spacing: .9px; text-transform: uppercase; }
+.detail-stats strong { margin-top: 5px; color: #e6eaec; font: 600 14px var(--display); }
+.detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 14px; }
+.detail-map, .detail-analysis, .detail-chart, .zone-card { min-width: 0; padding: 18px 20px; }
+.analysis-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin: 14px 0 0; }
+.analysis-list div { padding: 10px 11px; border: 1px solid #262d32; border-radius: 6px; background: #12171a; }
+.analysis-list dt { color: #7b868c; font-size: 9px; }
+.analysis-list dd { margin: 5px 0 0; color: #f0f2f3; font: 700 18px var(--display); }
+.analysis-list small { display: block; margin-top: 5px; color: #687379; font-size: 8.5px; line-height: 1.4; }
+.peak-table { margin-top: 16px; }
+.zone-list { margin: 12px 0 0; padding: 0; list-style: none; }
+.zone-list li { display: grid; grid-template-columns: 130px 1fr 60px; align-items: center; gap: 10px; padding: 6px 0; color: #9aa4a9; font-size: 10px; }
+.zone-list li.top { color: #ff9a7d; }
+.zone-track { height: 8px; overflow: hidden; border-radius: 4px; background: #20272b; }
+.zone-track i { display: block; height: 100%; background: linear-gradient(90deg, #a23d24, #fc6737); }
+.zone-list b { color: #dfe3e5; font: 10px var(--mono); text-align: right; }
+
+/* performance */
+.performance-layout { display: grid; gap: 14px; }
+.performance-top { display: grid; grid-template-columns: minmax(280px, .7fr) minmax(0, 1.5fr); gap: 14px; }
+.performance-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(300px, .9fr); gap: 14px; }
+.ftp-card, .form-card, .curve-card, .profile-card, .settings-card, .methodology-card { min-width: 0; padding: 19px 20px; }
+.ftp-value { margin-top: 14px; color: #f0f2f3; font: 700 40px var(--display); letter-spacing: -1.5px; }
+.ftp-value span { margin-left: 4px; color: #8d989e; font: 500 15px var(--sans); letter-spacing: 0; }
+.ftp-value small { display: block; margin-top: 2px; color: #ff9a7d; font: 600 13px var(--sans); letter-spacing: 0; }
+.form-figures { display: flex; flex-wrap: wrap; gap: 26px; margin: 14px 0 4px; }
+.form-figures strong, .form-figures small { display: block; }
+.form-figures strong { color: #f0f2f3; font: 700 24px var(--display); }
+.form-figures small { margin-top: 3px; color: #7e898f; font-size: 9px; }
+.form-figures .blue { color: #7cbde0; }
+.form-figures .pink { color: #e88bb4; }
+.form-figures .green { color: #7ac89b; }
+.curve-card .year-metric-tabs { margin-top: 0; flex-wrap: wrap; justify-content: flex-end; }
+.key-durations { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; margin-top: 10px; padding-top: 12px; border-top: 1px solid #252c30; }
+.key-durations small, .key-durations strong, .key-durations em { display: block; }
+.key-durations small { color: #77838a; font: 8px var(--mono); }
+.key-durations strong { margin-top: 4px; color: #e6eaec; font: 600 13px var(--display); }
+.key-durations em { margin-top: 2px; color: #8b969c; font-size: 9px; font-style: normal; }
+.settings-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
+.settings-form label { display: flex; flex-direction: column; gap: 5px; color: #89949a; font-size: 9px; }
+.settings-form input { width: 100%; }
+.settings-form input:disabled { opacity: .65; }
+.settings-form small { color: #667177; font-size: 8.5px; }
+.settings-form .primary-button { height: 32px; align-self: end; }
+.methodology-card ul { margin: 12px 0 0; padding-left: 16px; color: #8f999f; font-size: 10px; line-height: 1.6; }
+.methodology-card li { margin-bottom: 6px; }
+.methodology-card b { color: #d7dcde; font-weight: 600; }
+
+/* garage */
+.garage-gear { display: grid; gap: 14px; align-content: start; min-width: 0; }
+.bike-card { padding: 0 0 12px; overflow: hidden; }
+.bike-card > strong, .bike-card > small, .bike-card > em, .bike-figures { margin-left: 13px; margin-right: 13px; }
+.bike-card > strong { margin-top: 11px; }
+.bike-card > em { margin-top: 8px; color: #6f7a80; font-size: 9px; font-style: normal; }
+.bike-card.retired { opacity: .7; }
+.bike-photo { display: block; width: 100%; height: 118px; object-fit: cover; border-bottom: 1px solid #263035; background: #141a1e; }
+.bike-photo.placeholder { display: grid; place-items: center; color: #fc815a; font-size: 30px; }
+.bike-figures { display: flex; gap: 18px; margin-top: 12px; }
+.bike-figures b, .bike-figures small { display: block; }
+.bike-figures b { color: #e3e7e8; font: 600 13px var(--mono); }
+.bike-figures small { margin-top: 2px; color: #7e898f; font-size: 9px; }
+.retired-toggle { margin-top: 14px; padding: 0; }
+.shoe-list { display: grid; gap: 2px; margin-top: 12px; }
+.shoe-list span { display: grid; grid-template-columns: 1fr auto; padding: 8px 0; border-top: 1px solid #252c30; }
+.shoe-list strong { color: #dce1e3; font-size: 11px; font-weight: 500; }
+.shoe-list small { grid-row: 2; color: #7e898f; font-size: 9px; }
+.shoe-list b { grid-row: 1 / span 2; align-self: center; color: #c4cccf; font: 11px var(--mono); }
+.bike-select { display: flex; flex-direction: column; gap: 6px; margin-top: 16px; color: #89949a; font-size: 9px; }
+.bike-select select { height: 34px; border: 1px solid #333d42; border-radius: 5px; background: #111619; padding: 0 9px; color: #e6eaec; }
+.schedule-list { margin-top: 6px; }
+.schedule-row { display: flex; align-items: center; gap: 10px; border-top: 1px solid #252c30; padding: 10px 1px; }
+.schedule-row span { flex: 1; min-width: 0; }
+.schedule-row strong, .schedule-row small { display: block; }
+.schedule-row strong { color: #dce1e3; font-size: 10px; font-weight: 500; }
+.schedule-row small { margin-top: 4px; color: #7e898f; font-size: 9px; }
+.schedule-row b { color: #8fd0a6; font: 10px var(--mono); white-space: nowrap; }
+.schedule-row.soon b { color: #e2bd6a; }
+.schedule-row.overdue b { color: #ff8877; }
+
+/* year in review */
+.year-review { display: grid; gap: 14px; }
+.year-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 12px; margin: 16px 0 4px; }
+.year-stats small, .year-stats strong, .year-stats em { display: block; }
+.year-stats small { color: #77838a; font: 8px var(--mono); letter-spacing: .8px; text-transform: uppercase; }
+.year-stats strong { margin-top: 4px; color: #f0f2f3; font: 700 19px var(--display); }
+.year-stats em { margin-top: 2px; color: #8b969c; font-size: 9px; font-style: normal; }
+button.best-row { width: 100%; border: 0; border-top: 1px solid #252c30; background: transparent; cursor: pointer; text-align: left; }
+button.best-row span { min-width: 0; }
+button.best-row small { display: block; margin-top: 3px; overflow: hidden; color: #6f7a80; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+button.best-row:hover strong { color: #ff9a7d; }
+.year-calendar-card, .active-days-card { min-width: 0; padding: 19px 20px; }
+
+/* saved routes */
+.saved-routes-layout { display: grid; grid-template-columns: 270px minmax(0, 1fr); gap: 14px; align-items: start; }
+.saved-route-list { position: sticky; top: 14px; padding: 18px 16px; }
+.saved-route-search { margin-top: 12px; }
+.saved-route-search input { width: 100%; }
+.saved-route-list .route-list { max-height: calc(100vh - 220px); }
+.saved-route-list .route-list-item { padding: 10px 8px; border-radius: 5px; }
+.star { color: #f2c94c; }
+.saved-route-detail { display: grid; gap: 14px; min-width: 0; }
+.saved-route-header, .saved-route-profile, .saved-route-map-card, .climbs-card { min-width: 0; padding: 18px 20px; }
+h2.saved-route-title { margin-top: 8px; font-size: clamp(20px, 2vw, 26px); letter-spacing: -.6px; }
+.elevation-profile { width: 100%; margin-top: 8px; overflow: hidden; user-select: none; }
+.elevation-profile svg { display: block; }
+.profile-axis { stroke: #3a4449; stroke-width: 1; }
+.profile-grid { stroke: #ffffff0d; stroke-width: 1; }
+.profile-label { fill: #7e898f; font: 9px var(--mono); }
+.profile-label.strong { fill: #c9d0d3; font-weight: 500; }
+.profile-line { fill: none; stroke: #0b0f11; stroke-width: 1.4; stroke-linejoin: round; }
+.profile-selection { fill: #ffffff1f; stroke: #ffffff66; stroke-width: 1; }
+.profile-callout { fill: #f0f2f3; font: 600 11px var(--sans); paint-order: stroke; stroke: #14191d; stroke-width: 4px; }
+.profile-cursor { stroke: #e8ecee; stroke-width: 1; stroke-dasharray: 3 3; }
+.profile-dot { fill: #fff; stroke: #0b0f11; stroke-width: 2; }
+.grade-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 8px; color: #8b969c; font: 9px var(--mono); }
+.grade-legend span { display: flex; align-items: center; gap: 5px; }
+.grade-legend i { width: 14px; height: 8px; border-radius: 2px; }
+.saved-route-grid { grid-template-columns: minmax(0, 1.5fr) minmax(320px, 1fr); }
+.climb-table { margin-top: 12px; }
+.climb-table th, .climb-table td { padding: 9px 6px; }
+.climb-table th:first-child, .climb-table td:first-child { padding-left: 0; }
+.climb-table tbody tr { cursor: pointer; }
+.climb-table tbody tr:hover td, .climb-table tr.selected td { background: #fc673712; color: #e8ecee; }
+.climb-category { display: inline-block; min-width: 46px; padding: 3px 6px; border-radius: 4px; background: #22292d; color: #aab4b8; font: 600 9px var(--mono); text-align: center; }
+.climb-category.cat-4 { background: #3a3120; color: #f2e14a; }
+.climb-category.cat-3 { background: #3d2a1b; color: #f7a43a; }
+.climb-category.cat-2 { background: #3f201b; color: #ff7a5c; }
+.climb-category.cat-1, .climb-category.cat-HC { background: #3d1828; color: #ff8fb8; }
+.mile-marker { display: grid; min-width: 20px; height: 20px; place-items: center; padding: 0 4px; border: 2px solid #0b0f11; border-radius: 10px; background: #e8ecee; color: #0b0f11; font: 700 9px var(--mono); }
+.route-cursor { width: 14px; height: 14px; border: 3px solid #0b0f11; border-radius: 50%; background: #fff; box-shadow: 0 0 0 2px #fff6; }
+
 @media (max-width: 1100px) {
   .sidebar { width: 205px; flex-basis: 205px; }
   .content { padding-right: 24px; padding-left: 24px; }
@@ -236,6 +452,12 @@ table tr:last-child td { border-bottom: 0; }
   .metrics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dashboard-grid { grid-template-columns: minmax(0, 1fr); }
   .route-layout, .garage-layout, .year-review-layout { grid-template-columns: 1fr; }
+  .performance-top, .performance-grid { grid-template-columns: 1fr; }
+  .saved-routes-layout, .saved-route-grid { grid-template-columns: 1fr; }
+  .saved-route-list { position: static; }
+  .saved-route-list .route-list { max-height: 260px; }
+  .active-days-body { grid-template-columns: 1fr; }
+  .key-durations { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (max-width: 700px) {
   .app-shell { display: block; }
@@ -273,6 +495,15 @@ table tr:last-child td { border-bottom: 0; }
   .route-canvas { height: 230px; }
   .route-stats { gap: 20px; }
   .service-form { align-items: stretch; flex-direction: column; }
+  .topbar-actions { gap: 8px; }
+  .strava-connect { display: none; }
+  .welcome-row { flex-direction: column; align-items: stretch; }
+  .sport-filter { align-self: flex-start; }
+  .card-heading { flex-wrap: wrap; gap: 10px; }
+  .detail-grid { grid-template-columns: 1fr; }
+  .settings-form { grid-template-columns: 1fr; }
+  .zone-list li { grid-template-columns: 100px 1fr 52px; }
+  .owner-popover { position: fixed; top: 110px; right: 12px; left: 12px; width: auto; }
 }
 
 @media (prefers-reduced-motion: reduce) {

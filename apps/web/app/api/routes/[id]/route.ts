@@ -1,4 +1,5 @@
 import { loadActivityRoute } from "@/lib/activities";
+import { publicPolyline } from "@/lib/polyline";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -13,7 +14,7 @@ export async function GET(
     return NextResponse.json({ error: "Invalid activity ID" }, { status: 400 });
   }
   try {
-    const polyline = await loadActivityRoute(id);
+    const polyline = publicPolyline(await loadActivityRoute(id));
     if (!polyline) {
       return NextResponse.json({ error: "Route not found" }, { status: 404 });
     }

@@ -1,128 +1,85 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
-import { formatCalendarDate, type Activity } from "@/lib/activity-types";
+import { SportIcon } from "@/components/sport-icon";
+import { formatCalendarDate, formatNumber, type Activity } from "@/lib/activity-types";
 
-function decodePolyline(encoded: string): Array<[number, number]> {
-  const coordinates: Array<[number, number]> = [];
-  let index = 0;
-  let latitude = 0;
-  let longitude = 0;
+const RouteMap = dynamic(() => import("@/components/route-map"), {
+  ssr: false,
+  loading: () => <div className="route-map map-loading">Loading map…</div>,
+});
 
-  while (index < encoded.length) {
-    let result = 0;
-    let shift = 0;
-    let byte = 0;
-    do {
-      byte = encoded.charCodeAt(index++) - 63;
-      result |= (byte & 0x1f) << shift;
-      shift += 5;
-    } while (byte >= 0x20 && index < encoded.length);
-    latitude += result & 1 ? ~(result >> 1) : result >> 1;
-
-    result = 0;
-    shift = 0;
-    do {
-      byte = encoded.charCodeAt(index++) - 63;
-      result |= (byte & 0x1f) << shift;
-      shift += 5;
-    } while (byte >= 0x20 && index < encoded.length);
-    longitude += result & 1 ? ~(result >> 1) : result >> 1;
-    coordinates.push([latitude / 1e5, longitude / 1e5]);
-  }
-  return coordinates;
-}
-
-function routePath(encoded: string): string {
-  const points = decodePolyline(encoded);
-  if (points.length < 2) return "";
-  const latitudes = points.map(([latitude]) => latitude);
-  const longitudes = points.map(([, longitude]) => longitude);
-  const minLat = Math.min(...latitudes);
-  const maxLat = Math.max(...latitudes);
-  const minLon = Math.min(...longitudes);
-  const maxLon = Math.max(...longitudes);
-  const latSpan = Math.max(maxLat - minLat, 0.00001);
-  const lonSpan = Math.max(maxLon - minLon, 0.00001);
-  return points
-    .map(([latitude, longitude], index) => {
-      const x = 20 + ((longitude - minLon) / lonSpan) * 360;
-      const y = 20 + ((maxLat - latitude) / latSpan) * 190;
-      return `${index === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(" ");
-}
-
-export function RouteExplorer({ activities }: { activities: Activity[] }) {
-  const routes = useMemo(
-    () => activities.filter((activity) => activity.hasRoute),
-    [activities],
-  );
+export function RouteExplorer({
+  activities,
+  onOpenActivity,
+}: {
+  activities: Activity[];
+  onOpenActivity: (id: string) => void;
+}) {
+  const routes = useMemo(() => activities.filter((activity) => activity.hasRoute), [activities]);
   const [selectedId, setSelectedId] = useState(routes[0]?.id ?? "");
-  // Decoded SVG paths by activity ID; null marks a route that failed to load.
-  const [paths, setPaths] = useState<Record<string, string | null>>({});
+  // Polylines by activity ID; null marks a route that is unavailable or hidden.
+  const [polylines, setPolylines] = useState<Record<string, string | null>>({});
   const selected = routes.find((activity) => activity.id === selectedId) ?? routes[0];
   const routeId = selected?.id;
 
   useEffect(() => {
-    if (!routeId || routeId in paths) return;
+    if (!routeId || routeId in polylines) return;
     let cancelled = false;
     fetch(`/api/routes/${encodeURIComponent(routeId)}`)
       .then(async (response) => {
         if (!response.ok) throw new Error("Route unavailable");
-        const { polyline } = (await response.json()) as { polyline: string };
-        return routePath(polyline);
+        return ((await response.json()) as { polyline: string }).polyline;
       })
       .catch(() => null)
-      .then((path) => {
-        if (!cancelled) setPaths((current) => ({ ...current, [routeId]: path }));
+      .then((polyline) => {
+        if (!cancelled) setPolylines((current) => ({ ...current, [routeId]: polyline }));
       });
     return () => {
       cancelled = true;
     };
-  }, [paths, routeId]);
+  }, [polylines, routeId]);
 
-  if (!routes.length) {
+  if (!selected) {
     return (
       <section className="card route-panel">
-        <h2>Route explorer</h2>
-        <p className="chart-subtitle">
-          Route maps will appear when activities include GPS data.
-        </p>
+        <h2>Routes</h2>
+        <p className="chart-subtitle">Route maps appear for activities recorded with GPS.</p>
       </section>
     );
   }
 
-  const path = paths[selected.id];
+  const polyline = polylines[selected.id];
   return (
     <section className="route-layout">
       <article className="card route-map-card">
-        <div className="card-kicker">GPS ROUTE</div>
-        <h2>{selected.name}</h2>
-        <div className="route-canvas">
-          <div className="map-grid" />
-          <svg viewBox="0 0 400 230" role="img" aria-label={`Route map for ${selected.name}`}>
-            {path && <path d={path} className="route-line-shadow" />}
-            {path && <path d={path} className="route-line" />}
-            {path && <circle cx="20" cy="20" r="4" className="route-start" />}
-          </svg>
-          <span className="route-map-label">
-            {path === undefined
-              ? "LOADING ROUTE…"
-              : path === null
-                ? "ROUTE UNAVAILABLE"
-                : "GPS TRACE · NOT TO SCALE"}
-          </span>
+        <div className="card-heading">
+          <div>
+            <div className="card-kicker">GPS ROUTE</div>
+            <h2>{selected.name}</h2>
+          </div>
+          <button className="text-button" type="button" onClick={() => onOpenActivity(selected.id)}>
+            Full analysis →
+          </button>
         </div>
+        {polyline ? (
+          <RouteMap routes={[{ id: selected.id, polyline }]} variant="route" height={380} />
+        ) : (
+          <div className="route-map map-loading">
+            {polyline === null ? "This route stays within the hidden area around home." : "Loading route…"}
+          </div>
+        )}
         <div className="route-stats">
-          <span><strong>{selected.distance.toFixed(1)}</strong><small>miles</small></span>
-          <span><strong>{Math.round(selected.total_elevation_gain).toLocaleString("en-US")}</strong><small>ft climbed</small></span>
-          <span><strong>{Math.round(selected.average_speed)}</strong><small>mph avg</small></span>
+          <span><strong>{formatNumber(selected.distance, 1)}</strong><small>miles</small></span>
+          <span><strong>{formatNumber(selected.total_elevation_gain)}</strong><small>ft climbed</small></span>
+          <span><strong>{formatNumber(selected.average_speed, 1)}</strong><small>mph average</small></span>
         </div>
+        <p className="chart-subtitle">The first and last 500 m of every route are hidden to keep home private.</p>
       </article>
       <article className="card route-list-card">
         <div className="card-kicker">YOUR MAPPED ACTIVITIES</div>
-        <h2>Routes</h2>
+        <h2>{formatNumber(routes.length)} routes</h2>
         <div className="route-list">
           {routes.map((activity) => (
             <button
@@ -131,9 +88,9 @@ export function RouteExplorer({ activities }: { activities: Activity[] }) {
               onClick={() => setSelectedId(activity.id)}
               type="button"
             >
-              <span className="activity-type-icon">⌖</span>
+              <span className="activity-type-icon"><SportIcon type={activity.type} /></span>
               <span><strong>{activity.name}</strong><small>{formatCalendarDate(activity.date)}</small></span>
-              <span className="route-distance">{activity.distance.toFixed(1)} mi</span>
+              <span className="route-distance">{formatNumber(activity.distance, 1)} mi</span>
             </button>
           ))}
         </div>

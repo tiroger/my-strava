@@ -21,8 +21,9 @@ export default async function Home() {
       dataVersion={data.version}
       initialActivities={data.activities}
       initialAdmin={isAdmin}
-      initialBikes={data.bikes}
+      initialGear={data.gear}
       initialMaintenance={data.maintenance}
+      initialSettings={data.settings}
       serverToday={localIsoDate()}
     />
   );
