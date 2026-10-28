@@ -23,6 +23,12 @@ locals {
   # infrastructure/terraform/README.md. Until then its User-Agent rule may
   # refuse Strava's webhook validation.
   amplify_web_acl = null # { name = "CreatedByAmplify-...", metric_name = "Amplify-..." }
+
+  # Paused 2026-10-27: windchaser already uses this rider's Strava API
+  # application, and the plan is to merge my-strava into windchaser rather
+  # than give it credentials of its own. Without credentials every scheduled
+  # run fails and raises an alarm.
+  schedules_enabled = false
 }
 
 module "observability" {
@@ -61,6 +67,7 @@ module "strava_ingestion" {
   saved_routes_s3_key    = module.web.saved_routes_s3_key
   saved_routes_s3_prefix = module.web.saved_routes_s3_prefix
   strava_athlete_id      = local.strava_athlete_id
+  schedules_enabled      = local.schedules_enabled
 }
 
 module "web_firewall" {

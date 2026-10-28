@@ -88,6 +88,7 @@ resource "aws_cloudwatch_event_rule" "reconciliation" {
   name                = "${local.name}-reconciliation"
   description         = "Reconcile recent Strava activities as a webhook safety net."
   schedule_expression = var.reconciliation_schedule
+  state               = var.schedules_enabled ? "ENABLED" : "DISABLED"
 }
 
 resource "aws_cloudwatch_event_target" "reconciliation" {
@@ -110,6 +111,7 @@ resource "aws_cloudwatch_event_rule" "streams_backfill" {
   name                = "${local.name}-streams-backfill"
   description         = "Fetch detailed streams for activities that do not have them yet."
   schedule_expression = var.streams_backfill_schedule
+  state               = var.schedules_enabled ? "ENABLED" : "DISABLED"
 }
 
 resource "aws_cloudwatch_event_target" "streams_backfill" {

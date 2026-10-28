@@ -146,3 +146,14 @@ variable "log_retention_days" {
   type        = number
   default     = 14
 }
+
+variable "schedules_enabled" {
+  description = <<-EOT
+    Whether the reconciliation and stream backfill schedules run. Off keeps an
+    environment deployed but idle, for example before its Strava credentials
+    exist, when every scheduled run would fail and raise an alarm. Webhook
+    events are unaffected.
+  EOT
+  type        = bool
+  default     = true
+}
