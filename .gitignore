@@ -16,8 +16,8 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+/lib/
+/lib64/
 parts/
 sdist/
 var/
@@ -169,8 +169,27 @@ cython_debug/
 
 /FIT_Files/
 
+# Next.js frontend and installed dependencies
+apps/web/.next/
+apps/web/node_modules/
+*.tsbuildinfo
+
+# Terraform local state, plans, and deployment archives
+.terraform/
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfplan.*
+infrastructure/terraform/modules/**/.terraform-build/
+infrastructure/terraform/environments/*/backend.hcl
+
+# Local deployment secrets
+.env.*
+!.env.example
+
 # All notebooks folder
 /notebooks/
 playground.ipynb
 
-*.fit
+*.fitapps/web/.npm/
