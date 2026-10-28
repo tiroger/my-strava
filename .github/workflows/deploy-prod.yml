@@ -1,0 +1,27 @@
+name: Deploy production
+
+on:
+  push:
+    branches: [production]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: my-strava-production
+  cancel-in-progress: false
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    needs: ci
+    uses: ./.github/workflows/deploy.yml
+    with:
+      github_environment: production
+      terraform_environment: prod
+    secrets:
+      ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
