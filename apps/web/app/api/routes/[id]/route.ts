@@ -1,12 +1,13 @@
 import { loadActivityRoute } from "@/lib/activities";
 import { publicPolyline } from "@/lib/polyline";
+import { revalidatedJson } from "@/lib/http";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
@@ -18,10 +19,7 @@ export async function GET(
     if (!polyline) {
       return NextResponse.json({ error: "Route not found" }, { status: 404 });
     }
-    return NextResponse.json(
-      { polyline },
-      { headers: { "Cache-Control": "public, max-age=300" } },
-    );
+    return revalidatedJson(request, { polyline });
   } catch (error) {
     console.error("Could not load activity route", error);
     return NextResponse.json({ error: "Could not load route" }, { status: 503 });

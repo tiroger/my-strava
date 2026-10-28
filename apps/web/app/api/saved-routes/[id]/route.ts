@@ -1,6 +1,7 @@
 import { loadSavedRouteProfile } from "@/lib/activities";
 import type { RouteProfile } from "@/lib/metrics/route-profile";
 import { hideRouteEnds } from "@/lib/polyline";
+import { revalidatedJson } from "@/lib/http";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -12,7 +13,7 @@ export const dynamic = "force-dynamic";
  * covers the whole route while the map never shows where it starts.
  */
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
@@ -31,7 +32,7 @@ export async function GET(
       altitude: raw.altitude,
       latlng: hideRouteEnds(raw.latlng ?? []),
     };
-    return NextResponse.json(profile, { headers: { "Cache-Control": "public, max-age=300" } });
+    return revalidatedJson(request, profile);
   } catch (error) {
     console.error("Could not load route profile", error);
     return NextResponse.json({ error: "Could not load route profile" }, { status: 503 });
