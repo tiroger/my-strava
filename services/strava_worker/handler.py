@@ -13,6 +13,9 @@ from typing import Any
 
 import boto3
 
+from . import saved_routes
+from . import streams as stream_math
+
 _s3 = boto3.client("s3")
 _secrets = boto3.client("secretsmanager")
 _STRAVA_API = "https://www.strava.com/api/v3"
@@ -36,7 +39,12 @@ _STORED_FIELDS = (
     "max_heartrate",
     "average_watts",
     "weighted_average_watts",
+    "max_watts",
+    "device_watts",
     "kilojoules",
+    "suffer_score",
+    "average_cadence",
+    "elev_high",
     "kudos_count",
     "gear_id",
     "trainer",
@@ -63,6 +71,10 @@ def _read_json(key: str, default: Any) -> Any:
             return default
         raise
     return json.loads(result["Body"].read())
+
+
+def _delete_object(key: str) -> None:
+    _s3.delete_object(Bucket=os.environ["APP_DATA_BUCKET"], Key=key)
 
 
 def _write_json(key: str, value: Any) -> None:
@@ -198,22 +210,218 @@ def _reconcile(access_token: str, activities: list[dict[str, Any]]) -> list[dict
     return list(by_id.values())
 
 
-def _sync_bikes(access_token: str) -> None:
-    athlete = _strava_get("/athlete", access_token)
-    bikes = []
-    for bike in athlete.get("bikes", []):
-        distance = float(bike.get("distance", 0))
-        bikes.append(
-            {
-                "id": str(bike.get("id", "")),
-                "name": bike.get("nickname") or bike.get("name") or "Bike",
-                "brand": bike.get("brand_name") or "",
-                "model": bike.get("model_name") or "",
-                "distance": round(distance * 0.000621371, 1),
-                "retired": bool(bike.get("retired", False)),
-            }
+def _gear_kind(gear_id: str, fallback: str = "bike") -> str:
+    # Strava prefixes bike IDs with "b" and shoe IDs with "g".
+    if gear_id.startswith("b"):
+        return "bike"
+    if gear_id.startswith("g"):
+        return "shoe"
+    return fallback
+
+
+def _gear_record(gear: dict[str, Any], kind: str, previous: dict[str, Any] | None = None) -> dict[str, Any]:
+    previous = previous or {}
+    gear_id = str(gear.get("id", ""))
+    return {
+        "id": gear_id,
+        "name": gear.get("nickname") or gear.get("name") or previous.get("name") or "Gear",
+        # Summary gear from /athlete has no brand or model; keep what /gear gave.
+        "brand": gear.get("brand_name") or previous.get("brand") or "",
+        "model": gear.get("model_name") or previous.get("model") or "",
+        "distance": round(float(gear.get("distance") or 0) * 0.000621371, 1),
+        "retired": bool(gear.get("retired", previous.get("retired", False))),
+        "kind": _gear_kind(gear_id, kind),
+    }
+
+
+def _sync_gear(access_token: str, activities: list[dict[str, Any]], refresh_athlete: bool) -> bool:
+    """Keep bikes.json covering every bike and shoe the activities use.
+
+    The athlete profile lists current gear, so reconciliation refreshes
+    distances from it. Gear it does not list, such as a bike added since the
+    last reconciliation or one now retired, is found through the gear IDs on
+    activities and looked up once. Stored gear is never dropped.
+    """
+    key = os.getenv("BIKES_S3_KEY", "bikes.json")
+    stored = {gear["id"]: gear for gear in _read_json(key, []) if gear.get("id")}
+    changed = False
+
+    if refresh_athlete:
+        athlete = _strava_get("/athlete", access_token)
+        for kind, listed in (("bike", athlete.get("bikes") or []), ("shoe", athlete.get("shoes") or [])):
+            for gear in listed:
+                gear_id = str(gear.get("id", ""))
+                if not gear_id:
+                    continue
+                # Gear first seen here is detailed below like any other new gear.
+                if gear_id in stored and "kind" in stored[gear_id]:
+                    stored[gear_id] = _gear_record(gear, kind, stored[gear_id])
+                    changed = True
+
+    used = {str(activity["gear_id"]) for activity in activities if activity.get("gear_id")}
+    if refresh_athlete:
+        used |= {
+            str(gear.get("id")) for gear in (athlete.get("bikes") or []) + (athlete.get("shoes") or [])
+            if gear.get("id")
+        }
+    # Records without a kind predate gear discovery and lack brand and model.
+    unknown = sorted(gear_id for gear_id in used if "kind" not in stored.get(gear_id, {}))
+    for gear_id in unknown:
+        try:
+            gear = _strava_get(f"/gear/{gear_id}", access_token)
+        except StravaHTTPError as error:
+            if error.status != 404:
+                raise
+            print(f"Gear {gear_id} is not visible to this athlete; skipped")
+            continue
+        stored[gear_id] = _gear_record(gear, _gear_kind(gear_id), stored.get(gear_id))
+        changed = True
+
+    if changed:
+        gear_list = sorted(
+            stored.values(),
+            key=lambda gear: (gear.get("kind") != "bike", bool(gear.get("retired")), -float(gear.get("distance") or 0)),
         )
-    _write_json(os.getenv("BIKES_S3_KEY", "bikes.json"), bikes)
+        _write_json(key, gear_list)
+    return changed
+
+
+def _streams_key(activity_id: str) -> str:
+    return f"{os.getenv('STREAMS_S3_PREFIX', 'streams/')}{activity_id}.json"
+
+
+def _fetch_streams(activity: dict[str, Any], access_token: str) -> dict[str, Any]:
+    """Fetch, store, and summarize one activity's streams; return its index entry."""
+    activity_id = str(activity["id"])
+    entry: dict[str, Any] = {
+        "date": activity.get("start_date_local"),
+        "sport_type": activity.get("sport_type") or activity.get("type"),
+        "has_streams": False,
+    }
+    empty_summary = stream_math.summarize({})
+    try:
+        payload = _strava_get(
+            f"/activities/{int(activity_id)}/streams",
+            access_token,
+            {"keys": ",".join(stream_math.STREAM_KEYS), "key_by_type": "true"},
+        )
+    except StravaHTTPError as error:
+        if error.status != 404:
+            raise
+        return {**entry, **{key: None for key in empty_summary}, "power_bests": {}}
+
+    data = stream_math.by_type(payload)
+    if not data.get("time"):
+        return {**entry, **{key: None for key in empty_summary}, "power_bests": {}}
+    summary = stream_math.summarize(data)
+    _write_json(
+        _streams_key(activity_id),
+        {
+            "id": activity_id,
+            "start_date_local": entry["date"],
+            "sport_type": entry["sport_type"],
+            "samples": stream_math.samples(data),
+            "summary": summary,
+        },
+    )
+    return {**entry, "has_streams": True, **summary}
+
+
+def _fetch_streams_for(
+    activities: list[dict[str, Any]],
+    access_token: str,
+    index: dict[str, Any],
+    deadline: float,
+    limit: int,
+) -> int:
+    """Fetch streams for activities in order until the limit, the deadline, or Strava's quota."""
+    fetched = 0
+    for activity in activities:
+        if fetched >= limit or time.monotonic() > deadline:
+            break
+        try:
+            index[str(activity["id"])] = _fetch_streams(activity, access_token)
+        except StravaHTTPError as error:
+            if error.status == 429:
+                print("Strava rate limit reached; remaining streams wait for the next backfill")
+                break
+            print(f"Streams for {activity['id']} failed with HTTP {error.status}; left for backfill")
+            continue
+        except RuntimeError as error:
+            print(f"Streams for {activity['id']} failed: {error}; left for backfill")
+            continue
+        fetched += 1
+    return fetched
+
+
+def _saved_route_key(route_id: str) -> str:
+    return f"{os.getenv('SAVED_ROUTES_S3_PREFIX', 'saved-routes/')}{route_id}.json"
+
+
+def _list_saved_routes(access_token: str) -> list[dict[str, Any]]:
+    athlete_id = os.getenv("STRAVA_ATHLETE_ID") or str(_strava_get("/athlete", access_token)["id"])
+    routes: list[dict[str, Any]] = []
+    page = 1
+    while True:
+        batch = _strava_get(f"/athletes/{athlete_id}/routes", access_token, {"page": page, "per_page": 100})
+        routes += batch or []
+        if not batch or len(batch) < 100:
+            return routes
+        page += 1
+        if page > 50:
+            raise RuntimeError("Strava pagination limit exceeded while listing routes")
+
+
+def _sync_saved_routes(access_token: str, deadline: float) -> int:
+    """Store public saved routes and fetch the profiles of new or edited ones."""
+    key = os.getenv("SAVED_ROUTES_S3_KEY", "saved-routes.json")
+    limit = int(os.getenv("SAVED_ROUTES_PROFILE_LIMIT", "30"))
+    previous = {route["id"]: route for route in _read_json(key, [])}
+    listed = [route for route in _list_saved_routes(access_token) if not route.get("private")]
+    records = {
+        saved_routes.route_id(route): saved_routes.summary(
+            route, (previous.get(saved_routes.route_id(route)) or {}).get("profile_updated_at")
+        )
+        for route in listed
+    }
+
+    # Routes deleted or made private take their profiles with them.
+    for route_id, old in previous.items():
+        if route_id not in records and old.get("profile_updated_at"):
+            _delete_object(_saved_route_key(route_id))
+
+    stale = sorted(
+        (route for route in listed if records[saved_routes.route_id(route)]["profile_updated_at"] != route.get("updated_at")),
+        key=lambda route: route.get("updated_at") or "",
+        reverse=True,
+    )
+    fetched = 0
+    for route in stale:
+        if fetched >= limit or time.monotonic() > deadline:
+            break
+        route_id = saved_routes.route_id(route)
+        try:
+            payload = _strava_get(f"/routes/{route_id}/streams", access_token)
+        except StravaHTTPError as error:
+            if error.status == 429:
+                print("Strava rate limit reached; remaining route profiles wait for the next sync")
+                break
+            print(f"Profile for route {route_id} failed with HTTP {error.status}; skipped")
+            continue
+        except RuntimeError as error:
+            print(f"Profile for route {route_id} failed: {error}; skipped")
+            continue
+        fetched += 1
+        profile = saved_routes.profile(route, payload)
+        if profile:
+            _write_json(_saved_route_key(route_id), profile)
+            records[route_id]["profile_updated_at"] = route.get("updated_at")
+
+    _write_json(
+        key,
+        sorted(records.values(), key=lambda route: route.get("updated_at") or "", reverse=True),
+    )
+    return fetched
 
 
 def _process_event(event: dict[str, Any], access_token: str, activities: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -248,38 +456,85 @@ def _records_from_sqs(record: dict[str, Any]) -> dict[str, Any]:
     body = json.loads(record["body"])
     if body.get("source") == "scheduled-reconciliation":
         return {"source": "reconcile"}
+    if body.get("source") == "streams-backfill":
+        return {"source": "streams-backfill"}
+    if body.get("source") == "routes-sync":
+        return {"source": "routes-sync"}
     return body
 
 
-def main(event: dict[str, Any], _context: Any) -> dict[str, Any]:
+def _deadline(context: Any) -> float:
+    # Leave time to write what was fetched before Lambda stops the invocation.
+    remaining_ms = getattr(context, "get_remaining_time_in_millis", lambda: 300_000)()
+    return time.monotonic() + max(0.0, remaining_ms / 1000 - 30)
+
+
+def main(event: dict[str, Any], context: Any) -> dict[str, Any]:
     messages = event.get("Records", [])
     if messages:
         events = [_records_from_sqs(record) for record in messages]
     else:
         events = [event]
 
+    deadline = _deadline(context)
     access_token = _credentials()
     activities_key = os.getenv("ACTIVITIES_S3_KEY", "activities.json")
     state_key = os.getenv("SYNC_STATE_S3_KEY", "sync-state.json")
+    index_key = os.getenv("STREAMS_INDEX_S3_KEY", "streams-index.json")
+    backfill_limit = int(os.getenv("STREAMS_BACKFILL_LIMIT", "50"))
     activities = _read_json(activities_key, [])
+    index = _read_json(index_key, {})
 
     changed = False
     reconciled = False
+    index_changed = False
+    stream_targets: list[str] = []
+    backfill = False
+    routes_sync = False
     for item in events:
         if item.get("source") == "reconcile":
+            before = {activity["id"] for activity in activities}
             activities = _reconcile(access_token, activities)
             changed = True
             reconciled = True
+            # Only activities this run added; older gaps are the backfill's job.
+            stream_targets += [activity["id"] for activity in activities if activity["id"] not in before]
+        elif item.get("source") == "streams-backfill":
+            backfill = True
+        elif item.get("source") == "routes-sync":
+            routes_sync = True
         elif item.get("object_type") == "activity":
+            activity_id = str(item.get("object_id"))
             activities = _process_event(item, access_token, activities)
             changed = True
+            if any(activity["id"] == activity_id for activity in activities):
+                stream_targets.append(activity_id)
+            elif activity_id in index:
+                # Deleted, or now private: its detailed data goes with it.
+                _delete_object(_streams_key(activity_id))
+                del index[activity_id]
+                index_changed = True
 
     if changed:
         activities = [_compact(activity) for activity in activities if _is_public(activity)]
         activities.sort(key=lambda activity: activity.get("start_date_local", ""), reverse=True)
         _write_json(activities_key, activities)
+
+    _sync_gear(access_token, activities, refresh_athlete=reconciled)
+
+    wanted = set(stream_targets)
+    targets = [
+        activity for activity in activities
+        if activity["id"] not in index and (backfill or activity["id"] in wanted)
+    ]
+    targets.sort(key=lambda activity: activity.get("start_date_local", ""), reverse=True)
+    streams_fetched = _fetch_streams_for(targets, access_token, index, deadline, backfill_limit) if targets else 0
+    if streams_fetched or index_changed:
+        _write_json(index_key, index)
+
+    route_profiles_fetched = _sync_saved_routes(access_token, deadline) if reconciled or routes_sync else 0
+
     if reconciled:
-        _sync_bikes(access_token)
         _write_json(
             state_key,
             {
@@ -287,4 +542,10 @@ def main(event: dict[str, Any], _context: Any) -> dict[str, Any]:
                 "updated_at": datetime.now(timezone.utc).isoformat(),
             },
         )
-    return {"ok": True, "events": len(events), "activities": len(activities)}
+    return {
+        "ok": True,
+        "events": len(events),
+        "activities": len(activities),
+        "streams_fetched": streams_fetched,
+        "route_profiles_fetched": route_profiles_fetched,
+    }

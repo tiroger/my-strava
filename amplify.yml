@@ -22,7 +22,7 @@ applications:
             # Amplify exposes environment variables only during the build, so
             # the server runtime reads them from .env.production. These are
             # resource names and ARNs; secret values stay in Secrets Manager.
-            - env | grep -E '^(APP_DATA_BUCKET|ACTIVITIES_S3_KEY|BIKES_S3_KEY|MAINTENANCE_S3_KEY|WEB_SECRET_ARN|STRAVA_EVENTS_QUEUE_URL|STRAVA_ATHLETE_ID|STRAVA_SUBSCRIPTION_ID)=' > .env.production
+            - env | grep -E '^(APP_DATA_BUCKET|ACTIVITIES_S3_KEY|BIKES_S3_KEY|MAINTENANCE_S3_KEY|STREAMS_S3_PREFIX|STREAMS_INDEX_S3_KEY|SAVED_ROUTES_S3_KEY|SAVED_ROUTES_S3_PREFIX|SETTINGS_S3_KEY|WEB_SECRET_ARN|STRAVA_EVENTS_QUEUE_URL|STRAVA_ATHLETE_ID|STRAVA_SUBSCRIPTION_ID)=' > .env.production
             - grep -q '^APP_DATA_BUCKET=' .env.production
             - grep -q '^WEB_SECRET_ARN=' .env.production
             - npm run build

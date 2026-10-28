@@ -64,22 +64,32 @@ data "aws_iam_policy_document" "worker" {
       "${var.data_bucket_arn}/${var.activities_s3_key}",
       "${var.data_bucket_arn}/${var.bikes_s3_key}",
       "${var.data_bucket_arn}/${var.sync_state_s3_key}",
+      "${var.data_bucket_arn}/${var.streams_index_s3_key}",
+      "${var.data_bucket_arn}/${var.saved_routes_s3_key}",
     ]
   }
 
-  # Without ListBucket, the first sync would read a missing object as
-  # AccessDenied instead of NoSuchKey and fail.
+  # Streams go when their activity is deleted or made private, and a saved
+  # route's profile when the route is.
+  statement {
+    sid     = "ManageDetailObjects"
+    effect  = "Allow"
+    actions = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
+    resources = [
+      "${var.data_bucket_arn}/${var.streams_s3_prefix}*",
+      "${var.data_bucket_arn}/${var.saved_routes_s3_prefix}*",
+    ]
+  }
+
+  # Without ListBucket, S3 answers a missing object with AccessDenied rather
+  # than NoSuchKey and the first sync would fail. It is unconditioned because
+  # the 404 check carries no s3:prefix for a condition to match; the bucket
+  # holds only this application's data.
   statement {
     sid       = "DistinguishMissingObjects"
     effect    = "Allow"
     actions   = ["s3:ListBucket"]
     resources = [var.data_bucket_arn]
-
-    condition {
-      test     = "StringEquals"
-      variable = "s3:prefix"
-      values   = [var.activities_s3_key, var.bikes_s3_key, var.sync_state_s3_key]
-    }
   }
 
   statement {
@@ -118,12 +128,22 @@ resource "aws_lambda_function" "worker" {
 
   environment {
     variables = {
-      APP_DATA_BUCKET   = var.data_bucket
-      ACTIVITIES_S3_KEY = var.activities_s3_key
-      BIKES_S3_KEY      = var.bikes_s3_key
-      SYNC_STATE_S3_KEY = var.sync_state_s3_key
-      STRAVA_SECRET_ARN = aws_secretsmanager_secret.strava.arn
-      STRAVA_ATHLETE_ID = var.strava_athlete_id == null ? "" : var.strava_athlete_id
+      APP_DATA_BUCKET      = var.data_bucket
+      ACTIVITIES_S3_KEY    = var.activities_s3_key
+      BIKES_S3_KEY         = var.bikes_s3_key
+      SYNC_STATE_S3_KEY    = var.sync_state_s3_key
+      STREAMS_S3_PREFIX    = var.streams_s3_prefix
+      STREAMS_INDEX_S3_KEY = var.streams_index_s3_key
+      # One backfill batch: comfortably inside both Strava's 15-minute read
+      # limit and the worker timeout, which the handler also guards.
+      STREAMS_BACKFILL_LIMIT = tostring(var.streams_backfill_limit)
+      SAVED_ROUTES_S3_KEY    = var.saved_routes_s3_key
+      SAVED_ROUTES_S3_PREFIX = var.saved_routes_s3_prefix
+      # Profiles are fetched only for new or edited routes, so this caps the
+      # first sync; later runs rarely fetch any.
+      SAVED_ROUTES_PROFILE_LIMIT = tostring(var.saved_routes_profile_limit)
+      STRAVA_SECRET_ARN          = aws_secretsmanager_secret.strava.arn
+      STRAVA_ATHLETE_ID          = var.strava_athlete_id == null ? "" : var.strava_athlete_id
     }
   }
 

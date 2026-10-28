@@ -55,8 +55,8 @@ resource "aws_iam_role_policy" "enqueue" {
   policy = data.aws_iam_policy_document.enqueue.json
 }
 
-# The daily reconciliation enters through the same queue and message group, so
-# it can never interleave with a webhook event.
+# The daily reconciliation and the streams backfill enter through the same
+# queue and message group, so neither can interleave with a webhook event.
 data "aws_iam_policy_document" "scheduled_enqueue" {
   statement {
     effect    = "Allow"
@@ -71,7 +71,10 @@ data "aws_iam_policy_document" "scheduled_enqueue" {
     condition {
       test     = "ArnEquals"
       variable = "aws:SourceArn"
-      values   = [aws_cloudwatch_event_rule.reconciliation.arn]
+      values = [
+        aws_cloudwatch_event_rule.reconciliation.arn,
+        aws_cloudwatch_event_rule.streams_backfill.arn,
+      ]
     }
   }
 }
@@ -92,6 +95,28 @@ resource "aws_cloudwatch_event_target" "reconciliation" {
   target_id = "strava-event-queue"
   arn       = aws_sqs_queue.events.arn
   input     = jsonencode({ source = "scheduled-reconciliation" })
+
+  sqs_target {
+    message_group_id = var.message_group_id
+  }
+
+  depends_on = [aws_sqs_queue_policy.events]
+}
+
+# Detailed streams cost one Strava call per activity, so history is filled in
+# a batch at a time; a full import completes over a few days within the daily
+# API allowance.
+resource "aws_cloudwatch_event_rule" "streams_backfill" {
+  name                = "${local.name}-streams-backfill"
+  description         = "Fetch detailed streams for activities that do not have them yet."
+  schedule_expression = var.streams_backfill_schedule
+}
+
+resource "aws_cloudwatch_event_target" "streams_backfill" {
+  rule      = aws_cloudwatch_event_rule.streams_backfill.name
+  target_id = "strava-event-queue"
+  arn       = aws_sqs_queue.events.arn
+  input     = jsonencode({ source = "streams-backfill" })
 
   sqs_target {
     message_group_id = var.message_group_id

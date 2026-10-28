@@ -44,3 +44,23 @@ output "bikes_s3_key" {
   description = "Object holding the synced bikes."
   value       = var.bikes_s3_key
 }
+
+output "streams_s3_prefix" {
+  description = "Prefix holding each activity's detailed streams."
+  value       = var.streams_s3_prefix
+}
+
+output "streams_index_s3_key" {
+  description = "Object summarizing synced streams."
+  value       = var.streams_index_s3_key
+}
+
+output "saved_routes_s3_key" {
+  description = "Object listing public saved routes."
+  value       = var.saved_routes_s3_key
+}
+
+output "saved_routes_s3_prefix" {
+  description = "Prefix holding each saved route's elevation profile."
+  value       = var.saved_routes_s3_prefix
+}

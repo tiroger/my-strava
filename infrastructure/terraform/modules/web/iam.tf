@@ -68,30 +68,34 @@ data "aws_iam_policy_document" "compute" {
       "${aws_s3_bucket.data.arn}/${var.activities_s3_key}",
       "${aws_s3_bucket.data.arn}/${var.bikes_s3_key}",
       "${aws_s3_bucket.data.arn}/${var.maintenance_s3_key}",
+      "${aws_s3_bucket.data.arn}/${var.streams_index_s3_key}",
+      "${aws_s3_bucket.data.arn}/${var.settings_s3_key}",
+      "${aws_s3_bucket.data.arn}/${var.streams_s3_prefix}*",
+      "${aws_s3_bucket.data.arn}/${var.saved_routes_s3_key}",
+      "${aws_s3_bucket.data.arn}/${var.saved_routes_s3_prefix}*",
     ]
   }
 
   # Without ListBucket, S3 answers a missing object with AccessDenied rather
   # than NoSuchKey, and the dashboard could not tell "not synced yet" apart
-  # from a permissions failure.
+  # from a permissions failure. It is unconditioned because the 404 check
+  # carries no s3:prefix for a condition to match.
   statement {
     sid       = "DistinguishMissingObjects"
     effect    = "Allow"
     actions   = ["s3:ListBucket"]
     resources = [aws_s3_bucket.data.arn]
-
-    condition {
-      test     = "StringEquals"
-      variable = "s3:prefix"
-      values   = [var.activities_s3_key, var.bikes_s3_key, var.maintenance_s3_key]
-    }
   }
 
+  # The owner's edits: the maintenance log and settings such as goals.
   statement {
-    sid       = "WriteMaintenanceLog"
-    effect    = "Allow"
-    actions   = ["s3:PutObject"]
-    resources = ["${aws_s3_bucket.data.arn}/${var.maintenance_s3_key}"]
+    sid     = "WriteOwnerEdits"
+    effect  = "Allow"
+    actions = ["s3:PutObject"]
+    resources = [
+      "${aws_s3_bucket.data.arn}/${var.maintenance_s3_key}",
+      "${aws_s3_bucket.data.arn}/${var.settings_s3_key}",
+    ]
   }
 
   statement {

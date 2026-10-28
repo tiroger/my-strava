@@ -15,6 +15,11 @@ locals {
     ACTIVITIES_S3_KEY       = var.activities_s3_key
     BIKES_S3_KEY            = var.bikes_s3_key
     MAINTENANCE_S3_KEY      = var.maintenance_s3_key
+    STREAMS_S3_PREFIX       = var.streams_s3_prefix
+    STREAMS_INDEX_S3_KEY    = var.streams_index_s3_key
+    SAVED_ROUTES_S3_KEY     = var.saved_routes_s3_key
+    SAVED_ROUTES_S3_PREFIX  = var.saved_routes_s3_prefix
+    SETTINGS_S3_KEY         = var.settings_s3_key
     WEB_SECRET_ARN          = aws_secretsmanager_secret.web.arn
     STRAVA_EVENTS_QUEUE_URL = var.strava_events_queue_url == null ? "" : var.strava_events_queue_url
     STRAVA_ATHLETE_ID       = var.strava_athlete_id == null ? "" : var.strava_athlete_id

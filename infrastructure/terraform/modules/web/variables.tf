@@ -70,6 +70,36 @@ variable "maintenance_s3_key" {
   default     = "maintenance.json"
 }
 
+variable "streams_s3_prefix" {
+  description = "Prefix holding each activity's detailed streams, written by the worker."
+  type        = string
+  default     = "streams/"
+}
+
+variable "streams_index_s3_key" {
+  description = "Object summarizing synced streams and their effort summaries, written by the worker."
+  type        = string
+  default     = "streams-index.json"
+}
+
+variable "saved_routes_s3_key" {
+  description = "Object listing public saved routes, written by the worker."
+  type        = string
+  default     = "saved-routes.json"
+}
+
+variable "saved_routes_s3_prefix" {
+  description = "Prefix holding each saved route's elevation profile, written by the worker."
+  type        = string
+  default     = "saved-routes/"
+}
+
+variable "settings_s3_key" {
+  description = "Object holding owner-edited settings such as goals."
+  type        = string
+  default     = "settings.json"
+}
+
 variable "strava_events_queue_url" {
   description = "Queue the webhook endpoint enqueues to. Null acknowledges and drops events."
   type        = string

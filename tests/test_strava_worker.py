@@ -11,6 +11,7 @@ boto3.client = lambda _service: None
 sys.modules.setdefault("boto3", boto3)
 
 from services.strava_worker import handler
+from services.strava_worker import streams as stream_math
 from services.strava_worker.handler import _to_processed
 
 
@@ -200,6 +201,383 @@ class ReconcileTests(unittest.TestCase):
         ):
             result = handler._reconcile("token", stored)
         self.assertEqual([(a["id"], a["name"]) for a in result], [("1", "Renamed")])
+
+
+class StreamMathTests(unittest.TestCase):
+    def test_one_hz_fills_short_gaps_and_drops_pauses(self):
+        series = stream_math.one_hz(
+            [0, 1, 2, 5, 12, 13],
+            {"watts": [100, 110, 120, 130, 140, 150]},
+        )
+        # 2 -> 5 is a 3 s dropout, filled; 5 -> 12 is a pause, removed.
+        self.assertEqual(series["watts"], [100, 110, 120, 120, 120, 130, 140, 150])
+
+    def test_power_bests_use_full_windows_only(self):
+        bests = stream_math.power_bests([0, 0, 100, 200, 300, 0])
+        self.assertEqual(bests, {"1": 300, "5": 120})
+
+    def test_normalized_power(self):
+        self.assertEqual(stream_math.normalized_power([200] * 120), 200.0)
+        self.assertIsNone(stream_math.normalized_power([200] * 29))
+        watts = [100] * 30 + [300] * 30
+        rolling = [sum(watts[end - 30:end]) / 30 for end in range(30, 61)]
+        expected = round((sum(value ** 4 for value in rolling) / len(rolling)) ** 0.25, 1)
+        self.assertEqual(stream_math.normalized_power(watts), expected)
+
+    def test_summary_halves_and_moving_time(self):
+        summary = stream_math.summarize({
+            "time": list(range(10)),
+            "watts": [100] * 5 + [200] * 5,
+            "heartrate": [120] * 5 + [150] * 5,
+        })
+        self.assertEqual(summary["moving_seconds"], 10)
+        self.assertEqual(summary["first_half"], {"watts": 100.0, "heartrate": 120.0})
+        self.assertEqual(summary["second_half"], {"watts": 200.0, "heartrate": 150.0})
+        self.assertEqual(summary["average_watts"], 150)
+        self.assertEqual(summary["max_heartrate"], 150)
+
+    def test_samples_downsample_and_convert(self):
+        long = stream_math.samples({"time": list(range(5000)), "distance": [1609.344] * 5000})
+        self.assertLessEqual(len(long["time"]), 1200)
+        self.assertEqual(long["time"][0], 0)
+        self.assertEqual(long["time"][-1], 4999)
+        self.assertEqual(long["distance"][0], 1.0)
+        short = stream_math.samples({"time": list(range(100)), "watts": [1.6] * 100})
+        self.assertEqual(len(short["time"]), 100)
+        self.assertEqual(short["watts"][0], 2)
+        self.assertNotIn("heartrate", short)
+
+    def test_samples_keep_aligned_coordinates(self):
+        track = stream_math.samples(
+            {"time": list(range(3000)), "latlng": [[37.1234567, -122.7654321]] * 3000}
+        )
+        self.assertEqual(len(track["latlng"]), len(track["time"]))
+        self.assertEqual(track["latlng"][0], [37.12346, -122.76543])
+        self.assertIn("latlng", stream_math.STREAM_KEYS)
+
+
+class FakeStore:
+    """In-memory stand-in for the data bucket."""
+
+    def __init__(self, objects=None):
+        self.objects = dict(objects or {})
+        self.deleted = []
+
+    def read(self, key, default):
+        return json.loads(json.dumps(self.objects.get(key, default)))
+
+    def write(self, key, value):
+        self.objects[key] = value
+
+    def delete(self, key):
+        self.deleted.append(key)
+        self.objects.pop(key, None)
+
+    def patches(self):
+        return (
+            patch.object(handler, "_read_json", side_effect=self.read),
+            patch.object(handler, "_write_json", side_effect=self.write),
+            patch.object(handler, "_delete_object", side_effect=self.delete),
+            patch.object(handler, "_credentials", return_value="token"),
+        )
+
+
+class GearDiscoveryTests(unittest.TestCase):
+    def test_unknown_gear_is_looked_up_once_and_typed_by_prefix(self):
+        store = FakeStore({"bikes.json": [
+            {"id": "b1", "name": "Known", "brand": "Giant", "model": "TCR", "distance": 10.0, "retired": False, "kind": "bike"},
+            {"id": "b4", "name": "Legacy", "brand": "", "model": "", "distance": 5.0, "retired": False},
+        ]})
+        gear = {
+            "/gear/b2": {"id": "b2", "nickname": "New bike", "brand_name": "Storck", "model_name": "Scenero", "distance": 1609.344, "retired": False},
+            "/gear/g3": {"id": "g3", "name": "Shoes", "distance": 0, "retired": True},
+            "/gear/b4": {"id": "b4", "name": "Legacy", "brand_name": "Cannondale", "model_name": "CAAD10", "distance": 8046.72, "retired": True},
+        }
+        activities = [{"id": "1", "gear_id": "b1"}, {"id": "2", "gear_id": "b2"}, {"id": "3", "gear_id": "g3"}, {"id": "4", "gear_id": "b4"}]
+        read, write, delete, _ = store.patches()
+        with read, write, delete, patch.object(handler, "_strava_get", side_effect=lambda path, *_: gear[path]) as strava_get:
+            handler._sync_gear("token", activities, refresh_athlete=False)
+
+        self.assertEqual(sorted(call.args[0] for call in strava_get.call_args_list), ["/gear/b2", "/gear/b4", "/gear/g3"])
+        saved = {item["id"]: item for item in store.objects["bikes.json"]}
+        self.assertEqual(saved["b2"]["kind"], "bike")
+        self.assertEqual(saved["b2"]["distance"], 1.0)
+        self.assertEqual(saved["g3"]["kind"], "shoe")
+        self.assertTrue(saved["g3"]["retired"])
+        self.assertTrue(saved["b4"]["retired"])
+        self.assertEqual(saved["b4"]["brand"], "Cannondale")
+        self.assertEqual(saved["b1"]["brand"], "Giant")
+
+    def test_reconcile_refreshes_listed_gear_without_losing_details(self):
+        store = FakeStore({"bikes.json": [
+            {"id": "b1", "name": "Known", "brand": "Giant", "model": "TCR", "distance": 10.0, "retired": False, "kind": "bike"},
+            {"id": "b9", "name": "Sold", "brand": "Marin", "model": "", "distance": 3.0, "retired": True, "kind": "bike"},
+        ]})
+        athlete = {"bikes": [{"id": "b1", "name": "Known", "distance": 32186.88}], "shoes": []}
+        read, write, delete, _ = store.patches()
+        with read, write, delete, patch.object(handler, "_strava_get", return_value=athlete) as strava_get:
+            handler._sync_gear("token", [], refresh_athlete=True)
+
+        strava_get.assert_called_once()
+        saved = {item["id"]: item for item in store.objects["bikes.json"]}
+        self.assertEqual(saved["b1"]["distance"], 20.0)
+        self.assertEqual(saved["b1"]["brand"], "Giant")
+        self.assertIn("b9", saved)
+
+
+def _stored(activity_id, date):
+    return {"id": activity_id, "start_date_local": date, "sport_type": "Ride", "gear_id": None}
+
+
+class StreamsSyncTests(unittest.TestCase):
+    def setUp(self):
+        patcher = patch.dict(os.environ, {"STRAVA_ATHLETE_ID": "42", "STREAMS_BACKFILL_LIMIT": "2"})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def _run(self, store, event, strava_get):
+        read, write, delete, credentials = store.patches()
+        with read, write, delete, credentials, patch.object(handler, "_strava_get", side_effect=strava_get):
+            return handler.main(event, None)
+
+    def test_backfill_fetches_newest_missing_up_to_the_limit(self):
+        store = FakeStore({
+            "activities.json": [_stored(str(i), f"2025-01-0{i}T08:00:00Z") for i in range(1, 6)],
+            "streams-index.json": {"5": {"has_streams": True}},
+        })
+        fetched = []
+
+        def strava_get(path, *_):
+            fetched.append(path)
+            return {"time": {"data": [0, 1, 2]}, "watts": {"data": [100, 200, 300]}}
+
+        result = self._run(store, {"source": "streams-backfill"}, strava_get)
+        self.assertEqual(fetched, ["/activities/4/streams", "/activities/3/streams"])
+        self.assertEqual(result["streams_fetched"], 2)
+        self.assertEqual(set(store.objects["streams-index.json"]), {"3", "4", "5"})
+        self.assertEqual(store.objects["streams/4.json"]["summary"]["power_bests"], {"1": 300})
+
+    def test_backfill_stops_at_the_rate_limit_and_keeps_progress(self):
+        store = FakeStore({"activities.json": [_stored(str(i), f"2025-01-0{i}T08:00:00Z") for i in range(1, 4)]})
+        calls = []
+
+        def strava_get(path, *_):
+            calls.append(path)
+            if len(calls) > 1:
+                raise handler.StravaHTTPError(429, "Rate Limit Exceeded")
+            return {"time": {"data": [0, 1]}}
+
+        result = self._run(store, {"source": "streams-backfill"}, strava_get)
+        self.assertTrue(result["ok"])
+        self.assertEqual(list(store.objects["streams-index.json"]), ["3"])
+
+    def test_activity_without_streams_is_indexed_as_such(self):
+        missing = handler.StravaHTTPError(404, "Record Not Found")
+        with patch.object(handler, "_strava_get", side_effect=missing), patch.object(handler, "_write_json") as write:
+            entry = handler._fetch_streams(_stored("7", "2025-01-01T08:00:00Z"), "token")
+        self.assertFalse(entry["has_streams"])
+        self.assertEqual(entry["power_bests"], {})
+        write.assert_not_called()
+
+    def test_confirmed_delete_removes_streams_and_index_entry(self):
+        store = FakeStore({
+            "activities.json": [_stored("1", "2025-01-01T08:00:00Z")],
+            "streams-index.json": {"1": {"has_streams": True}},
+            "streams/1.json": {"id": "1"},
+        })
+        event = {"object_type": "activity", "aspect_type": "delete", "object_id": 1, "owner_id": 42}
+        self._run(store, event, lambda *_: (_ for _ in ()).throw(handler.StravaHTTPError(404, "")))
+        self.assertEqual(store.deleted, ["streams/1.json"])
+        self.assertEqual(store.objects["streams-index.json"], {})
+
+    def test_private_activity_never_has_streams_fetched(self):
+        store = FakeStore({"activities.json": []})
+        paths = []
+
+        def strava_get(path, *_):
+            paths.append(path)
+            return _strava_activity(8, visibility="only_me")
+
+        event = {"object_type": "activity", "aspect_type": "create", "object_id": 8, "owner_id": 42}
+        self._run(store, event, strava_get)
+        self.assertEqual(paths, ["/activities/8"])
+        self.assertNotIn("streams/8.json", store.objects)
+
+    def test_new_webhook_activity_gets_streams_and_unknown_gear(self):
+        store = FakeStore({"activities.json": []})
+        responses = {
+            "/activities/9": _strava_activity(9, gear_id="b77"),
+            "/gear/b77": {"id": "b77", "nickname": "Brand new", "distance": 0},
+            "/activities/9/streams": {"time": {"data": [0, 1, 2]}, "heartrate": {"data": [90, 95, 100]}},
+        }
+        self._run(store, {"object_type": "activity", "aspect_type": "create", "object_id": 9, "owner_id": 42},
+                  lambda path, *_: responses[path])
+        self.assertEqual(store.objects["bikes.json"][0]["name"], "Brand new")
+        self.assertTrue(store.objects["streams-index.json"]["9"]["has_streams"])
+        self.assertEqual(store.objects["streams/9.json"]["samples"]["heartrate"], [90, 95, 100])
+
+
+def _route(route_id, updated_at, **overrides):
+    return {
+        "id": int(route_id),
+        "id_str": route_id,
+        "name": f"Route {route_id}",
+        "description": None,
+        "type": 1,
+        "sub_type": 1,
+        "distance": 1609.344,
+        "elevation_gain": 304.8,
+        "estimated_moving_time": 3600,
+        "starred": False,
+        "private": False,
+        "created_at": "2025-01-01T00:00:00Z",
+        "updated_at": updated_at,
+        "map": {"summary_polyline": "abc"},
+        **overrides,
+    }
+
+
+def _route_streams(points=3):
+    return [
+        {"type": "latlng", "data": [[37.8 + i * 0.001, -122.4] for i in range(points)]},
+        {"type": "distance", "data": [i * 100.0 for i in range(points)]},
+        {"type": "altitude", "data": [10.0 + i for i in range(points)]},
+    ]
+
+
+class SavedRoutesTests(unittest.TestCase):
+    def setUp(self):
+        patcher = patch.dict(os.environ, {"STRAVA_ATHLETE_ID": "42", "SAVED_ROUTES_PROFILE_LIMIT": "2"})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def _sync(self, store, responses):
+        calls = []
+
+        def strava_get(path, _token, query=None):
+            calls.append((path, (query or {}).get("page")))
+            response = responses[(path, (query or {}).get("page"))] if (path, (query or {}).get("page")) in responses else responses[path]
+            if isinstance(response, Exception):
+                raise response
+            return response
+
+        read, write, delete, _ = store.patches()
+        with read, write, delete, patch.object(handler, "_strava_get", side_effect=strava_get):
+            fetched = handler._sync_saved_routes("token", deadline=float("inf"))
+        return fetched, calls
+
+    def test_lists_every_page_and_skips_private_routes(self):
+        full_page = [_route(str(1000 + i), "2025-01-01T00:00:00Z") for i in range(100)]
+        store = FakeStore({"saved-routes.json": [
+            {"id": str(1000 + i), "updated_at": "2025-01-01T00:00:00Z", "profile_updated_at": "2025-01-01T00:00:00Z"}
+            for i in range(100)
+        ]})
+        responses = {
+            ("/athletes/42/routes", 1): full_page,
+            ("/athletes/42/routes", 2): [_route("7", "2025-01-01T00:00:00Z", private=True)],
+        }
+        fetched, calls = self._sync(store, responses)
+        self.assertEqual([call for call in calls if "routes" in call[0] and "streams" not in call[0]],
+                         [("/athletes/42/routes", 1), ("/athletes/42/routes", 2)])
+        self.assertEqual(fetched, 0)
+        ids = {route["id"] for route in store.objects["saved-routes.json"]}
+        self.assertEqual(len(ids), 100)
+        self.assertNotIn("7", ids)
+
+    def test_converts_units_and_types(self):
+        route = handler.saved_routes.summary(
+            _route("9", "2025-02-01T00:00:00Z", type=2, sub_type=4, starred=True, map={}), None
+        )
+        self.assertEqual(route["id"], "9")
+        self.assertEqual(route["type"], "run")
+        self.assertEqual(route["sub_type"], "trail")
+        self.assertEqual(route["distance"], 1.0)
+        self.assertEqual(route["elevation_gain"], 1000)
+        self.assertEqual(route["description"], "")
+        self.assertIsNone(route["polyline"])
+        self.assertTrue(route["starred"])
+        self.assertEqual(handler.saved_routes.summary(_route("9", "x", type=3, sub_type=9), None)["type"], "other")
+
+    def test_fetches_profiles_only_for_new_or_edited_routes(self):
+        store = FakeStore({"saved-routes.json": [
+            {"id": "1", "updated_at": "2025-01-01T00:00:00Z", "profile_updated_at": "2025-01-01T00:00:00Z"},
+            {"id": "2", "updated_at": "2025-01-01T00:00:00Z", "profile_updated_at": "2025-01-01T00:00:00Z"},
+        ]})
+        responses = {
+            ("/athletes/42/routes", 1): [
+                _route("1", "2025-01-01T00:00:00Z"),
+                _route("2", "2025-03-01T00:00:00Z"),
+                _route("3", "2025-02-01T00:00:00Z"),
+            ],
+            "/routes/2/streams": _route_streams(),
+            "/routes/3/streams": _route_streams(),
+        }
+        fetched, calls = self._sync(store, responses)
+        self.assertEqual(fetched, 2)
+        self.assertEqual([path for path, _ in calls if path.endswith("/streams")], ["/routes/2/streams", "/routes/3/streams"])
+        profile = store.objects["saved-routes/3.json"]
+        self.assertEqual(profile["distance"], [0.0, 0.062, 0.124])
+        self.assertEqual(profile["altitude"], [32.8, 36.1, 39.4])
+        self.assertEqual(profile["latlng"][0], [37.8, -122.4])
+        saved = {route["id"]: route for route in store.objects["saved-routes.json"]}
+        self.assertEqual(saved["2"]["profile_updated_at"], "2025-03-01T00:00:00Z")
+        self.assertEqual([route["id"] for route in store.objects["saved-routes.json"]], ["2", "3", "1"])
+
+    def test_stops_at_the_limit_and_the_rate_limit_keeping_progress(self):
+        store = FakeStore()
+        responses = {
+            ("/athletes/42/routes", 1): [_route(str(i), f"2025-0{i}-01T00:00:00Z") for i in range(1, 5)],
+            "/routes/4/streams": _route_streams(),
+            "/routes/3/streams": handler.StravaHTTPError(429, "Rate Limit Exceeded"),
+        }
+        fetched, calls = self._sync(store, responses)
+        self.assertEqual(fetched, 1)
+        self.assertEqual([path for path, _ in calls if path.endswith("/streams")], ["/routes/4/streams", "/routes/3/streams"])
+        saved = {route["id"]: route for route in store.objects["saved-routes.json"]}
+        self.assertEqual(saved["4"]["profile_updated_at"], "2025-04-01T00:00:00Z")
+        self.assertIsNone(saved["3"]["profile_updated_at"])
+
+        store = FakeStore()
+        responses = {
+            ("/athletes/42/routes", 1): [_route(str(i), f"2025-0{i}-01T00:00:00Z") for i in range(1, 5)],
+            **{f"/routes/{i}/streams": _route_streams() for i in range(1, 5)},
+        }
+        fetched, _ = self._sync(store, responses)
+        self.assertEqual(fetched, 2)
+
+    def test_removes_profiles_of_deleted_or_private_routes(self):
+        store = FakeStore({
+            "saved-routes.json": [
+                {"id": "1", "updated_at": "a", "profile_updated_at": "a"},
+                {"id": "2", "updated_at": "a", "profile_updated_at": "a"},
+                {"id": "3", "updated_at": "a", "profile_updated_at": None},
+            ],
+            "saved-routes/1.json": {"id": "1"},
+            "saved-routes/2.json": {"id": "2"},
+        })
+        responses = {("/athletes/42/routes", 1): [_route("1", "a"), _route("2", "a", private=True)]}
+        self._sync(store, responses)
+        self.assertEqual(store.deleted, ["saved-routes/2.json"])
+        self.assertEqual([route["id"] for route in store.objects["saved-routes.json"]], ["1"])
+
+    def test_profile_downsampling_keeps_both_ends(self):
+        profile = handler.saved_routes.profile(_route("5", "a"), _route_streams(4500))
+        self.assertLessEqual(len(profile["distance"]), 2000)
+        self.assertEqual(profile["distance"][0], 0.0)
+        self.assertEqual(profile["distance"][-1], round(4499 * 100 * 0.000621371, 3))
+        self.assertEqual(len(profile["latlng"]), len(profile["altitude"]))
+
+    def test_routes_sync_message_triggers_a_sync(self):
+        record = {"body": json.dumps({"source": "routes-sync"})}
+        self.assertEqual(handler._records_from_sqs(record), {"source": "routes-sync"})
+        store = FakeStore({"activities.json": []})
+        read, write, delete, credentials = store.patches()
+        with read, write, delete, credentials, \
+                patch.object(handler, "_strava_get", return_value=[]), \
+                patch.object(handler, "_sync_gear"), \
+                patch.object(handler, "_sync_saved_routes", return_value=0) as sync:
+            handler.main({"Records": [record]}, None)
+        sync.assert_called_once()
 
 
 if __name__ == "__main__":

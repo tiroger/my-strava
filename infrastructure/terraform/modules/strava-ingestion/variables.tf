@@ -43,6 +43,48 @@ variable "bikes_s3_key" {
   type        = string
 }
 
+variable "streams_s3_prefix" {
+  description = "Prefix under which each activity's detailed streams are stored."
+  type        = string
+}
+
+variable "streams_index_s3_key" {
+  description = "Object summarizing which activities have streams, with their effort summaries."
+  type        = string
+}
+
+variable "saved_routes_s3_key" {
+  description = "Object listing the athlete's public saved routes."
+  type        = string
+}
+
+variable "saved_routes_s3_prefix" {
+  description = "Prefix under which each saved route's elevation profile is stored."
+  type        = string
+}
+
+variable "saved_routes_profile_limit" {
+  description = "Saved-route profiles fetched per run; each costs one Strava read."
+  type        = number
+  default     = 30
+}
+
+variable "streams_backfill_schedule" {
+  description = "How often to fetch streams for activities that do not have them yet."
+  type        = string
+  default     = "rate(2 hours)"
+}
+
+variable "streams_backfill_limit" {
+  description = <<-EOT
+    Activities whose streams are fetched per backfill run. Each costs one
+    Strava read; 50 every two hours stays well inside the daily allowance
+    while leaving room for webhook events.
+  EOT
+  type        = number
+  default     = 50
+}
+
 variable "sync_state_s3_key" {
   description = "Object recording when reconciliation last ran."
   type        = string

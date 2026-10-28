@@ -48,15 +48,19 @@ module "web" {
 module "strava_ingestion" {
   source = "../../modules/strava-ingestion"
 
-  environment        = "prod"
-  source_root        = "${path.root}/../../../.."
-  consumer_role_name = module.web.compute_role_name
-  alarm_topic_arn    = module.observability.alert_topic_arn
-  data_bucket        = module.web.data_bucket
-  data_bucket_arn    = module.web.data_bucket_arn
-  activities_s3_key  = module.web.activities_s3_key
-  bikes_s3_key       = module.web.bikes_s3_key
-  strava_athlete_id  = local.strava_athlete_id
+  environment            = "prod"
+  source_root            = "${path.root}/../../../.."
+  consumer_role_name     = module.web.compute_role_name
+  alarm_topic_arn        = module.observability.alert_topic_arn
+  data_bucket            = module.web.data_bucket
+  data_bucket_arn        = module.web.data_bucket_arn
+  activities_s3_key      = module.web.activities_s3_key
+  bikes_s3_key           = module.web.bikes_s3_key
+  streams_s3_prefix      = module.web.streams_s3_prefix
+  streams_index_s3_key   = module.web.streams_index_s3_key
+  saved_routes_s3_key    = module.web.saved_routes_s3_key
+  saved_routes_s3_prefix = module.web.saved_routes_s3_prefix
+  strava_athlete_id      = local.strava_athlete_id
 }
 
 module "web_firewall" {
