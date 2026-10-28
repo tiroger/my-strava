@@ -15,7 +15,7 @@ locals {
   # Turned true once the repository is connected in the Amplify console with
   # the GitHub App. Terraform then adopts the branch the console created (see
   # the import below) and the deploy workflow builds it.
-  repository_connected = false
+  repository_connected = true
   amplify_branch       = "master"
 
   # If Amplify attached a "CreatedByAmplify-..." Web ACL when the repository
