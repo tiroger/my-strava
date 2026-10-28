@@ -13,9 +13,10 @@ locals {
   strava_subscription_id = null
 
   # Turned true once the repository is connected in the Amplify console with
-  # the GitHub App. Terraform then owns the branch and the deploy workflow
-  # builds it.
+  # the GitHub App. Terraform then adopts the branch the console created (see
+  # the import below) and the deploy workflow builds it.
   repository_connected = false
+  amplify_branch       = "production"
 
   # If Amplify attached a "CreatedByAmplify-..." Web ACL when the repository
   # was connected, record it here and add an import block, as described in
@@ -36,7 +37,7 @@ module "web" {
   source = "../../modules/web"
 
   environment             = "prod"
-  branch_name             = "production"
+  branch_name             = local.amplify_branch
   repository_connected    = local.repository_connected
   github_access_token     = var.amplify_github_token
   strava_events_queue_url = module.strava_ingestion.queue_url
@@ -64,4 +65,16 @@ module "web_firewall" {
 
   web_acl_name = each.value.name
   metric_name  = each.value.metric_name
+}
+
+
+# Connecting the repository in the console creates the branch, and also resets
+# the platform to static WEB and the framework to "Web", which disables every
+# API route. Adopting the branch here lets the next apply put both back, rather
+# than failing to create a duplicate. Once the branch is in state this block
+# is a no-op, so it can stay.
+import {
+  for_each = local.repository_connected ? toset([local.amplify_branch]) : toset([])
+  to       = module.web.aws_amplify_branch.tracked[0]
+  id       = "${module.web.app_id}/${each.value}"
 }

@@ -89,9 +89,13 @@ the same run.
    budget. The app is not built yet; it has no repository.
 3. **Connect the repository** in the Amplify console with the GitHub App
    (Amplify → `my-strava-dev` → connect repository → `tiroger/my-strava`,
-   branch `master`). Then set `repository_connected = true` in
-   `infrastructure/terraform/environments/dev/main.tf` and push. Terraform takes
-   over the branch and the workflow builds and health-checks the app. If the
+   branch `master`). This is the one step Terraform cannot express. The console
+   creates the branch and resets the app to the static platform, which disables
+   the API routes. Then set `repository_connected = true` in
+   `infrastructure/terraform/environments/dev/main.tf` and push: Terraform
+   adopts the console-created branch through the import block in that file,
+   restores the server-side platform, and the workflow builds and
+   health-checks the app. If the
    console attached a `CreatedByAmplify-...` Web ACL, adopt it as described in
    [`infrastructure/terraform/README.md`](./infrastructure/terraform/README.md),
    or Strava's webhook validation will be refused.
