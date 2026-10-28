@@ -10,7 +10,7 @@ locals {
   # the SSR compute runtime reads the branch's, and an app-level value alone is
   # invisible to it. amplify.yml then writes these into .env.production, which
   # is what actually carries them into the server bundle.
-  runtime_environment = {
+  all_runtime_environment = {
     APP_DATA_BUCKET         = aws_s3_bucket.data.id
     ACTIVITIES_S3_KEY       = var.activities_s3_key
     BIKES_S3_KEY            = var.bikes_s3_key
@@ -25,6 +25,11 @@ locals {
     STRAVA_ATHLETE_ID       = var.strava_athlete_id == null ? "" : var.strava_athlete_id
     STRAVA_SUBSCRIPTION_ID  = var.strava_subscription_id == null ? "" : var.strava_subscription_id
   }
+
+  # Amplify drops variables with empty values, so declaring one would show as
+  # a change on every plan and fail the weekly drift check. The app reads an
+  # absent variable the same as an empty one.
+  runtime_environment = { for key, value in local.all_runtime_environment : key => value if value != "" }
 }
 
 resource "aws_amplify_app" "web" {
