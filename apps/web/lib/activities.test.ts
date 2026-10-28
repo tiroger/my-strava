@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { normalizeActivity, normalizeDate } from "./activities";
+import { decodePolyline } from "./polyline";
+import { mapValue, normalizeActivity, normalizeDate } from "./activities";
 
 describe("activity normalization", () => {
   it("keeps Strava local dates as wall-clock time", () => {
@@ -20,5 +21,16 @@ describe("activity normalization", () => {
         .polyline,
     ).toBe("xyz");
     expect(normalizeActivity({ id: 3, map: { summary_polyline: "" } }).polyline).toBeNull();
+  });
+
+  it("unescapes the Python repr the CSV snapshot stores polylines in", () => {
+    // From the snapshot: the polyline contains a backslash, written as "\\".
+    const stored = "{'id': 'a1', 'summary_polyline': 'o{veF`rgjVm\\\\n^iO~G', 'resource_state': 2}";
+    const polyline = mapValue(stored)!;
+    expect(polyline).toBe("o{veF`rgjVm\\n^iO~G");
+    const [, second, third] = decodePolyline(polyline);
+    // Without unescaping, the extra character swaps latitude and longitude deltas.
+    expect(Math.abs(third[0] - second[0])).toBeLessThan(0.01);
+    expect(Math.abs(third[1] - second[1])).toBeLessThan(0.01);
   });
 });

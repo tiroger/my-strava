@@ -54,10 +54,15 @@ function textOrNull(value: unknown): string | null {
   return text === "Activity" ? null : text;
 }
 
-function mapValue(value: unknown): string | null {
+/**
+ * The CSV snapshot stores the map as a Python dict repr, which escapes every
+ * backslash. Backslash is a legal polyline character, so leaving the escapes
+ * in shifts every coordinate decoded after one, mirroring the rest of the route.
+ */
+export function mapValue(value: unknown): string | null {
   if (typeof value !== "string" || value.length === 0) return null;
-  const match = value.match(/summary_polyline['"]?\s*:\s*['"]([^'"]*)/);
-  return match?.[1] || null;
+  const match = value.match(/summary_polyline['"]?\s*:\s*(['"])((?:\\.|(?!\1).)*)\1/);
+  return match?.[2]?.replace(/\\(.)/g, "$1") || null;
 }
 
 export function normalizeDate(value: unknown): string {
